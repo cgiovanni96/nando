@@ -13,13 +13,14 @@ Tasks è core, non una capability (ADR-0005): è uno dei building block che Know
 
 ### Entità
 
-- **Task**: la definizione — titolo, note, `spaceId`, `recurrenceRule?`, `timeZone`, `createdAt`, `endedAt?`. Non porta lo stato di esecuzione.
+- **Task**: la definizione — titolo, note, `spaceId`, `recurrenceRule?`, `timeZone`, `createdAt`, `endedAt?`, `emailDigest`, `reminderOffsetMinutes?`. Non porta lo stato di esecuzione.
 - **TaskOccurrence**: l'istanza — `id`, `taskId`, `schedule?`, `location?`, `participants?`, `status`, `completedAt?`, `activityId?`.
 - **Schedule**: il value object del tempo — `allDay`, `from?`, `to`, `timeZone`.
 - Ogni Task ha **almeno un'Occurrence**. Un task una tantum ne ha esattamente una. Un Task senza Schedule esiste (Inbox/backlog) ma non compare in Calendar.
 - Lo Space è del Task; l'Occurrence eredita il proprietario e non lo cambia. Per spostare un task in un altro Space si sposta il Task.
 - Completamento, evidenza e deduplicazione puntano all'**Occurrence**, mai al Task.
 - **Event non è un'entità.** Ciò che l'utente chiama evento è una TaskOccurrence con Schedule; il termine resta nella UI.
+- **Notifiche**: `emailDigest` (default false) decide l'inclusione nel digest email; `reminderOffsetMinutes` (null = default del tipo, 0 = al momento) decide quando arriva `dueSoon` o `starts`. L'in-app è sempre attiva; `overdue` non ha offset (ADR-0006).
 - Partecipanti e luogo stanno sull'Occurrence. `Person` è core e minimale; i partecipanti sono `EntityRef<Person>`, senza inviti né risposte in v1.
 
 ### Schedule
@@ -81,7 +82,8 @@ Tasks è core, non una capability (ADR-0005): è uno dei building block che Know
 
 ```text
 Task
-  id, title, notes, spaceId?, recurrenceRule?, timeZone, createdAt, endedAt?
+  id, title, notes, spaceId?, recurrenceRule?, timeZone, createdAt, endedAt?,
+  emailDigest, reminderOffsetMinutes?
 
 TaskOccurrence
   id, taskId, schedule?, location?, participants?, status, completedAt?, activityId?
@@ -111,7 +113,7 @@ Completion
 ## Conseguenze
 
 - **NAS-55 Calendar**: vista sui Task con Schedule; range come blocco; nessun evento duplicato.
-- **NAS-83 Notifiche core**: trigger relativi a `from`/`to`, in-app sempre, email per task; il contratto dettagliato vive nel ticket.
+- **NAS-83 Notifiche core**: trigger relativi a `from`/`to`, in-app sempre, digest email opt-in; il contratto vive in ADR-0006.
 - **NAS-63 Habits binding**: il binding punta al Task o alla serie; l'evidenza punta all'Occurrence tramite `activityId`.
 - **NAS-58 AI**: completare un task è un comando idempotente con `activityId`; una Proposal può creare o spostare Occurrences.
 - **NAS-62 Dashboard**: “oggi”, “in corso” e “in ritardo” leggono le Occurrences aperte.

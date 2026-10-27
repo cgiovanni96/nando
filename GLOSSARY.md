@@ -85,8 +85,12 @@ Vista core sulle TaskOccurrence con Schedule: non è un'entità, non ha tabella 
 _Avoid_: Event (come entità), modulo Calendar, agenda
 
 **Notification**:
-Messaggio generato dal servizio core Notifications e consegnato in-app o via email. Non è una capability e non conosce il dominio che l'ha richiesto.
+Segnale in-app generato dal servizio core Notifications. L'email è un Digest separato, non un canale della Notification. Non è una capability e non conosce il dominio che l'ha richiesto.
 _Avoid_: reminder (come sinonimo), evento, alert
+
+**Digest**:
+Email periodica opt-in che raggruppa i task con `emailDigest` attivo, composta al momento dell'invio. Non è una Notification e non ha un centro proprio.
+_Avoid_: notifica, email immediata
 
 ### Persone e accesso
 
@@ -226,5 +230,6 @@ _Avoid_: componente, sezione
 
 - **Module**: confine di codice che implementa una capability. È architettura, non dominio.
 - **Event (come entità)**: una voce di calendario è una TaskOccurrence con Schedule; il termine resta solo nella UI.
+- **Reminder**: termine di UI per una Notification con trigger temporale; non è un'entità.
 - **Port / Outbox / Domain event**: pattern di comunicazione fra moduli, descritti nell'ADR-0003.
 - **Component / Service / Feature**: vocabolario tecnico generico, non specifico di Nando.
