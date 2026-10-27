@@ -132,6 +132,10 @@ _Avoid_: meeting, evento (da solo)
 L'origine di un dato — connettore, persona, import, AI, inserimento manuale — con identità e lifecycle propri. Una Source si può revocare.
 _Avoid_: provenance, origine (vago)
 
+**AI grant**:
+Autorizzazione per Source che abilita separatamente l'importazione (`ingest`), la lettura AI (`ai`) e la conservazione/riuso (`retain`). Ha default di Space, override per Source e revoca a cascata; non è un permesso di Scope.
+_Avoid_: permission, scope, consenso (generico)
+
 **Provenance**:
 Il record attaccato a un oggetto che dice da quale Source viene, chi lo ha creato o trasformato, quando e attraverso quale derivazione.
 _Avoid_: source, audit log
@@ -139,6 +143,10 @@ _Avoid_: source, audit log
 **Confidence**:
 Campo della Provenance che esprime quanto ci fidiamo di un valore o di un'asserzione. Non è un'entità e non ha storia propria.
 _Avoid_: score, certezza
+
+**Sensitivity**:
+Classificazione di un dato per la policy AI: `personal`, `sensitive`, `restricted`. `sensitive` è un'etichetta di UI e trasparenza; `restricted` è l'unico livello che esclude il dato dall'AI e dal provider esterno.
+_Avoid_: privacy level, classification, segreto (come livello)
 
 ### Proprietà e claim
 
@@ -233,7 +241,7 @@ _Avoid_: componente, sezione
 ## Termini deliberatamente esclusi
 
 - **Module**: confine di codice che implementa una capability. È architettura, non dominio.
-- **Tool / Orchestrator / ModelRegistry**: vocabolario tecnico dell'AI, descritto nell'ADR-0007.
+- **Tool / Orchestrator / ModelRegistry / PolicyEngine / PolicyDecision**: vocabolario tecnico dell'AI, descritto negli ADR-0007 e ADR-0008.
 - **Event (come entità)**: una voce di calendario è una TaskOccurrence con Schedule; il termine resta solo nella UI.
 - **Reminder**: termine di UI per una Notification con trigger temporale; non è un'entità.
 - **Port / Outbox / Domain event**: pattern di comunicazione fra moduli, descritti nell'ADR-0003.

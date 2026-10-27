@@ -1,6 +1,6 @@
 # 0007 — AI supervisionata: tool, proposte e applicazione
 
-- **Stato:** accettato
+- **Stato:** accettato; modificato in parte da ADR-0008 (privacy e policy dei dati per l'AI)
 - **Data:** 2026-10-27
 - **Ticket:** NAS-58 — AI: orchestrazione, proposte, approvazione
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
