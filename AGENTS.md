@@ -11,3 +11,7 @@ Use the five default triage labels on Linear issues. Read `docs/agents/triage-la
 ### Domain docs
 
 Single-context layout: root `GLOSSARY.md` and `docs/adr/`. Read `docs/agents/domain.md` before exploring the codebase or proposing domain changes.
+
+### VPS
+
+Hosting and operations documentation lives in `docs/vps/`. Read `docs/vps/README.md` before touching the VPS; for maintenance work, read `docs/vps/AGENT.md` first.
