@@ -1,6 +1,6 @@
 # Nando
 
-Personal OS single-user: un solo proprietario organizza la propria vita in Space che compongono capability. Questo glossario fissa i termini di dominio; l'architettura — moduli, servizi, tabelle — resta fuori.
+Personal OS single-user: un solo proprietario organizza la propria vita in Space che compongono capability sopra un core sempre presente. Questo glossario fissa i termini di dominio; l'architettura — moduli, servizi, tabelle — resta fuori.
 
 **Stato:** vivo. Una voce entra qui solo quando un ticket della mappa [Nando v1 — Fondazione decision-complete](https://linear.app/giocosta/issue/NAS-41/nando-v1-fondazione-decision-complete) la ratifica. I termini ancora aperti non compaiono.
 
@@ -32,13 +32,17 @@ _Avoid_: Space di sistema, cartella
 Stato di un Project che ha raggiunto il suo esito; è distinto dall'archivio, che lo toglie dalle viste attive.
 _Avoid_: archive, done (come sinonimo di archiviato)
 
+**Core**:
+Insieme di strumenti sempre disponibili e mai opzionali: PARA/Space, Tasks, Calendar, Notifications e Person minima. Il core non dipende dalle capability e le capability lo usano come building block.
+_Avoid_: capability, modulo, piattaforma
+
 **Capability**:
-Unità di dominio che l'utente compone dentro uno Space: Tasks, Knowledge, Habits, Calendar. Non è un confine di codice.
-_Avoid_: modulo, feature, plugin
+Unità di dominio opzionale che l'utente attiva dentro uno Space: Knowledge, Habits, Learning, Relationships. Non è un confine di codice e non è un core tool.
+_Avoid_: modulo, feature, plugin, core
 
 **SpaceCapability**:
-Record esplicito che dichiara una capability attiva in uno Space, con la sua configurazione e il suo stato. Lo Space custodisce l'attivazione, non il comportamento.
-_Avoid_: modulo, plugin, abilitazione implicita
+Record esplicito che dichiara una capability opzionale attiva in uno Space, con la sua configurazione e il suo stato. Le core tool sono implicite e non richiedono attivazione.
+_Avoid_: modulo, plugin, abilitazione implicita, core
 
 **Extension**:
 Capability che specializza un motore più ampio invece di definirne uno proprio: Languages per Learning, Romantic per Relationships.
@@ -47,12 +51,16 @@ _Avoid_: modulo, plugin
 ### Tasks
 
 **Task**:
-Definizione di un'attività da svolgere: titolo, note, Space proprietario e regola di ricorrenza opzionale. Lo stato vive nelle sue Occurrences, non nel Task.
-_Avoid_: todo, item, attività (da solo)
+Definizione di un'azione o di un evento pianificato: titolo, note, Space proprietario e regola di ricorrenza opzionale. Lo stato vive nelle sue Occurrences, non nel Task. Ciò che l'utente chiama evento è una Occurrence con Schedule.
+_Avoid_: todo, item, attività (da solo), Event (come entità)
 
 **TaskOccurrence**:
-Istanza schedulata di un Task, con data, timezone e stato; un Task una tantum ne ha una sola.
-_Avoid_: istanza, task (come sinonimo)
+Istanza schedulata di un Task, con Schedule opzionale, luogo, partecipanti e stato; un Task una tantum ne ha una sola.
+_Avoid_: istanza, task (come sinonimo), evento (come entità)
+
+**Schedule**:
+Value object del tempo di una TaskOccurrence: `allDay`, `from` opzionale, `to` e timezone. `to` è la scadenza; `from` presente indica un intervallo che occupa il calendario.
+_Avoid_: dueDate (come stringa), evento
 
 **Recurrence rule**:
 Regola RRULE (subset RFC 5545) che genera le Occurrences di un Task; si valuta nella timezone del Task.
@@ -66,6 +74,20 @@ _Avoid_: cancel, delete
 Chiusura di un Task o di una Occurrence senza completamento; non produce Evidence. Cancellare una serie chiude le occorrenze future.
 _Avoid_: delete, archive
 
+**Overdue**:
+Stato derivato di una TaskOccurrence `open` la cui scadenza `to` è passata; non è uno stato memorizzato e non produce una transizione.
+_Avoid_: scaduto (come stato), late
+
+### Calendar e notifiche
+
+**Calendar**:
+Vista core sulle TaskOccurrence con Schedule: non è un'entità, non ha tabella propria e non duplica i Task.
+_Avoid_: Event (come entità), modulo Calendar, agenda
+
+**Notification**:
+Messaggio generato dal servizio core Notifications e consegnato in-app o via email. Non è una capability e non conosce il dominio che l'ha richiesto.
+_Avoid_: reminder (come sinonimo), evento, alert
+
 ### Persone e accesso
 
 **User**:
@@ -73,7 +95,7 @@ Principal di autenticazione. Esiste solo per l'accesso e non porta dati di domin
 _Avoid_: Person, account (come entità di dominio), utente (per le persone della vita)
 
 **Person**:
-Una persona reale del dominio, con identità stabile e indipendente dai contatti esterni. Il proprietario dell'app non è una Person.
+Una persona reale del dominio, con identità stabile e indipendente dai contatti esterni. In v1 esiste in forma minima — `id`, `displayName` — come core, usata da Calendar per i partecipanti; Relationships la arricchirà. Il proprietario dell'app non è una Person.
 _Avoid_: User, contatto, profilo
 
 **Context**:
@@ -91,7 +113,7 @@ Dato grezzo ricevuto da una fonte esterna o da un import, non interpretato e non
 _Avoid_: evento, evidenza, dato (da solo)
 
 **Evidence**:
-Occorrenza registrata che prova che qualcosa è accaduto e può contribuire a uno score o a una cronologia. Nasce da un'azione manuale, da un task o da un evento di capability.
+Occorrenza registrata che prova che qualcosa è accaduto e può contribuire a uno score o a una cronologia. Nasce da un'azione manuale, da un task o da un segnale di capability.
 _Avoid_: completion, check, log
 
 **Rectification**:
@@ -167,8 +189,8 @@ _Avoid_: suggerimento
 ### Identità e occorrenze
 
 **Activity identity** (`activityId`):
-Identificatore condiviso dai record che descrivono la stessa azione, per esempio un task e un evento Space. Non è un'entità: è il valore che permette di deduplicare le evidenze.
-_Avoid_: Activity (come entità), chiave deterministica, dedup per titolo
+Identificatore condiviso dai record che descrivono la stessa azione, per esempio lo stesso appuntamento registrato due volte. Non è un'entità: è il valore che permette di deduplicare le evidenze.
+_Avoid_: Activity (come entità), chiave deterministica, dedup per titolo, evento (come entità)
 
 **Idempotency key**:
 Chiave per comando che permette al server di restituire lo stesso risultato su replay invece di creare un duplicato.
@@ -179,12 +201,12 @@ Riferimento cross-module a un'entità: tipo + identificatore. Non è una foreign
 _Avoid_: foreign key, puntatore
 
 **Occurrence**:
-Istanza datata di una definizione, per esempio un Task o un evento. Si completa, si salta o si annulla individualmente.
-_Avoid_: istanza, ricorrenza (come sinonimo)
+Istanza datata di una definizione. In v1 è sempre una TaskOccurrence: si completa, si salta o si annulla individualmente.
+_Avoid_: istanza, ricorrenza (come sinonimo), evento (come entità)
 
 **Completion**:
-Fatto datato che un'Occurrence è stata completata. Non è uno stato della serie o della definizione che l'ha generata.
-_Avoid_: status, check, done
+Fatto datato che un'Occurrence è stata completata; per un evento significa che è avvenuto. Non è uno stato della serie o della definizione che l'ha generata.
+_Avoid_: status, check, done, avvenuto (come stato separato)
 
 ### Interfaccia
 
@@ -203,5 +225,6 @@ _Avoid_: componente, sezione
 ## Termini deliberatamente esclusi
 
 - **Module**: confine di codice che implementa una capability. È architettura, non dominio.
+- **Event (come entità)**: una voce di calendario è una TaskOccurrence con Schedule; il termine resta solo nella UI.
 - **Port / Outbox / Domain event**: pattern di comunicazione fra moduli, descritti nell'ADR-0003.
 - **Component / Service / Feature**: vocabolario tecnico generico, non specifico di Nando.

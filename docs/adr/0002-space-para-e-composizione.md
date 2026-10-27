@@ -7,7 +7,7 @@
 
 ## Contesto
 
-Il handoff conferma due cose: la struttura PARA e la possibilità che uno Space componga più capability. Lascia però aperti proprietà dei dati, schema dei riferimenti, contratto delle capability e comportamento su archivio e migrazione. Serve un modello strutturale che regga anche le estensioni future — Learning e Relationships — senza trasformare lo Space in un modulo.
+Il handoff conferma due cose: la struttura PARA e la possibilità che uno Space componga più capability. Lascia però aperti proprietà dei dati, schema dei riferimenti, contratto delle capability e comportamento su archivio e migrazione. Serve un modello strutturale che regga anche le estensioni future — Learning e Relationships — senza trasformare lo Space in un modulo. La composizione è stata rivista da ADR-0005: Tasks, Calendar, PARA e Notifications sono core e non capability.
 
 ## Decisione
 
@@ -17,14 +17,15 @@ Il handoff conferma due cose: la struttura PARA e la possibilità che uno Space 
 - **`kind`** vale `area`, `project` o `resource`, ed è **immutabile dalla creazione**. Per correggere un errore si crea lo Space giusto e si spostano le entità.
 - **PARA** resta la convenzione di classificazione. **Archive non è un `kind`**: è uno stato del lifecycle, così un progetto archiviato resta un progetto e può essere disarchiviato.
 - **Gerarchia** ad albero con grammatica PARA: un'Area può contenere Aree e Progetti; un Progetto può contenere Resource; una Resource è foglia. Tutti possono stare al root. Un `parentId` non può creare cicli.
-- Lo Space è **sottile**: non definisce workflow, stati o schemi propri. Il comportamento vive nelle capability.
+- Lo Space è **sottile**: non definisce workflow, stati o schemi propri. Il comportamento vive nelle capability e nelle core tool.
 
 ### Composizione delle capability
 
-- **`SpaceCapability`** è il record esplicito che dichiara una capability attiva in uno Space: `(spaceId, capabilityKey, config, state)`.
+- **`SpaceCapability`** è il record esplicito che dichiara una capability **opzionale** attiva in uno Space: `(spaceId, capabilityKey, config, state)`.
 - Attivare una capability è un gesto esplicito; l'empty state è parte del prodotto, non un'assenza di dati.
 - **Disattivare** trattiene i dati e la storia, rimuove la UI e ferma i contributi attivi. Riattivare ripristina.
-- Capability componibili in v1: Tasks, Calendar, Knowledge, Habits. Learning e Relationships saranno estensioni con lo stesso contratto.
+- Capability componibili in v1: Knowledge, Habits. Learning e Relationships saranno estensioni con lo stesso contratto.
+- **Core tool** — PARA/Space, Tasks, Calendar, Notifications e Person minima — sono sempre disponibili e non richiedono `SpaceCapability`. Il core non dipende dalle capability; sono le capability a usarlo come building block (ADR-0005).
 
 ### Proprietà dei dati
 
@@ -48,10 +49,10 @@ Space
   kind ∈ {area, project, resource}   // immutabile
 
 SpaceCapability
-  spaceId, capabilityKey, config, state
+  spaceId, capabilityKey, config, state   // solo capability opzionali
   state ∈ {active, suspended}
 
-Entity (Tasks, Documents, Habits, Events, ...)
+Entity (Tasks, Documents, Habits, People, ...)
   id, spaceId?                        // un solo proprietario
 
 Reference
@@ -67,6 +68,7 @@ Reference
 5. Uno Space archiviato o in deletion non contribuisce agli aggregati attivi.
 6. Un'entità derivata appartiene allo Space che la produce, non a quello del referente.
 7. Disattivare una capability non cancella i suoi dati.
+8. Le core tool non richiedono `SpaceCapability` e non dipendono da una capability.
 
 ## Conseguenze
 
@@ -74,6 +76,7 @@ Reference
 - **NAS-47** deve prevedere soft delete, purge programmata e la finestra di grazia; la durata resta un parametro.
 - **NAS-61 / NAS-63**: lo score di un Habit resta nello Space dell'Habit anche quando il Task che lo alimenta vive altrove.
 - **NAS-62**: dashboard globale e viste di Space usano la stessa regola di aggregazione.
+- **ADR-0005** fissa il confine core/capability/piattaforma: Tasks, Calendar, PARA e Notifications sono core, non `SpaceCapability`.
 - La UI deve mostrare empty state per le capability attive senza dati e impedire modifiche dentro uno Space archiviato.
 
 ## Alternative scartate
@@ -81,6 +84,7 @@ Reference
 - **Archive come `kind`**: perde il tipo originale e rende l'archivio un tipo transitorio.
 - **Albero libero**: la gerarchia perde significato e i cicli diventano difficili da validare.
 - **Capability implicite dai dati**: niente empty state, niente configurazione, disattivazione ambigua.
+- **Tasks e Calendar come capability**: li renderebbe opzionali e incompatibili con il ruolo di building block del core (ADR-0005).
 - **Molti-a-molti**: proprietà ambigua e archivio senza effetto chiaro.
 - **Entità globali con Space come vista**: la metafora del contenitore crolla.
 - **Space aggregato con campi propri**: diventa un modulo e duplica le Property del Knowledge.
