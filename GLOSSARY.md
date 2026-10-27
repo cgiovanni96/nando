@@ -9,16 +9,36 @@ Personal OS single-user: un solo proprietario organizza la propria vita in Space
 ### Organizzazione
 
 **Space**:
-Il contenitore primario che l'utente naviga e in cui compone più capability. Il suo `kind` segue PARA — area, project, resource, archive — e Area non è un'entità separata.
-_Avoid_: Area (come entità), cartella, workspace
+Il contenitore primario che l'utente naviga e in cui compone più capability. Il `kind` è fissato alla creazione — area, project o resource — e Area non è un'entità separata.
+_Avoid_: Area (come entità), cartella, workspace, archive (come kind)
 
 **PARA**:
-Convenzione che classifica gli Space in quattro `kind`: area, project, resource, archive. Non è una gerarchia parallela agli Space.
-_Avoid_: Area come contenitore
+Convenzione che classifica gli Space in tre `kind` — area, project, resource — e tratta l'archivio come stato del lifecycle, non come quarto tipo. Non è una gerarchia parallela agli Space.
+_Avoid_: Area come contenitore, archive come kind
+
+**Archive**:
+Stato di uno Space che lo rende read-only, lo nasconde dalle viste attive e lo esclude dagli aggregati, conservando storia ed evidenze. Si applica a cascata ai discendenti.
+_Avoid_: kind, cancellazione, done
+
+**Deletion**:
+Stato reversibile che nasconde uno Space e i suoi discendenti e avvia la purge definitiva dopo una finestra di grazia. È distinta dall'archivio, che non elimina nulla.
+_Avoid_: archive, hard delete (come sinonimo)
+
+**Inbox**:
+Vista globale delle entità senza Space proprietario. Non è uno Space e non ha lifecycle.
+_Avoid_: Space di sistema, cartella
+
+**Project completion**:
+Stato di un Project che ha raggiunto il suo esito; è distinto dall'archivio, che lo toglie dalle viste attive.
+_Avoid_: archive, done (come sinonimo di archiviato)
 
 **Capability**:
 Unità di dominio che l'utente compone dentro uno Space: Tasks, Knowledge, Habits, Calendar. Non è un confine di codice.
 _Avoid_: modulo, feature, plugin
+
+**SpaceCapability**:
+Record esplicito che dichiara una capability attiva in uno Space, con la sua configurazione e il suo stato. Lo Space custodisce l'attivazione, non il comportamento.
+_Avoid_: modulo, plugin, abilitazione implicita
 
 **Extension**:
 Capability che specializza un motore più ampio invece di definirne uno proprio: Languages per Learning, Romantic per Relationships.
