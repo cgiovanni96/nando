@@ -44,6 +44,28 @@ _Avoid_: modulo, plugin, abilitazione implicita
 Capability che specializza un motore più ampio invece di definirne uno proprio: Languages per Learning, Romantic per Relationships.
 _Avoid_: modulo, plugin
 
+### Tasks
+
+**Task**:
+Definizione di un'attività da svolgere: titolo, note, Space proprietario e regola di ricorrenza opzionale. Lo stato vive nelle sue Occurrences, non nel Task.
+_Avoid_: todo, item, attività (da solo)
+
+**TaskOccurrence**:
+Istanza schedulata di un Task, con data, timezone e stato; un Task una tantum ne ha una sola.
+_Avoid_: istanza, task (come sinonimo)
+
+**Recurrence rule**:
+Regola RRULE (subset RFC 5545) che genera le Occurrences di un Task; si valuta nella timezone del Task.
+_Avoid_: schedulazione, ripetizione
+
+**Skip**:
+Chiusura di una singola Occurrence senza completamento e senza Evidence; la serie continua.
+_Avoid_: cancel, delete
+
+**Cancel**:
+Chiusura di un Task o di una Occurrence senza completamento; non produce Evidence. Cancellare una serie chiude le occorrenze future.
+_Avoid_: delete, archive
+
 ### Persone e accesso
 
 **User**:
@@ -157,7 +179,7 @@ Riferimento cross-module a un'entità: tipo + identificatore. Non è una foreign
 _Avoid_: foreign key, puntatore
 
 **Occurrence**:
-Istanza datata di una definizione ricorrente, per esempio un task o un evento. Si completa o si salta individualmente.
+Istanza datata di una definizione, per esempio un Task o un evento. Si completa, si salta o si annulla individualmente.
 _Avoid_: istanza, ricorrenza (come sinonimo)
 
 **Completion**:
