@@ -72,6 +72,10 @@ _Avoid_: evento, evidenza, dato (da solo)
 Occorrenza registrata che prova che qualcosa è accaduto e può contribuire a uno score o a una cronologia. Nasce da un'azione manuale, da un task o da un evento di capability.
 _Avoid_: completion, check, log
 
+**Rectification**:
+Correzione append-only che supersede o annulla un'evidenza o un completamento, con motivo e provenienza; l'originale resta.
+_Avoid_: delete, undo (come sinonimo), soft delete
+
 **Interaction**:
 Evidence specializzata in un incontro fra persone, con partecipanti e contesto. La sola presenza in calendario non la rende confermata.
 _Avoid_: meeting, evento (da solo)
@@ -140,6 +144,14 @@ _Avoid_: suggerimento
 
 ### Identità e occorrenze
 
+**Activity identity** (`activityId`):
+Identificatore condiviso dai record che descrivono la stessa azione, per esempio un task e un evento Space. Non è un'entità: è il valore che permette di deduplicare le evidenze.
+_Avoid_: Activity (come entità), chiave deterministica, dedup per titolo
+
+**Idempotency key**:
+Chiave per comando che permette al server di restituire lo stesso risultato su replay invece di creare un duplicato.
+_Avoid_: request ID, dedup key (per i comandi)
+
 **EntityRef**:
 Riferimento cross-module a un'entità: tipo + identificatore. Non è una foreign key e non implica una supertype comune.
 _Avoid_: foreign key, puntatore
@@ -169,4 +181,5 @@ _Avoid_: componente, sezione
 ## Termini deliberatamente esclusi
 
 - **Module**: confine di codice che implementa una capability. È architettura, non dominio.
+- **Port / Outbox / Domain event**: pattern di comunicazione fra moduli, descritti nell'ADR-0003.
 - **Component / Service / Feature**: vocabolario tecnico generico, non specifico di Nando.
