@@ -179,12 +179,16 @@ _Avoid_: relazione (da sola)
 ### AI supervisionata
 
 **Proposal**:
-Modifica tipizzata e azionabile che attende approvazione — crea un task, collega un habit — con stato, provenienza e chiave idempotente.
-_Avoid_: suggerimento, azione automatica
+Modifica tipizzata e azionabile che attende approvazione, composta da uno o più ProposalEffect ordinati. Ha stato, provenienza, spiegazione e chiave idempotente; l'applicazione è per effetto e può essere parziale.
+_Avoid_: suggerimento, azione automatica, bozza
+
+**ProposalEffect**:
+Un effetto tipizzato dentro una Proposal: un comando del modulo proprietario, con precondizioni, stato e risultato. Un effetto di creazione può prenotare l'`entityId` usato dagli effetti successivi.
+_Avoid_: azione, step
 
 **Suggestion**:
-Idea soft e dismissibile, senza effetto persistente se ignorata.
-_Avoid_: proposta
+Idea soft e dismissibile, senza effetto persistente se ignorata. Vive nel testo della conversazione; non è una Proposal e non ha effetti.
+_Avoid_: proposta, bozza
 
 **Candidate**:
 Elemento interno di ranking o di bozza, mai presentato come entità all'utente.
@@ -229,6 +233,7 @@ _Avoid_: componente, sezione
 ## Termini deliberatamente esclusi
 
 - **Module**: confine di codice che implementa una capability. È architettura, non dominio.
+- **Tool / Orchestrator / ModelRegistry**: vocabolario tecnico dell'AI, descritto nell'ADR-0007.
 - **Event (come entità)**: una voce di calendario è una TaskOccurrence con Schedule; il termine resta solo nella UI.
 - **Reminder**: termine di UI per una Notification con trigger temporale; non è un'entità.
 - **Port / Outbox / Domain event**: pattern di comunicazione fra moduli, descritti nell'ADR-0003.
