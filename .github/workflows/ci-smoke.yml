@@ -1,0 +1,63 @@
+name: ci-smoke
+
+# Test manuale, usa-e-getta: verifica che un runner GitHub possa entrare nel
+# tailnet, autenticarsi come nando-deploy ed eseguire il wrapper di deploy.
+# Non deploya nulla: lancia solo `status`, che è in sola lettura.
+# Serve a dimostrare la catena prima che esista l'applicazione.
+#
+# Si lancia a mano: gh workflow run ci-smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reach-vps:
+    # environment staging = nessuna approvazione; i secret VPS_*/TS_* sono
+    # environment-scoped, quindi senza questa riga la job non li vede.
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Tailscale (nodo effimero taggato)
+        uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4.3.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Prepara chiave e known_hosts
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/deploy"
+          chmod 600 "$HOME/.ssh/deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/deploy" >/dev/null && echo "chiave parsabile"
+
+      - name: Verifica accesso e wrapper (sola lettura)
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          SSH=(ssh -i "$HOME/.ssh/deploy" -o BatchMode=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts")
+
+          echo "== identità =="
+          "${SSH[@]}" "$VPS_USER@$VPS_HOST" 'hostname; whoami'
+
+          echo "== wrapper (health FAIL è atteso: l'app non esiste) =="
+          "${SSH[@]}" "$VPS_USER@$VPS_HOST" \
+            'sudo -n /usr/local/sbin/nando-deploy status production' \
+            || echo "exit != 0: atteso finché /api/health non risponde"
+
+          echo "== docker arbitrario deve essere negato =="
+          if "${SSH[@]}" "$VPS_USER@$VPS_HOST" 'sudo -n docker ps' >/dev/null 2>&1; then
+            echo "ERRORE: docker concesso al deploy user"; exit 1
+          fi
+          echo "ok: permesso negato come atteso"
