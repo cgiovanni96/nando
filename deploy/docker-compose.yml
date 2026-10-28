@@ -2,6 +2,13 @@
 # Copia live: /srv/nando/compose/docker-compose.yml (questo file è la sorgente di verità).
 #
 # Nessuna porta pubblicata su 0.0.0.0: l'unico ingresso è Cloudflare Tunnel.
+#
+# name: fissa il nome del progetto Compose. Senza, deriverebbe dal nome della
+# directory ("compose") e gli script che girano da un'altra cwd vedrebbero un
+# progetto diverso — cioè un secondo container db sullo stesso volume.
+# Lo staging lo sovrascrive con `docker compose -p nando-staging`.
+
+name: nando
 
 services:
   db:

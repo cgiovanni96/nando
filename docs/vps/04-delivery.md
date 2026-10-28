@@ -78,6 +78,8 @@ Push dell'immagine (solo su `main` o tag):
 6. Smoke test.
 7. Se fallisce, rollback all'immagine precedente.
 
+> Percorso canonico: `sudo nando-deploy staging sha-<short>` esegue i passi 4–7 e fa il rollback da solo. I comandi espliciti sotto restano utili per capire cosa fa e per il debug.
+
 Comandi sul host:
 
 ```bash
@@ -94,6 +96,8 @@ curl -fsS http://127.0.0.1:3002/api/health
 ## Deploy produzione
 
 Produzione è un workflow manuale con approvazione. Ordine obbligatorio:
+
+> Percorso canonico: `sudo nando-deploy production sha-<short>` — il backup è dentro il wrapper e blocca il deploy se fallisce.
 
 ```bash
 cd /srv/nando/compose
@@ -188,27 +192,58 @@ jobs:
 
 ## Utente `nando-deploy`
 
-- Utente non-root, con shell necessaria al runner (`/bin/bash`), chiave SSH dedicata.
-- Non aggiungerlo al gruppo `sudo`; usa un drop-in con i soli comandi di deploy.
-- Con GitHub-hosted runner l'IP è dinamico: usa **Tailscale ephemeral** nel workflow (`tailscale/github-action`) e `from="100.64.0.0/10"`, oppure Cloudflare Access. Non puoi allowlistare l'IP del runner.
+- Utente non-root, non nel gruppo `sudo`, chiave SSH dedicata.
+- **Non ha `sudo docker compose`**: ha `NOPASSWD` solo su `/usr/local/sbin/nando-deploy`, un wrapper che implementa l'ordine di deploy. `docker compose` arbitrario è root mascherato: con quel permesso il "deploy user" può avviare un container con `/` montato.
+
+Installazione (script nel repository, idempotente):
 
 ```bash
-sudo adduser --disabled-password --gecos "" nando-deploy
-sudo install -d -m 700 -o nando-deploy -g nando-deploy /home/nando-deploy/.ssh
-# incolla la chiave pubblica del runner in authorized_keys
-
-sudo tee /etc/sudoers.d/nando-deploy >/dev/null <<'EOF'
-nando-deploy ALL=(root) NOPASSWD: /usr/bin/docker compose *
-nando-deploy ALL=(root) NOPASSWD: /usr/local/sbin/nando-backup
-EOF
-sudo chmod 440 /etc/sudoers.d/nando-deploy
-sudo visudo -c
+# dal repository, dopo aver copiato scripts/ e la chiave pubblica del runner
+sudo bash docs/vps/scripts/setup-nando-deploy.sh
 ```
 
-`docker compose *` è potente: se vuoi ridurre la superficie, incapsula pull/migrate/up/health in uno script `/usr/local/sbin/nando-deploy` e concedi solo quello.
+Lo script crea `nando-deploy`, installa `/usr/local/sbin/nando-deploy` (750 root), scrive `/etc/sudoers.d/nando-deploy`, e limita la chiave al range Tailscale con `from="100.64.0.0/10"`.
 
-- Non dare a `nando-deploy` accesso a `.env` in chiaro: i comandi Compose lo leggono come root.
-- Revoca la chiave quando il runner cambia.
+Wrapper:
+
+```bash
+sudo nando-deploy production sha-a1b2c3d   # backup -> pull -> migrate -> up -> smoke
+sudo nando-deploy staging    sha-a1b2c3d
+sudo nando-deploy status production        # sola lettura: tag, container, health
+```
+
+Comportamento:
+
+- Il tag si passa via `IMAGE_TAG` nell'ambiente: **non** riscrive `.env`, quindi non lascia stato sporco.
+- In produzione esegue `nando-backup` **prima** di toccare l'app; se il backup fallisce, il deploy non parte.
+- Le migrazioni girano in un container one-shot: se falliscono, l'app corrente resta in piedi.
+- Se lo smoke test non passa entro 60 s, torna al tag precedente e lo dichiara nel log.
+- Ogni passo finisce in `/var/log/nando/deploy.log`.
+
+### Ingresso del runner
+
+Il runner GitHub è ospitato e ha IP dinamico: niente allowlist. Entra nel tailnet come nodo **effimero taggato `tag:ci`**, e la chiave di `nando-deploy` accetta solo `100.64.0.0/10`.
+
+ACL Tailscale (una tantum, admin console → **Access controls** → editor JSON, `https://login.tailscale.com/admin/acls/file`):
+
+```json
+{
+  "tagOwners": { "tag:ci": ["autogroup:admin"] }
+}
+```
+
+> **Solo `tagOwners`, nessun blocco `acls`.** Con la policy di default tutti i nodi si raggiungono: aggiungere un array `acls` non vuoto nega tutto il resto e ci si chiude fuori dalla VPS. Se in futuro si passa a una policy esplicita, la regola per il runner va aggiunta **insieme** a quelle dei dispositivi umani, mai da sola:
+>
+> ```json
+> { "action": "accept", "src": ["tag:ci"], "dst": ["100.99.66.53:22"] }
+> ```
+>
+> Le due serrature indipendenti restano la chiave con `from="100.64.0.0/10"` e il sudo limitato al wrapper.
+
+Il tag deve esistere in `tagOwners` **prima** di creare l'OAuth client, altrimenti non compare tra i tag selezionabili.
+
+L'OAuth client per il runner si crea in *Settings → Trust credentials → OAuth clients*, con scope `Devices: Core` (write) e `Auth keys` (write) e il tag `tag:ci`; client id e secret vanno nei secret GitHub `TS_OAUTH_CLIENT_ID` e `TS_OAUTH_SECRET`. Nel workflow: `tailscale/github-action` con `oauth-client-id` e `oauth-secret`, poi `ssh` verso `100.99.66.53`.
+
 
 ## Rollback e immagini
 
