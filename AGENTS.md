@@ -1,3 +1,9 @@
+## Agent interaction
+
+### Questions
+
+Ask through the harness's native question UI, not as prose lists: OpenCode uses the `question` tool, Claude Code `AskUserQuestion`, Codex its plan/question prompt. One item per question, recommended option first and labelled `(Recommended)`. Fall back to a numbered markdown list only when the harness has no question UI.
+
 ## Agent skills
 
 ### Issue tracker
