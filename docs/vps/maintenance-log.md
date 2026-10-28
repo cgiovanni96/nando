@@ -22,6 +22,8 @@ Registro append-only delle manutenzioni. Una riga per intervento; i dettagli sta
 | 2026-10-27 21:35 | agente | review | Aperti: redirect apex/`www`, header di sicurezza, HSTS, Resend da verificare, healthchecks.io, deploy app | WARN | Redirect bloccato dal permesso `Config Rules` sul token API |
 | 2026-10-28 | umano | review | Decisione: apex e `www` non vengono rediretti a `nando`; restano riservati a un futuro portfolio | OK | Oggi rispondono `522`, accettato. Token `nando-dns` non necessita di `Config Rules` |
 | 2026-10-28 | umano | review | GoDaddy non consente più la modifica della zona DNS dopo il cambio NS | OK | Atteso: DS/DNSSEC è livello registrar, non zona. DNSSEC lasciato `pending` |
+| 2026-10-28 | agente | setup | `HEALTHCHECKS_BACKUP_URL` impostato in `restic.env`, ping di prova `200` | OK | Alert se il backup non gira da 26 h. `HEALTHCHECKS_RESTORE_URL` ancora vuoto |
+| 2026-10-28 | umano | backup | `nando-backup` e `nando-restore-test` eseguiti a mano: entrambi con `healthchecks ping ok` | OK | `HEALTHCHECKS_RESTORE_URL` impostato. Catena backup+restore+alert completa |
 
 ## Tipi
 

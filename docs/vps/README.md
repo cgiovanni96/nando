@@ -97,7 +97,7 @@ L'agente legge questi documenti dal repository. Se opera solo via SSH, copia `do
 - [ ] Resend verificato dopo il cambio DNS
 - [x] Backup restic su R2 + timer giornaliero
 - [x] Restore test eseguito
-- [ ] Monitoraggio esterno + alert
+- [ ] Monitoraggio esterno + alert — backup: healthchecks.io configurato; uptime: da fare (con Access servono un service token o un check interno)
 - [x] `nando-agent` creato, chiave testata, sudoers ristretto
 - [ ] Report e `maintenance-log.md` allineati
 
