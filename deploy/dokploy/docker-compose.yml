@@ -1,0 +1,73 @@
+# Dokploy — solo UI, senza Swarm e senza Traefik.
+# L'ingresso è Cloudflare Tunnel; la dashboard ascolta su 127.0.0.1:3000.
+# Sorgente di verità: questo file nel repository. Copia live: /srv/nando/dokploy/docker-compose.yml
+
+services:
+  dokploy-postgres:
+    image: postgres:16
+    container_name: dokploy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dokploy
+      POSTGRES_DB: dokploy
+      POSTGRES_PASSWORD_FILE: /run/secrets/dokploy_postgres_password
+    secrets:
+      - dokploy_postgres_password
+    volumes:
+      - dokploy_pgdata:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dokploy -d dokploy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  dokploy:
+    image: dokploy/dokploy:latest
+    container_name: dokploy
+    restart: unless-stopped
+    depends_on:
+      dokploy-postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      POSTGRES_USER: dokploy
+      POSTGRES_DB: dokploy
+      POSTGRES_HOST: dokploy-postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_PASSWORD_FILE: /run/secrets/dokploy_postgres_password
+      BETTER_AUTH_SECRET_FILE: /run/secrets/dokploy_auth_secret
+    secrets:
+      - dokploy_postgres_password
+      - dokploy_auth_secret
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/dokploy:/etc/dokploy
+    networks:
+      - dokploy-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+secrets:
+  dokploy_postgres_password:
+    file: /srv/nando/secrets/dokploy_postgres_password
+  dokploy_auth_secret:
+    file: /srv/nando/secrets/dokploy_auth_secret
+
+volumes:
+  dokploy_pgdata:
+    name: dokploy_pgdata
+
+networks:
+  dokploy-network:
+    name: dokploy-network
