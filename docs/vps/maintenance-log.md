@@ -24,6 +24,9 @@ Registro append-only delle manutenzioni. Una riga per intervento; i dettagli sta
 | 2026-10-28 | umano | review | GoDaddy non consente più la modifica della zona DNS dopo il cambio NS | OK | Atteso: DS/DNSSEC è livello registrar, non zona. DNSSEC lasciato `pending` |
 | 2026-10-28 | agente | setup | `HEALTHCHECKS_BACKUP_URL` impostato in `restic.env`, ping di prova `200` | OK | Alert se il backup non gira da 26 h. `HEALTHCHECKS_RESTORE_URL` ancora vuoto |
 | 2026-10-28 | umano | backup | `nando-backup` e `nando-restore-test` eseguiti a mano: entrambi con `healthchecks ping ok` | OK | `HEALTHCHECKS_RESTORE_URL` impostato. Catena backup+restore+alert completa |
+| 2026-10-28 08:27 | agente | setup | `nando-deploy` creato, wrapper installato, sudoers ristretto; progetto Compose rinominato `compose` → `nando` | OK | Errore iniziale per ordine sbagliato (backup dopo la sostituzione del compose): corretto |
+| 2026-10-28 08:35 | agente | setup | GitHub: environment `staging` e `production` (required reviewer), secret `VPS_*` e `TS_*` sui due | OK | Secret environment-scoped, non di repository |
+| 2026-10-28 08:53 | agente | review | Workflow `ci-smoke` eseguito: runner GitHub → Tailscale `tag:ci` → SSH `nando-deploy` → wrapper | OK | Verificato anche che `sudo docker ps` sia negato dal runner. Run `40660000026` |
 
 ## Tipi
 
