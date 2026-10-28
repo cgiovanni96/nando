@@ -1,6 +1,7 @@
 # 0016 — Knowledge: modello del documento e indice dei blocchi
 
 - **Stato:** accettato
+- **Amendato da:** [ADR-0018](0018-knowledge-v1.md) — identità dei wikilink (`docId` + `label` invece del titolo) e note di Task/Risorsa come documenti referenziati
 - **Data:** 2026-10-28
 - **Ticket:** NAS-54 — Knowledge: editor e modello dei contenuti
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
