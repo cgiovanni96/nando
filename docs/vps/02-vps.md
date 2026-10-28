@@ -1,6 +1,8 @@
 # 02 — Bootstrap della VPS
 
-**Obiettivo:** Ubuntu 24.04 aggiornato, utente amministrativo, SSH key-only via Tailscale, firewall chiuso, Docker, cloudflared. La VPS non deve avere porte applicative pubbliche.
+**Obiettivo:** Ubuntu aggiornato, utente amministrativo, SSH key-only via Tailscale, firewall chiuso, Docker, cloudflared. La VPS non deve avere porte applicative pubbliche.
+
+> **Ordine corretto (verificato il 2026-10-27).** Tailscale va installato e **testato** *prima* di attivare UFW: la regola `allow in on tailscale0` non ha effetto finché l'interfaccia non esiste, e attivare UFW prima significa chiudersi fuori. Lo stesso vale per l'hardening SSH: si applica dopo aver verificato che il login con chiave funzioni per tutti gli utenti.
 
 ## Accesso iniziale
 
@@ -17,6 +19,8 @@ chown nando:nando /home/nando/.ssh/authorized_keys
 chmod 600 /home/nando/.ssh/authorized_keys
 ```
 
+> **Non usare `adduser --disabled-password` per l'utente umano.** Senza password `sudo` chiede un'autenticazione interattiva che non esiste e ogni comando privilegiato fallisce. Le due opzioni praticabili sono: impostare una password con `passwd nando` (usata solo per `sudo`, il login SSH resta key-only) oppure concedere un `NOPASSWD` temporaneo durante il setup e rimuoverlo alla fine.
+
 Testa prima di chiudere la sessione root:
 
 ```bash
@@ -26,7 +30,9 @@ sudo -v
 
 ## Hardening SSH
 
-Crea `/etc/ssh/sshd_config.d/99-nando.conf`:
+Il file **deve** chiamarsi `00-nando.conf`, non `99-nando.conf`: OpenSSH applica la **prima** occorrenza di ogni direttiva, e su Ubuntu `Include /etc/ssh/sshd_config.d/*.conf` è in cima al file principale. Cloud-init scrive `PasswordAuthentication yes` in `50-cloud-init.conf`; un drop-in chiamato `99-` verrebbe letto *dopo* e la sua impostazione sarebbe ignorata senza alcun errore apparente.
+
+Crea `/etc/ssh/sshd_config.d/00-nando.conf`:
 
 ```text
 PermitRootLogin no
@@ -53,6 +59,8 @@ sudo systemctl reload ssh
 Tieni aperta la sessione corrente finché non hai verificato un nuovo login con chiave.
 
 ## Firewall
+
+**Prerequisito:** Tailscale installato, `tailscale up` completato e `ssh nando@nando-vps` funzionante da un secondo terminale. Se attivi UFW prima, `tailscale0` non esiste, la regola SSH non si applica e perdi l'accesso.
 
 Con Tailscale (consigliato):
 
@@ -84,6 +92,16 @@ less /tmp/tailscale.sh
 sudo sh /tmp/tailscale.sh
 sudo tailscale up --hostname=nando-vps --ssh=false
 sudo tailscale status
+```
+
+In alternativa, dal repository ufficiale (verificato su Ubuntu 26.04):
+
+```bash
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/$(. /etc/os-release && echo $VERSION_CODENAME).noarmor.gpg \
+  | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/$(. /etc/os-release && echo $VERSION_CODENAME).tailscale-keyring.list \
+  | sudo tee /etc/apt/sources.list.d/tailscale.list >/dev/null
+sudo apt-get update && sudo apt-get install -y tailscale
 ```
 
 - `--ssh=false`: usiamo SSH standard con chiavi sopra Tailscale, più prevedibile per un agente LLM. Tailscale SSH è un'alternativa.
@@ -152,6 +170,8 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io \
 sudo systemctl enable --now docker
 ```
 
+Il repository Docker pubblica `resolute` (Ubuntu 26.04): se in futuro un codename mancasse, `apt update` fallisce con `404` e va pinnato l'ultimo codename disponibile.
+
 Non aggiungere `nando` al gruppo `docker`: è equivalente a root. Usa `sudo docker`/`sudo docker compose`.
 
 Log rotation in `/etc/docker/daemon.json`:
@@ -170,26 +190,19 @@ sudo systemctl restart docker
 
 ## Dokploy (opzionale)
 
-Dokploy è comodo per la UI e i deploy, ma **Compose resta la sorgente di verità**. Se lo installi:
+Dokploy è comodo per la UI e i deploy, ma **Compose resta la sorgente di verità**.
 
-```bash
-curl -fsSL https://dokploy.com/install.sh -o /tmp/dokploy-install.sh
-less /tmp/dokploy-install.sh
-sudo bash /tmp/dokploy-install.sh
-```
+> **Non usare `dokploy.com/install.sh` su questa VPS.** Lo script ufficiale inizializza Docker **Swarm**, pubblica Traefik su `0.0.0.0:80/443` e la dashboard su `0.0.0.0:3000`. In Swarm non è possibile bindare una porta pubblicata a `127.0.0.1`, e UFW **non** filtra le porte pubblicate da Docker: si finirebbe con tre porte esposte a Internet.
+>
+> L'installazione usata qui è in Compose, senza Swarm e senza Traefik: vedi `03-stack.md`, sezione Dokploy. File nel repository: `deploy/dokploy/docker-compose.yml`.
 
-Poi:
+Se in futuro vuoi Traefik per altri servizi, bindalo esplicitamente a `127.0.0.1` e verifica con `ss -tlnp`: 3000 e 80/443 non devono ascoltare su `0.0.0.0`.
 
-- Dashboard su `127.0.0.1:3000`; non esporla pubblicamente.
-- Traefik di Dokploy su 80/443: bindalo a localhost o bloccalo; con Tunnel non ci serve pubblico.
-- Verifica con `ss -tlnp`: 3000 e 80/443 non devono ascoltare su `0.0.0.0`.
-- Backuppa `/etc/dokploy` e il database di Dokploy insieme al resto.
-
-Se Dokploy crea conflitti di porte, usa Docker Compose puro e lascia Dokploy solo per altri servizi.
+Backuppa `/etc/dokploy` e il database di Dokploy insieme al resto (`nando-backup` li include già).
 
 ## cloudflared
 
-Installa dal repository Cloudflare (verifica la pagina ufficiale per la distro):
+Il repository Cloudflare **non pubblica il codename di Ubuntu 26.04** (`resolute`): va usato `noble` (24.04). `cloudflared` è un binario Go statico, quindi non dipende dalle librerie della distro e i futuri aggiornamenti continuano ad arrivare.
 
 ```bash
 sudo mkdir -p --mode=0755 /usr/share/keyrings
@@ -197,11 +210,17 @@ curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | \
   sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
 
 echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] \
-https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | \
+https://pkg.cloudflare.com/cloudflared noble main" | \
   sudo tee /etc/apt/sources.list.d/cloudflared.list
 
 sudo apt update
 sudo apt install -y cloudflared
+```
+
+Verifica la disponibilità del codename prima di cambiarlo:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://pkg.cloudflare.com/cloudflared/dists/$(. /etc/os-release && echo $VERSION_CODENAME)/Release
 ```
 
 Poi, con il token del tunnel (vedi `01-domain.md`):

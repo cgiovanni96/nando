@@ -27,8 +27,11 @@ if [[ "$(id -u)" -ne 0 ]]; then
 fi
 [[ -r "$RESTIC_ENV" ]] || { echo "manca $RESTIC_ENV"; exit 1; }
 
+# set -a: restic legge repository e credenziali S3 dall'ambiente, non dal file.
+set -a
 # shellcheck disable=SC1090
 source "$RESTIC_ENV"
+set +a
 : "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY mancante}"
 : "${RESTIC_PASSWORD_FILE:?RESTIC_PASSWORD_FILE mancante}"
 

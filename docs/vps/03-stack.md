@@ -31,6 +31,18 @@
 
 Nessuna porta applicativa su `0.0.0.0`.
 
+## Layout dei file
+
+| Percorso nel repository | Percorso live | Contenuto |
+| --- | --- | --- |
+| `deploy/docker-compose.yml` | `/srv/nando/compose/docker-compose.yml` | Postgres 17 + pgvector (poi app e staging) |
+| `deploy/dokploy/docker-compose.yml` | `/srv/nando/dokploy/docker-compose.yml` | Dokploy senza Swarm/Traefik |
+| `docs/vps/scripts/` | `/usr/local/sbin/nando-*` | script operativi |
+| — | `/srv/nando/compose/.env` | interpolazione Compose (600) |
+| — | `/srv/nando/secrets/` | segreti applicativi e restic (700) |
+
+Il repository è la sorgente di verità: le copie live si aggiornano da lì, mai il contrario.
+
 ## Compose — Postgres
 
 `/srv/nando/compose/docker-compose.yml`:
@@ -222,13 +234,19 @@ L'app usa l'SDK S3; non salvare byte nel database. R2 è S3-compatibile: se un g
 
 ## Dokploy
 
-Dokploy può gestire app, database, domini e backup. Regole:
+Stato attuale: installato **in Compose, senza Swarm e senza Traefik**. Dashboard su `127.0.0.1:3000`, raggiungibile solo via Tunnel + Access.
+
+- File: `deploy/dokploy/docker-compose.yml` nel repository, copia live `/srv/nando/dokploy/docker-compose.yml`.
+- Postgres dedicato (`dokploy-postgres`, postgres:16, volume `dokploy_pgdata`), separato da quello di Nando: un guasto o un upgrade dell'uno non trascina l'altro.
+- Segreti in `/srv/nando/secrets/dokploy_postgres_password` e `dokploy_auth_secret` (600), montati come file.
+- Nessuna porta pubblica: `ports: ["127.0.0.1:3000:3000"]`. Verifica con `ss -tlnp`.
+
+Regole:
 
 - **Compose nel repository** è la sorgente di verità; Dokploy è un'interfaccia, non l'unico posto dove vive la configurazione.
-- Dashboard solo su `127.0.0.1:3000`, raggiungibile via Tunnel + Access o Tailscale.
-- Traefik di Dokploy: non esporlo su 80/443 pubblici. Con Tunnel, punta il tunnel direttamente alle porte app (`3001`, `3002`).
+- La dashboard è protetta da Cloudflare Access (`admin.giovannicosta.me`). Dokploy monta `/var/run/docker.sock`, quindi vale root: non esporla mai senza Access.
+- Se userai la funzione "Domains" di Dokploy, sappi che tenta di ricreare Traefik su 80/443. Con il Tunnel non serve: punta il tunnel direttamente alle porte app (`3001`, `3002`).
 - Backuppa `/etc/dokploy` e il suo database; senza, perdi la configurazione.
-- Se Dokploy complica il compose, usa Compose puro e lascia Dokploy per altri servizi.
 
 ## `.env` — solo nomi
 

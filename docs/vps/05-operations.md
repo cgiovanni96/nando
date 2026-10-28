@@ -131,6 +131,10 @@ sudo journalctl -p err --since "7 days ago" --no-pager | tail -50
 sudo fail2ban-client status sshd
 ```
 
+> Finché l'app non è deployata, `nando-health` esce con `2` (FAIL) perché `127.0.0.1:3001` e `3002` non rispondono: è atteso. Non è una stop condition.
+
+> `nando-backup` legge `restic.env` con `set -a`: le variabili (`RESTIC_REPOSITORY`, `AWS_*`) devono essere esportate, altrimenti restic non trova il repository. Se modifichi lo script, mantieni quel `set -a`.
+
 ### Soglie
 
 | Segnale | Warning | Critical |

@@ -1,6 +1,6 @@
 # VPS Nando — documentazione operativa
 
-**Stato:** target di setup. La VPS non è ancora configurata; questi documenti descrivono lo stato da raggiungere e le procedure per raggiungerlo.
+**Stato:** infrastruttura configurata (2026-10-27); app non ancora deployata. I documenti descrivono lo stato attuale e le procedure per completarlo.
 **Ultimo aggiornamento:** 2026-10-27
 **Decisione:** [ADR-0009 — Hosting VPS-first fino a giugno 2027](../adr/0009-vps-first-hosting.md)
 
@@ -9,11 +9,11 @@
 | Voce | Valore |
 | --- | --- |
 | Provider | SSDNodes (cloud VPS) |
-| OS | Ubuntu 24.04 |
+| OS | Ubuntu 26.04 LTS "Resolute Raccoon" (`resolute`) |
 | Risorse | 6 vCPU, 24 GB RAM, 400 GB disco |
-| IP pubblico | `89.233.107.32` |
+| IP pubblico | `89.233.107.32` (nessuna porta in ingresso) |
 | Dominio | `giovannicosta.me` (registrar GoDaddy) |
-| DNS | oggi GoDaddy; target Cloudflare |
+| DNS | Cloudflare (NS `carlane`/`jay.ns.cloudflare.com`, migrato 2026-10-27) |
 | App produzione | `nando.giovannicosta.me` |
 | Staging | `nando-staging.giovannicosta.me` |
 | Admin / Dokploy | `admin.giovannicosta.me` |
@@ -83,18 +83,22 @@ L'agente legge questi documenti dal repository. Se opera solo via SSH, copia `do
 
 ## Checklist di setup
 
-- [ ] Zona DNS su Cloudflare, record Resend preservati, nameserver GoDaddy aggiornati
-- [ ] DNSSEC attivato, Tunnel creato, Access su `nando`, `nando-staging`, `admin`
-- [ ] Ubuntu aggiornato, utente `nando`, SSH key-only, UFW, Tailscale
-- [ ] Docker, cloudflared, Dokploy (opzionale)
-- [ ] `/srv/nando` e `/srv/nando/secrets` con permessi corretti
-- [ ] Postgres healthy, estensioni `vector` e `pg_stat_statements`
-- [ ] App produzione e staging healthy su `127.0.0.1`
+- [x] Zona DNS su Cloudflare, record Resend preservati, nameserver GoDaddy aggiornati
+- [x] Wildcard `*` e `_domainconnect` eliminati
+- [x] Apex/`www` lasciati intatti (A proxied verso la VPS, oggi 522): riservati a un futuro portfolio, **nessun redirect** a `nando`
+- [x] DNSSEC attivato su Cloudflare — status `pending`, DS non inseribile da GoDaddy con NS esterni (accettato: senza DS non c'è validazione né rischio)
+- [x] `min_tls_version=1.2`, `always_use_https=on`, SSL/TLS mode `full`
+- [x] Tunnel creato, Access su `nando`, `nando-staging`, `admin`
+- [x] Ubuntu aggiornato, utente `nando`, SSH key-only, UFW, Tailscale
+- [x] Docker, cloudflared, Dokploy (composto, senza Swarm/Traefik)
+- [x] `/srv/nando` e `/srv/nando/secrets` con permessi corretti
+- [x] Postgres healthy, estensioni `vector` e `pg_stat_statements`
+- [ ] App produzione e staging healthy su `127.0.0.1` (bloccato: immagine `ghcr.io/cgiovanni96/nando` non esiste)
 - [ ] Resend verificato dopo il cambio DNS
-- [ ] Backup restic su R2 + timer giornaliero
-- [ ] Restore test eseguito
+- [x] Backup restic su R2 + timer giornaliero
+- [x] Restore test eseguito
 - [ ] Monitoraggio esterno + alert
-- [ ] `nando-agent` creato, chiave testata, sudoers ristretto
+- [x] `nando-agent` creato, chiave testata, sudoers ristretto
 - [ ] Report e `maintenance-log.md` allineati
 
 ## Cosa non è ancora deciso
