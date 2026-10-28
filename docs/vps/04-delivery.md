@@ -1,5 +1,7 @@
 # 04 — Build, deploy e migrazioni
 
+> **⚠️ Superato in parte da [ADR-0010](../adr/0010-forma-del-repository-e-processi.md).** Il deploy non è più un solo servizio: `migrate` è un servizio one-shot nel compose e staging è gestito da Dokploy, non dal wrapper. Riscrittura tracciata in NAS-102.
+
 **Obiettivo:** ogni modifica arriva in produzione solo dopo test, build immutabile, migrazione verificata e smoke test. Il deploy non dipende da click-ops.
 
 ## Modello di branch e ambienti

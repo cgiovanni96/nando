@@ -1,5 +1,7 @@
 # 03 — Stack applicativo
 
+> **⚠️ Superato in parte da [ADR-0010](../adr/0010-forma-del-repository-e-processi.md).** Un solo container `app` e un solo `app.env` non esistono più: servono `web`, `api`, `worker` e `migrate` da una immagine con tre env file. Riscrittura tracciata in NAS-102.
+
 **Obiettivo:** un solo host Docker con app, Postgres e job; nessun servizio pubblicato; storage e backup fuori dalla VPS.
 
 ## Componenti
