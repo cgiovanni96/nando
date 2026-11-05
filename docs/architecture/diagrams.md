@@ -843,7 +843,7 @@ flowchart TD
 
 ## 19. Ticket aperti e roadmap
 
-Stato al 2026-10-29. La roadmap NAS-53 parte quando i suoi blocchi sono chiusi.
+Stato al 2026-11-05. La roadmap NAS-53 parte quando i suoi blocchi sono chiusi.
 
 ```mermaid
 flowchart LR
@@ -854,12 +854,13 @@ flowchart LR
         D4["NAS-45 scope v1"]
         D5["NAS-61 e NAS-63 Habits"]
         D6["NAS-54 e NAS-59 Knowledge"]
+        D7["NAS-129 forza dell'abitudine"]
+        D8["NAS-103 test, CI e ambienti"]
     end
 
     subgraph OPEN["Aperti"]
         O1["NAS-62 mock di riferimento"]
         O2["NAS-60 UI Habits"]
-        O3["NAS-103 strategia di test"]
     end
 
     subgraph HUMAN["Lavoro umano sull'infrastruttura"]
@@ -874,12 +875,13 @@ flowchart LR
 
     O1 --> R
     O2 --> R
-    O3 --> R
     H1 -.->|"non blocca"| R
     H2 -.->|"non blocca"| R
     H3 -.->|"non blocca"| R
     D1 --> R
     D2 --> R
+    D7 --> O2
+    D8 --> R
 ```
 
 ---
