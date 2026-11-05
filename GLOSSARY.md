@@ -78,6 +78,16 @@ _Avoid_: delete, archive
 Stato derivato di una TaskOccurrence `open` la cui scadenza `to` è passata; non è uno stato memorizzato e non produce una transizione.
 _Avoid_: scaduto (come stato), late
 
+### Habits
+
+**Habit strength**:
+Metrica derivata e continua (0–100) della consistenza recente di un Habit, calcolata con una media esponenziale su una finestra mobile di evidenze. Non è lo score del periodo, non è uno stato e non entra negli aggregati per Area o globale. Nel grafico è campionata a fine periodo.
+_Avoid_: score, punteggio, completamento
+
+**Period score**:
+Valutazione binaria di un periodo di un Habit: `met`, `missed`, `paused` o `not_evaluated`. Il progresso parziale (`2/3`) è mostrato separatamente e non è uno score. È la base degli aggregati per Area e globale.
+_Avoid_: strength, percentuale, progresso
+
 ### Calendar e notifiche
 
 **Calendar**:

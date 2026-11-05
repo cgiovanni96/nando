@@ -296,13 +296,14 @@ Per ognuna: obiettivo, struttura, contenuto, stati, azioni, criteri di accettazi
   - nome e Area;
   - **periodo corrente** con progresso (`2 su 3`) e pulsante di check-in;
   - **periodi adiacenti** (precedente e successivo) come celle compatte: raggiunto, mancato, in pausa, non valutato;
-  - score del periodo e streak (`4 mesi`);
+  - score del periodo e streak (`4 mesi · 122 giorni`, con tooltip che distingue periodi valutati e pause);
+  - **storico per periodo** nel dettaglio: celle per periodo con stato e linea di forza campionata a fine periodo (ADR-0019);
   - pausa come badge, con l'intervallo.
-- **Dettaglio laterale (opzionale):** fonti attive, storico delle evidenze, pausa.
+- **Dettaglio laterale (opzionale):** fonti attive, storico delle evidenze, storico per periodo con forza, pausa.
 
 **Esempi da mostrare:** un habit giornaliero, uno settimanale, uno mensile e uno in pausa nello stesso elenco: è il test che dimostra che il modello per periodo funziona visivamente.
 
-**Accettazione:** nessuna riga mostra una sequenza di giorni se il periodo non è giornaliero.
+**Accettazione:** nessuna riga mostra una sequenza di giorni se il periodo non è giornaliero; il grafico di forza resta per periodo e non diventa una griglia giornaliera.
 
 ---
 

@@ -405,7 +405,7 @@ Note:
 
 ## 8. Modello dati: Habits
 
-ADR-0014, ADR-0015. Nessuna tabella periodo: il periodo è derivato da configurazione, tempo e timezone.
+ADR-0014, ADR-0015, ADR-0019. Nessuna tabella periodo: il periodo è derivato da configurazione, tempo e timezone.
 
 ```mermaid
 erDiagram
@@ -454,7 +454,7 @@ erDiagram
     }
 ```
 
-Derivati a runtime, senza tabella: periodo (`periodKey`), stato del periodo (`met`, `missed`, `paused`, `not_evaluated`), streak, aggregati per Area e globale.
+Derivati a runtime, senza tabella: periodo (`periodKey`), stato del periodo (`met`, `missed`, `paused`, `not_evaluated`), forza dell'abitudine (`strength`, campionata a fine periodo), streak, aggregati per Area e globale.
 
 ---
 
@@ -890,8 +890,9 @@ flowchart LR
 | --- | --- | --- |
 | Documento | `doc.content` JSON ProseMirror | indice `block`, tsvector, backlink |
 | Periodo di un habit | configurazione + tempo + timezone | stato, score, streak, aggregati |
+| Forza di un habit | configurazione + tempo + timezone + evidenze non rettificate | `strength` 0–1, campionata a fine periodo |
 | Occorrenza di un task | `TaskOccurrence` | `overdue`, viste Calendar |
-| Evidenza | `HabitEvidence` non rettificata | score del periodo |
+| Evidenza | `HabitEvidence` non rettificata | score del periodo, forza |
 | Notifica | `Notification` e `ScheduledNotification` | badge, centro notifiche |
 | Backup | dump + restic | export leggibile |
 | Proprietà | `PropertyDefinition` + `PropertyValue` | colonne delle schermate |
