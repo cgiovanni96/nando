@@ -4,6 +4,7 @@
 - **Data:** 2026-10-28
 - **Ticket:** NAS-59 — Knowledge: proprietà, backlink, viste e ricerca
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
+- **Emendato da:** ADR-0024 (property locali di entità)
 
 ## Contesto
 
@@ -45,6 +46,8 @@ PropertyValue
 - **Nessuna property obbligatoria.** L'obbligatorietà è dei campi core. Una property mancante è un'informazione, non un errore che blocca la cattura rapida.
 - **Valori orfani conservati**: se un'entità si sposta e una definizione non si applica più, il valore resta nel database, sparisce dalla UI e la pagina avvisa. Nessuna cancellazione silenziosa, nessun trasferimento bloccato.
 - Eliminare una definizione è una soft delete: i valori restano, nascosti.
+
+**Nota di amendamento (ADR-0024).** Questo modello descrive le definizioni di Space. ADR-0024 aggiunge le **property locali di entità**: definizioni legate a una singola entità, non ereditate, visibili solo nella pagina dell'entità e escluse da viste, ricerca e AI in v1. Per quelle definizioni non valgono l'ereditarietà e la visibilità nelle viste descritte qui.
 
 ### I valori, precisazione ad ADR-0011
 
@@ -106,6 +109,8 @@ Salute (area)
 9. Nessuna vista costruita dall'utente: le schermate sono codice.
 10. Creare una property è un'azione utente, non una migrazione.
 
+**Nota:** l'invariante 2 vale per le definizioni di Space; ADR-0024 aggiunge l'eccezione delle property locali di entità.
+
 ## Conseguenze
 
 - **ADR-0001:** `PropertyValue` diventa finalmente operativo, e il primo consumatore è la pagina di entità, non Knowledge.
@@ -120,7 +125,7 @@ Salute (area)
 
 ## Alternative scartate
 
-- **Property definite per entità:** massima libertà, ed è il punto in cui il sistema diventa un clone di Notion: nessuna pagina comparabile, nessuna vista che significhi qualcosa.
+- **Property definite per entità:** massima libertà, ed è il punto in cui il sistema diventa un clone di Notion: nessuna pagina comparabile, nessuna vista che significhi qualcosa. Parzialmente riaperta da ADR-0024, con scope limitato all'entità e nessuna vista.
 - **Definizioni solo sullo Space immediato:** nessuna ereditarietà, quindi i task di due progetti della stessa Area non condividono colonne.
 - **Catalogo globale per tipo:** coerente ovunque, ma uno Space non può avere esigenze proprie.
 - **Property obbligatorie:** bloccano la cattura rapida per proteggere dati che l'utente sa di non avere ancora.

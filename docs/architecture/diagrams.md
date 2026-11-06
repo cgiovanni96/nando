@@ -1,6 +1,6 @@
 # Diagrammi di Nando
 
-> **Stato:** bozza di lavoro, generata dagli ADR 0001–0018 il 2026-10-29 e aggiornata con ADR-0022 il 2026-11-06.
+> **Stato:** bozza di lavoro, generata dagli ADR 0001–0018 il 2026-10-29 e aggiornata con ADR-0022, ADR-0023 e ADR-0024 il 2026-11-06.
 > La fonte di verità resta `docs/adr/`. Se una decisione cambia, il diagramma va rigenerato o cancellato: un diagramma vecchio è peggio di nessun diagramma.
 
 Indice:
@@ -203,7 +203,7 @@ flowchart LR
 
 ## 5. Modello dati: kernel e core
 
-ADR-0001, ADR-0002, ADR-0003, ADR-0017. `EntityRef` è un valore, non una tabella.
+ADR-0001, ADR-0002, ADR-0003, ADR-0017, ADR-0024. `EntityRef` è un valore, non una tabella. `PROPERTY_DEFINITION.scopeKind` distingue le definizioni di Space dalle property locali di entità.
 
 ```mermaid
 erDiagram
@@ -231,7 +231,10 @@ erDiagram
     }
     PROPERTY_DEFINITION {
         uuid id PK
+        text scopeKind
         uuid spaceId FK
+        text entityType
+        uuid entityId
         text key
         text type
         text format
@@ -847,7 +850,7 @@ flowchart TD
 
 ## 19. Ticket aperti e roadmap
 
-Stato al 2026-11-05. La roadmap NAS-53 parte quando i suoi blocchi sono chiusi.
+Stato al 2026-11-06. La roadmap NAS-53 parte quando i suoi blocchi sono chiusi.
 
 ```mermaid
 flowchart LR
@@ -860,11 +863,17 @@ flowchart LR
         D6["NAS-54 e NAS-59 Knowledge"]
         D7["NAS-129 forza dell'abitudine"]
         D8["NAS-103 test, CI e ambienti"]
+        D9["ADR-0022 contratto HTTP"]
+        D10["NAS-62 mock shell e dashboard"]
+        D11["ADR-0024 property locali"]
     end
 
     subgraph OPEN["Aperti"]
-        O1["NAS-62 mock di riferimento"]
         O2["NAS-60 UI Habits"]
+    end
+
+    subgraph IMPL["Implementazione"]
+        I1["NAS-131 contratto HTTP"]
     end
 
     subgraph HUMAN["Lavoro umano sull'infrastruttura"]
@@ -877,8 +886,8 @@ flowchart LR
         R["NAS-53 roadmap v1"]
     end
 
-    O1 --> R
     O2 --> R
+    I1 -.->|"non blocca"| R
     H1 -.->|"non blocca"| R
     H2 -.->|"non blocca"| R
     H3 -.->|"non blocca"| R
@@ -886,6 +895,7 @@ flowchart LR
     D2 --> R
     D7 --> O2
     D8 --> R
+    D10 --> R
 ```
 
 ---

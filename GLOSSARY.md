@@ -161,8 +161,12 @@ _Avoid_: privacy level, classification, segreto (come livello)
 ### Proprietà e claim
 
 **Property**:
-Definizione di un campo aperto e tipizzato, condivisa nel kernel e usabile da più capability. Non è un campo core del dominio.
+Definizione di un campo aperto e tipizzato, condivisa nel kernel e usabile da più capability. Può essere definita su uno Space — e allora si eredita verso i discendenti — o su una singola entità come property locale. Non è un campo core del dominio.
 _Avoid_: fact, colonna, attributo
+
+**Local property**:
+Property definita su una singola entità, non ereditata e visibile solo nella pagina dell'entità. Non entra nelle viste di Space, nella ricerca o nel retrieval AI in v1.
+_Avoid_: property di entità (come sinonimo), campo locale, attributo
 
 **PropertyValue**:
 Valore di una Property su un'entità, con la sua Provenance. È il mattone comune di attributi aperti e asserzioni; il comportamento dipende dalla capability che lo valuta.

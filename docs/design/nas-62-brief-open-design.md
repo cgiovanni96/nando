@@ -4,6 +4,8 @@
 
 **Lingua della UI:** italiano. Copy in sentence case, senza emoji, senza punti esclamativi.
 
+> **Aggiornamento 2026-11-06:** ADR-0023 e ADR-0024 ratificano la griglia giornaliera delle evidenze con score per periodo, le property locali di entità e la ricerca solo documenti. Le sezioni 3.1, 3.7, 7.2, 7.4, 7.7 e 7.8 sono aggiornate di conseguenza.
+
 ---
 
 ## 1. Cos'è Nando, in dieci righe
@@ -26,13 +28,13 @@ Non è Notion e non deve sembrarlo. Non ci sono database creati dall'utente, cos
 
 ## 3. Regole di prodotto da rispettare (vincoli duri)
 
-1. **Le property non si configurano dall'interfaccia.** Nessun pulsante "aggiungi proprietà", nessun "aggiungi colonna", nessun menu per cambiare tipo. Le property compaiono perché esistono nello Space.
+1. **Le property di Space non si configurano dall'interfaccia.** Nessun pulsante per aggiungere una property di Space, nessun "aggiungi colonna", nessun menu per cambiarne il tipo: compaiono perché esistono nello Space. Le **property locali di un'entità** sono l'unica eccezione: si aggiungono dalla pagina dell'entità, con tipi fissi (testo, numero, data, checkbox, link), non si ereditano e non entrano nelle viste (ADR-0024).
 2. **Nessun costruttore di viste.** Gli elenchi hanno colonne e filtri già decisi. Niente pannelli "filtra", "raggruppa", "scegli colonne".
 3. **Nessun drag-and-drop strutturale.** Non si trascinano pagine dentro pagine, non si riordinano sezioni, non si annidano blocchi liberamente.
 4. **I campi core non sono eliminabili.** Nella pagina di un task, lo stato è un campo obbligatorio: può stare visivamente tra le property, ma non ha una "x" per rimuoverlo.
 5. **I fatti di capability sono in sola lettura.** Il binding di un habit su un task si vede, non si modifica da lì: c'è un link al modulo Habit.
 6. **Le property dinamiche sono opzionali.** Un valore mancante si mostra come assenza, non come errore che blocca.
-7. **Le abitudini si valutano per periodo, non per giorno.** Un habit settimanale mostra settimane, uno mensile mostra mesi. Non esiste una griglia di caselle giornaliere per tutti.
+7. **Le abitudini hanno uno score per periodo; la griglia mostra le evidenze.** Lo score resta binario per periodo (giorno/settimana/mese/anno) e non diventa un punteggio giornaliero. La vista Habit può mostrare una griglia giornaliera delle evidenze come vista primaria; ogni riga mostra anche progresso e stato del periodo. Il grafico di forza resta campionato a fine periodo (ADR-0019).
 8. **La ricerca è una sola.** Nessuna sintassi `campo:valore`, nessun filtro avanzato nell'overlay.
 
 ---
@@ -188,7 +190,7 @@ Per ognuna: obiettivo, struttura, contenuto, stati, azioni, criteri di accettazi
 
 **Colonna laterale:**
 
-1. **Habit** — card con l'elenco degli habit attivi. Ogni riga: nome, periodo corrente (`2 su 3`), una barra o indicatore di progresso, pulsante di check-in. La pausa è uno stato visibile, non un'assenza. Gli habit non giornalieri **non** mostrano giorni.
+1. **Habit** — card con l'elenco degli habit attivi. Ogni riga: nome, periodo corrente (`2 su 3`), una barra o indicatore di progresso, pulsante di check-in. La pausa è uno stato visibile, non un'assenza. La riga può mostrare gli ultimi 7 giorni come evidenze, ma il progresso e lo stato restano quelli del periodo: nessun habit settimanale o mensile viene valutato come una sequenza di giorni.
 2. **Aree** — elenco compatto con nome, numero di progetti e numero di task aperti.
 3. **Inbox** — conteggio delle entità senza Space.
 
@@ -225,13 +227,14 @@ Per ognuna: obiettivo, struttura, contenuto, stati, azioni, criteri di accettazi
 - **Header:** titolo (editabile inline), breadcrumb `Relazioni / Anniversari`, stato come **campo core** accanto al titolo, non come property eliminabile.
 - **Zona 1 — Campi core:** griglia a due colonne con `Stato`, `Scadenza`, `Space`, `Ricorrenza` (se presente). Ogni campo ha etichetta sopra, valore, e non ha una "x".
 - **Zona 2 — Property:** griglia a due colonne con le definizioni applicabili a `task` in quello Space. Alcune vuote (`frequenza: —`, `costo: —`), una compilata (`occasione: anniversario`). Le property ereditate mostrano un'indicazione discreta della provenienza (`da Relazioni`) al passaggio del mouse o come testo secondario.
+- **Property locali:** sotto le ereditate, un gruppo separato `Solo questa entità`, con le property locali e il controllo `Aggiungi proprietà locale`. Tipi fissi (testo, numero, data, checkbox, link), nessuna vista e nessuna ereditarietà (ADR-0024).
 - **Zona 3 — Capability:** pannello separato, bordo leggero, titolo `Habit`, contenuto `Atti d'amore — 2 su 3 questo mese`, link `Apri in Habits`. Nessun controllo modificabile.
 - **Note:** sotto le zone, un'area di prosa con titolo del documento di note, oppure uno stato vuoto `Crea una nota`.
 - **Avviso valori orfani:** banner discreto sopra le property quando esistono valori non visibili.
 
 **Stati:** task completato (titolo barrato leggero, stato diverso); task in ritardo (badge testuale); task senza proprietà compilate; task spostato con valore orfano; task senza note.
 
-**Accettazione:** si distingue a colpo d'occhio cosa è campo core, cosa è property e cosa è fatto di capability. Nessuna "x" sui campi core. Le property non applicabili non compaiono affatto.
+**Accettazione:** si distingue a colpo d'occhio cosa è campo core, cosa è property ereditata, cosa è property locale e cosa è fatto di capability. Nessuna "x" sui campi core. Le property non applicabili non compaiono affatto. Le property locali sono chiaramente marcate come `Solo questa entità`.
 
 ---
 
@@ -274,36 +277,29 @@ Per ognuna: obiettivo, struttura, contenuto, stati, azioni, criteri di accettazi
 
 **Obiettivo:** ritrovare in due secondi, da tastiera.
 
-**Struttura:** overlay centrato, larghezza 640 px, input grande in alto, risultati sotto, raggruppati per documento.
+**Struttura:** overlay centrato, larghezza 640 px, input grande in alto, risultati sotto, raggruppati per documento. La ricerca v1 cerca **solo documenti**, non task o Space.
 
 - **Riga risultato:** titolo del documento, breadcrumb dello Space, snippet con il termine evidenziato, conteggio `3 blocchi`. Se il documento è `restricted`, badge testuale.
 - **Stato iniziale:** suggerimenti (`Cerca in tutti gli Space`, `Filtra per Space`), nessun risultato inventato.
 - **Stato vuoto:** `Nessun risultato per "…"` con suggerimento di cercare per titolo.
 - **Navigazione:** frecce su/giù, invio apre, esc chiude. Il focus resta nell'input.
 
-**Accettazione:** nessun filtro con sintassi, nessuna colonna, nessuna anteprima laterale. Un solo significato di "cerca".
+**Accettazione:** nessun filtro con sintassi, nessuna colonna, nessuna anteprima laterale. Un solo significato di "cerca": documenti, non task o Space.
 
 ---
 
 ### 7.8 Vista Habit
 
-**Obiettivo:** vedere la costanza per periodo, non una griglia di giorni.
+**Obiettivo:** vedere le evidenze giorno per giorno e, allo stesso tempo, lo score del periodo. La griglia non è lo score.
 
 **Struttura:**
 
 - **Header:** `Habit`, filtro per Area, `Nuovo habit`.
-- **Elenco:** una riga per habit, con:
-  - nome e Area;
-  - **periodo corrente** con progresso (`2 su 3`) e pulsante di check-in;
-  - **periodi adiacenti** (precedente e successivo) come celle compatte: raggiunto, mancato, in pausa, non valutato;
-  - score del periodo e streak (`4 mesi · 122 giorni`, con tooltip che distingue periodi valutati e pause);
-  - **storico per periodo** nel dettaglio: celle per periodo con stato e linea di forza campionata a fine periodo (ADR-0019);
-  - pausa come badge, con l'intervallo.
-- **Dettaglio laterale (opzionale):** fonti attive, storico delle evidenze, storico per periodo con forza, pausa.
+- **Griglia principale:** una riga per habit, con nome, Area, progresso e stato del periodo, pulsante di check-in; una colonna per giorno (15 passati, oggi, 15 futuri) con le evidenze. La pausa è un badge visibile.
+- **Dettaglio:** score del periodo, streak, storico per periodo con stato e linea di forza campionata a fine periodo (ADR-0019); fonti attive e storico delle evidenze.
+- **Esempi da mostrare:** un habit giornaliero, uno settimanale, uno mensile e uno in pausa nello stesso elenco.
 
-**Esempi da mostrare:** un habit giornaliero, uno settimanale, uno mensile e uno in pausa nello stesso elenco: è il test che dimostra che il modello per periodo funziona visivamente.
-
-**Accettazione:** nessuna riga mostra una sequenza di giorni se il periodo non è giornaliero; il grafico di forza resta per periodo e non diventa una griglia giornaliera.
+**Accettazione:** la griglia mostra le evidenze, non lo score. Ogni habit mostra sempre il progresso e lo stato del proprio periodo; il grafico di forza resta per periodo e non diventa una griglia giornaliera.
 
 ---
 
@@ -342,16 +338,16 @@ Per ogni variante: una frase su cosa guadagna e cosa perde. Non servono altre va
 
 ## 11. Cosa consegnare
 
-- Un file di design con le otto schermate, tre breakpoint ciascuna.
+- Un prototipo responsive unico con le otto schermate, verificato a 1440, 900 e 390 px.
 - Una pagina di **token** (colori light/dark, tipografia, spaziature, raggi, bordi).
 - Una pagina di **componenti** con gli stati principali (default, hover, attivo, vuoto, errore, disabilitato).
-- I nomi dei frame coerenti con la tabella della sezione 5.
+- I nomi delle superfici coerenti con la tabella della sezione 5.
 - Per ogni schermata, una nota di una riga su cosa è stato deciso e cosa resta aperto.
 
 ## 12. Cosa non disegnare
 
 - Costruttori di viste, filtri, colonne, raggruppamenti.
-- Editor di property o di tipi.
+- Editor di property di Space o di tipi. Il controllo per le property locali di un'entità è ammesso con i tipi fissi di ADR-0024.
 - Trascinamento di pagine, alberi di pagine annidate, blocchi riordinabili.
 - Sidebar di blocchi tipo Notion, emoji come stato, avatar e social proof.
 - Grafici e KPI finti, gamification, badge celebrativi.

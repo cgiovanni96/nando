@@ -1,0 +1,6 @@
+.open-design/
+.od-frames/
+.od-skills/
+*.artifact.json
+drawing-*.png
+*.jpg
