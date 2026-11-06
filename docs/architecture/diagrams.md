@@ -1,6 +1,6 @@
 # Diagrammi di Nando
 
-> **Stato:** bozza di lavoro, generata dagli ADR 0001–0018 il 2026-10-29.
+> **Stato:** bozza di lavoro, generata dagli ADR 0001–0018 il 2026-10-29 e aggiornata con ADR-0022 il 2026-11-06.
 > La fonte di verità resta `docs/adr/`. Se una decisione cambia, il diagramma va rigenerato o cancellato: un diagramma vecchio è peggio di nessun diagramma.
 
 Indice:
@@ -124,7 +124,7 @@ flowchart TB
 
 ## 3. Richiesta HTTP e streaming
 
-ADR-0010, ADR-0012, ADR-0016. Un solo origin per il browser; l'API non è raggiungibile dall'esterno.
+ADR-0010, ADR-0012, ADR-0016, ADR-0022. Un solo origin per il browser; l'API non è raggiungibile dall'esterno.
 
 ```mermaid
 sequenceDiagram
@@ -140,17 +140,21 @@ sequenceDiagram
     A-->>B: redirect al login se assente
     A->>W: richiesta autenticata
     W->>W: SSR con TanStack Start
-    W->>P: RPC tipizzato, Authorization bearer
+    W->>P: proxy /api/*, Authorization bearer
     P->>D: query con scope applicativo
     D-->>P: righe
     P-->>W: JSON
     W-->>B: HTML + hydration
+
+    Note over B,W: browser usa /api/*; SSR chiama api direttamente
 
     Note over B,W: streaming
     B->>W: GET /events (SSE)
     W->>P: stream SSE interno
     P-->>W: eventi
     W-->>B: relay senza buffering
+
+    Note over W,P: /api/reference e /api/openapi.json passano dallo stesso proxy
 ```
 
 ---

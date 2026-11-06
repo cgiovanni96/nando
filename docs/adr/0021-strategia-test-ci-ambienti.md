@@ -5,6 +5,7 @@
 - **Ticket:** NAS-103 — Strategia di test, CI e ambienti
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
 - **Dipende da:** ADR-0010, ADR-0011, ADR-0013
+- **Chiarito da:** ADR-0022 (aggiunge `docs:check` a `pnpm verify` e al job `static`)
 
 ## Contesto
 
@@ -85,13 +86,15 @@ pnpm test               # unit, senza Docker
 pnpm test:integration   # integration, richiede Postgres
 pnpm build              # build di web, api, worker
 pnpm db:check           # drizzle-kit generate + git diff, niente drift
-pnpm verify             # typecheck + lint + db:check + test + test:integration + build
+pnpm docs:check         # route/spec allineati, esempi, OpenAPI valido
+pnpm verify             # typecheck + lint + db:check + docs:check + test + test:integration + build
 ```
 
 - `pnpm test` è **solo unit**: veloce e senza Docker.
 - `pnpm test:integration` richiede `TEST_DATABASE_URL`; se manca, lo script avvia `deploy/compose.dev.yml` con `docker compose up -d --wait`, applica le migrazioni e lascia il container acceso. In CI la variabile punta al service container e il compose non parte.
 - Se Docker o Postgres non sono disponibili, `pnpm test:integration` e `pnpm verify` **falliscono con un messaggio azionabile**; non saltano la suite in silenzio.
 - `pnpm verify` è l'unico comando che un agente esegue prima di aprire una PR. È lo stesso comando in locale e in CI, anche se la CI lo spezza in job paralleli.
+- `pnpm docs:check` è aggiunto da ADR-0022: confronta route registrate e spec OpenAPI, verifica esempi e schema, e valida il documento. Fallisce con un messaggio azionabile, come `db:check`.
 
 ### CI
 
@@ -99,7 +102,7 @@ Quattro job paralleli su GitHub Actions, `ubuntu-latest`, Node 24 e pnpm 9:
 
 | Job | Cosa esegue | Blocca il merge |
 | --- | --- | --- |
-| `static` | `pnpm typecheck`, `pnpm lint`, `pnpm db:check` | sì |
+| `static` | `pnpm typecheck`, `pnpm lint`, `pnpm db:check`, `pnpm docs:check` | sì |
 | `unit` | `pnpm test` | sì |
 | `integration` | `pnpm test:integration` con Postgres 17 + pgvector | sì |
 | `build` | `pnpm build`; su `main` e tag anche immagine Docker e push su GHCR | sì |
@@ -180,6 +183,7 @@ Locale
 - **ADR-0013:** «test in CI» significa test di dominio e integration sull'API, non browser E2E. La p95 resta una misura di produzione, non un test.
 - **ADR-0011:** il restore mensile resta un'operazione documentata e non entra nella CI.
 - **ADR-0012:** Access resta fuori dai test automatici; lo smoke è locale al processo.
+- **ADR-0022:** `docs:check` entra in `pnpm verify` e nel job `static`; i contract test delle risposte completano gli integration test dei route group.
 - **NAS-102:** la riscrittura dei documenti VPS deve recepire lo smoke con healthcheck Docker e i nuovi script, al posto del vecchio `curl` su un solo container.
 - **NAS-53:** la roadmap può assumere `pnpm verify`, quattro job CI e un costo di test per capability.
 - **Implementazione:** la prima PR di codice deve portare Vitest, il setup del database di test, `deploy/compose.dev.yml`, il healthcheck di `api` e i workflow. Fino ad allora `pnpm verify` è un contratto, non un comando esistente.
