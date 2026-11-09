@@ -1,0 +1,31 @@
+{
+  "name": "nando",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r typecheck",
+    "lint": "oxlint apps packages scripts && prettier --check \"**/*.{ts,tsx,js,mjs,json,yaml,yml,css}\"",
+    "format": "oxlint --fix apps packages scripts && prettier --write \"**/*.{ts,tsx,js,mjs,json,yaml,yml,css}\"",
+    "test": "vitest run --project unit",
+    "test:integration": "node scripts/not-implemented.mjs test:integration",
+    "build": "pnpm -r build",
+    "db:migrate": "node scripts/not-implemented.mjs db:migrate",
+    "db:check": "node scripts/not-implemented.mjs db:check",
+    "docs:check": "node scripts/not-implemented.mjs docs:check",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "oxlint": "^1.93.0",
+    "prettier": "^3.9.10",
+    "tsdown": "^0.23.7",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  }
+}

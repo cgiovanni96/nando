@@ -98,7 +98,7 @@ pnpm verify             # typecheck + lint + db:check + docs:check + test + test
 
 ### CI
 
-Quattro job paralleli su GitHub Actions, `ubuntu-latest`, Node 24 e pnpm 9:
+Quattro job paralleli su GitHub Actions, `ubuntu-latest`, Node 24 e pnpm 11:
 
 | Job | Cosa esegue | Blocca il merge |
 | --- | --- | --- |

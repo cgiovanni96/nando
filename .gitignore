@@ -1,2 +1,12 @@
 node_modules/
 dist/
+coverage/
+.output/
+.tanstack/
+routeTree.gen.ts
+*.tsbuildinfo
+*.log
+
+.env
+.env.*
+!.env.example
