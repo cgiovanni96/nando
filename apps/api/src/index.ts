@@ -1,7 +1,7 @@
 import { serve } from "@hono/node-server";
 import { assertOwner, createDatabase, loadEnv, parseApiConfig } from "@nando/platform";
 
-import { app } from "./app";
+import { createApiApp } from "./http/app";
 
 async function main() {
   loadEnv();
@@ -15,6 +15,7 @@ async function main() {
     throw error;
   }
 
+  const app = createApiApp({ config, db });
   const server = serve({ fetch: app.fetch, port: config.PORT }, (info) => {
     console.log(`[nando] api listening on http://127.0.0.1:${info.port}`);
   });

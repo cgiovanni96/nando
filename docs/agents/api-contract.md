@@ -96,6 +96,7 @@ The test is not a replacement for domain tests. It proves that the wire shape an
 - The spec uses full `/api/...` paths and `servers: [{ url: '/' }]`, so "Try it" stays same-origin and goes through the web proxy.
 - Documentation routes are controlled by `DOCS_ENABLED`: on in local and staging, off in production by default.
 - Do not commit a generated OpenAPI document. `docs:check` generates it in memory.
+- `GET /api/health` is infrastructure: it is not part of the wire contract, it is not proxied by `web`, and it is not in OpenAPI. The browser never calls it.
 
 ## Commands
 
