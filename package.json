@@ -12,7 +12,7 @@
     "lint": "oxlint apps packages scripts && prettier --check \"**/*.{ts,tsx,js,mjs,json,yaml,yml,css}\"",
     "format": "oxlint --fix apps packages scripts && prettier --write \"**/*.{ts,tsx,js,mjs,json,yaml,yml,css}\"",
     "test": "vitest run --project unit",
-    "test:integration": "node scripts/not-implemented.mjs test:integration",
+    "test:integration": "node scripts/test-integration.mjs",
     "build": "pnpm -r build",
     "db:generate": "pnpm --filter @nando/platform db:generate",
     "db:migrate": "pnpm --filter @nando/platform db:migrate",
@@ -20,7 +20,7 @@
     "db:check": "pnpm --filter @nando/platform db:check",
     "start:migrate": "pnpm --filter @nando/platform start:migrate",
     "docs:check": "node scripts/not-implemented.mjs docs:check",
-    "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm test && pnpm build"
+    "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm test && pnpm test:integration && pnpm build"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
