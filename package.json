@@ -19,8 +19,8 @@
     "db:seed": "pnpm --filter @nando/platform db:seed",
     "db:check": "pnpm --filter @nando/platform db:check",
     "start:migrate": "pnpm --filter @nando/platform start:migrate",
-    "docs:check": "node scripts/not-implemented.mjs docs:check",
-    "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm test && pnpm test:integration && pnpm build"
+    "docs:check": "pnpm --filter @nando/api docs:check",
+    "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm docs:check && pnpm test && pnpm test:integration && pnpm build"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

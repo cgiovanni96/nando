@@ -29,6 +29,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm db:check
+      - run: pnpm docs:check
 
   unit:
     name: unit

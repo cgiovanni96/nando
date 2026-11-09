@@ -1,1 +1,1 @@
-export type AppType = typeof import("./app").app;
+export type AppType = ReturnType<typeof import("./http/app").createApiApp>;
