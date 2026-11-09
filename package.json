@@ -14,10 +14,13 @@
     "test": "vitest run --project unit",
     "test:integration": "node scripts/not-implemented.mjs test:integration",
     "build": "pnpm -r build",
-    "db:migrate": "node scripts/not-implemented.mjs db:migrate",
-    "db:check": "node scripts/not-implemented.mjs db:check",
+    "db:generate": "pnpm --filter @nando/platform db:generate",
+    "db:migrate": "pnpm --filter @nando/platform db:migrate",
+    "db:seed": "pnpm --filter @nando/platform db:seed",
+    "db:check": "pnpm --filter @nando/platform db:check",
+    "start:migrate": "pnpm --filter @nando/platform start:migrate",
     "docs:check": "node scripts/not-implemented.mjs docs:check",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

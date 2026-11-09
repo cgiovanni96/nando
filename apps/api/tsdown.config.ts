@@ -8,4 +8,8 @@ export default defineConfig({
   outDir: "dist",
   clean: true,
   sourcemap: true,
+  deps: {
+    alwaysBundle: [/.*/],
+    onlyBundle: false,
+  },
 });
