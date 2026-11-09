@@ -907,6 +907,7 @@ flowchart LR
 | Documento | `doc.content` JSON ProseMirror | indice `block`, tsvector, backlink |
 | Periodo di un habit | configurazione + tempo + timezone | stato, score, streak, aggregati |
 | Forza di un habit | configurazione + tempo + timezone + evidenze non rettificate | `strength` 0–1, campionata a fine periodo |
+| Storico Habit | configurazione + pause + evidenze non rettificate | periodi, forza, streak, fonti (ADR-0025) |
 | Occorrenza di un task | `TaskOccurrence` | `overdue`, viste Calendar |
 | Evidenza | `HabitEvidence` non rettificata | score del periodo, forza |
 | Notifica | `Notification` e `ScheduledNotification` | badge, centro notifiche |
