@@ -12,6 +12,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsdown",
     "start": "node dist/index.mjs",
+    "start:migrate": "node dist/migrate.mjs",
     "typecheck": "tsc --noEmit",
     "docs:check": "tsx scripts/docs-check.ts"
   },

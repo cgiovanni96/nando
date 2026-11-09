@@ -71,6 +71,16 @@ packages/capability-*    Knowledge, Habits
 
 Regole: `web` non tocca il database; `api` è l'unico scrittore; `packages/core` non dipende dalle capability; ogni processo ha un solo composition root.
 
+## Deploy staging
+
+Lo staging vive su Dokploy e sul tailnet, senza route pubbliche. La procedura completa è in [`docs/vps/staging-m0.md`](docs/vps/staging-m0.md).
+
+```bash
+gh workflow run deploy-staging -f image_tag=sha-<full-sha>
+```
+
+Il workflow aggiorna `IMAGE_TAG` nel compose Dokploy, deploya e fa smoke su `/healthz`, OpenAPI e `/api/system/info`.
+
 ## Documenti
 
 - `AGENTS.md` — contratto operativo per gli agenti

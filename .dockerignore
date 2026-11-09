@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+node_modules
+**/node_modules
+dist
+**/dist
+.output
+**/.output
+coverage
+docs
+prototypes
+.env
+.env.*
+!.env.example
+*.log
+.pnpm-store
