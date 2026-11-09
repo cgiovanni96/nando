@@ -1,14 +1,33 @@
 # Nando — servizi di infrastruttura sulla VPS.
 # Copia live: /srv/nando/compose/docker-compose.yml (questo file è la sorgente di verità).
 #
-# Nessuna porta pubblicata su 0.0.0.0: l'unico ingresso è Cloudflare Tunnel.
+# Nessuna porta pubblica: l'unico ingresso è Cloudflare Tunnel.
 #
 # name: fissa il nome del progetto Compose. Senza, deriverebbe dal nome della
 # directory ("compose") e gli script che girano da un'altra cwd vedrebbero un
 # progetto diverso — cioè un secondo container db sullo stesso volume.
-# Lo staging lo sovrascrive con `docker compose -p nando-staging`.
+# Lo staging è un progetto separato e usa deploy/compose.staging.yml.
+#
+# L'immagine è una sola: web, api, worker e migrate sono comandi diversi.
+# `api.env` e `worker.env` devono contenere OWNER_USER_ID; `web.env` deve
+# contenere API_URL e INTERNAL_TOKEN, con lo stesso INTERNAL_TOKEN di api.env.
 
 name: nando
+
+x-app: &app
+  image: ghcr.io/cgiovanni96/nando:${IMAGE_TAG:?IMAGE_TAG required}
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  tmpfs:
+    - /tmp
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
 
 services:
   db:
@@ -44,6 +63,80 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  migrate:
+    <<: *app
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - /srv/nando/secrets/api.env
+    environment:
+      NODE_ENV: production
+      MIGRATIONS_DIR: /app/migrations
+    command: ["node", "/app/api/migrate.mjs"]
+
+  api:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - /srv/nando/secrets/api.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DOCS_ENABLED: "false"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  web:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    env_file:
+      - /srv/nando/secrets/web.env
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+    ports:
+      - "127.0.0.1:3001:3001"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - /srv/nando/secrets/worker.env
+    environment:
+      NODE_ENV: production
 
 volumes:
   nando_pgdata:
