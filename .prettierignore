@@ -7,5 +7,6 @@ routeTree.gen.ts
 pnpm-lock.yaml
 docs
 prototypes
+packages/platform/drizzle
 AGENTS.md
 GLOSSARY.md

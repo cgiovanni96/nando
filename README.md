@@ -25,6 +25,16 @@ pnpm install
 cp .env.example .env
 ```
 
+## Database locale
+
+```bash
+docker compose -f deploy/compose.dev.yml up -d --wait
+pnpm db:migrate
+pnpm db:seed
+```
+
+`db:seed` inserisce l'utente owner con l'ID in `OWNER_USER_ID`. API e worker non partono se l'owner non esiste.
+
 ## Comandi
 
 | Comando | Cosa fa |
@@ -35,8 +45,11 @@ cp .env.example .env
 | `pnpm test` | Unit test, senza Docker |
 | `pnpm test:integration` | Integration test con Postgres (NAS-134) |
 | `pnpm build` | Build di web, api e worker |
-| `pnpm db:migrate` | Migrazioni Drizzle (NAS-133) |
-| `pnpm db:check` | Drift fra schema Drizzle e migrazioni (NAS-133) |
+| `pnpm db:generate` | Genera una migrazione Drizzle |
+| `pnpm db:migrate` | Applica le migrazioni |
+| `pnpm db:seed` | Semina l'owner da `OWNER_USER_ID` |
+| `pnpm db:check` | Drift fra schema Drizzle e migrazioni |
+| `pnpm start:migrate` | Migrate + seed, come nel container `migrate` |
 | `pnpm docs:check` | Allineamento route/OpenAPI (NAS-131) |
 | `pnpm verify` | Catena dei gate disponibili |
 

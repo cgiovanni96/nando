@@ -1,0 +1,35 @@
+name: nando-dev
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: nando-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nando_dev
+      POSTGRES_USER: nando
+      POSTGRES_PASSWORD: nando
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - nando_dev_pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c log_min_duration_statement=500
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nando -d nando_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  nando_dev_pgdata:
+    name: nando_dev_pgdata

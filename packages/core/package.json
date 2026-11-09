@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@nando/kernel": "workspace:*"
+    "@nando/kernel": "workspace:*",
+    "drizzle-orm": "^0.45.4"
   }
 }
