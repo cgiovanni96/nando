@@ -1,0 +1,16 @@
+{
+  "name": "@nando/capability-knowledge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nando/core": "workspace:*",
+    "@nando/kernel": "workspace:*"
+  }
+}

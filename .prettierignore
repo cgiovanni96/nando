@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.output
+.tanstack
+routeTree.gen.ts
+pnpm-lock.yaml
+docs
+prototypes
+AGENTS.md
+GLOSSARY.md
