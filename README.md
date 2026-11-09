@@ -35,6 +35,8 @@ pnpm db:seed
 
 `db:seed` inserisce l'utente owner con l'ID in `OWNER_USER_ID`. API e worker non partono se l'owner non esiste.
 
+`pnpm test:integration` usa `TEST_DATABASE_URL` se presente; altrimenti avvia `deploy/compose.dev.yml`, crea `nando_test` e applica le migrazioni. Se Docker o Postgres non sono disponibili fallisce con un messaggio azionabile: la suite non viene saltata in silenzio.
+
 ## Comandi
 
 | Comando | Cosa fa |
@@ -43,7 +45,7 @@ pnpm db:seed
 | `pnpm typecheck` | TypeScript su tutti i workspace |
 | `pnpm lint` | oxlint + Prettier |
 | `pnpm test` | Unit test, senza Docker |
-| `pnpm test:integration` | Integration test con Postgres (NAS-134) |
+| `pnpm test:integration` | Integration test con Postgres 17 + pgvector |
 | `pnpm build` | Build di web, api e worker |
 | `pnpm db:generate` | Genera una migrazione Drizzle |
 | `pnpm db:migrate` | Applica le migrazioni |
