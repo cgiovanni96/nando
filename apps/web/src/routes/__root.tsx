@@ -1,8 +1,10 @@
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { I18nextProvider } from "react-i18next";
 
 import { AppShell } from "../components/shared/shell/app-shell";
+import { defaultLocale, i18n } from "../lib/i18n";
 import { cssVariablesResolver, theme } from "../lib/theme";
 import "@mantine/core/styles.css";
 import "../styles/global.css";
@@ -14,7 +16,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#fafafa", media: "(prefers-color-scheme: light)" },
       { name: "theme-color", content: "#181818", media: "(prefers-color-scheme: dark)" },
-      { title: "Nando" },
+      { title: i18n.t("app.name") },
     ],
   }),
   component: RootComponent,
@@ -28,9 +30,11 @@ function RootComponent() {
         defaultColorScheme="auto"
         cssVariablesResolver={cssVariablesResolver}
       >
-        <AppShell>
-          <Outlet />
-        </AppShell>
+        <I18nextProvider i18n={i18n}>
+          <AppShell>
+            <Outlet />
+          </AppShell>
+        </I18nextProvider>
       </MantineProvider>
     </RootDocument>
   );
@@ -38,7 +42,7 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="it" suppressHydrationWarning>
+    <html lang={defaultLocale} suppressHydrationWarning>
       <head>
         <ColorSchemeScript defaultColorScheme="auto" />
         <HeadContent />

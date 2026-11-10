@@ -1,6 +1,7 @@
 import { AppShell as MantineAppShell, Box, Container } from "@mantine/core";
 import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AppHeader } from "./app-header";
 import { AppSidebar } from "./app-sidebar";
@@ -8,6 +9,7 @@ import classes from "./app-shell.module.css";
 import { BottomNav } from "./bottom-nav";
 
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
+  const { t } = useTranslation();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
@@ -22,7 +24,7 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
       }}
     >
       <Box component="a" href="#main-content" className={classes.skipLink}>
-        Salta al contenuto
+        {t("app.skipToContent")}
       </Box>
 
       <AppSidebar pathname={pathname} />

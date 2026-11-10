@@ -24,6 +24,14 @@
             "case": "kebabCase",
             "ignore": ["^__", "^\\$"]
           }
+        ],
+        "react/jsx-no-literals": [
+          "error",
+          {
+            "noStrings": true,
+            "ignoreProps": true,
+            "allowedStrings": ["N", "/", "⌘K"]
+          }
         ]
       }
     },
