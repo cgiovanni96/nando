@@ -18,22 +18,25 @@ Il repository è nella fase **M0 — Fondazione deployabile**. Non esistono anco
 - `worker`: processo Node bundlato con tsdown.
 - Database, migrazioni e Drizzle: NAS-133, con postgres.js.
 
-## Setup
+## Avvio locale
+
+Serve Docker con container Linux per il Postgres 17 + pgvector di sviluppo.
 
 ```bash
 pnpm install
-cp .env.example .env
-```
-
-## Database locale
-
-```bash
+cp .env.example .env                          # PowerShell: Copy-Item .env.example .env
 docker compose -f deploy/compose.dev.yml up -d --wait
 pnpm db:migrate
 pnpm db:seed
+pnpm dev
 ```
 
-`db:seed` inserisce l'utente owner con l'ID in `OWNER_USER_ID`. API e worker non partono se l'owner non esiste.
+Apri `http://localhost:3001`.
+
+- `web` ascolta su `3001`, `api` su `3000`, `worker` non ha porta.
+- Il compose dev pubblica Postgres su `127.0.0.1:5433`, per non collidere con un PostgreSQL locale su `5432`.
+- `db:seed` inserisce l'utente owner con l'ID in `OWNER_USER_ID`. API e worker non partono se l'owner non esiste.
+- Per vedere solo la shell senza database: `pnpm --filter @nando/web dev`.
 
 `pnpm test:integration` usa `TEST_DATABASE_URL` se presente; altrimenti avvia `deploy/compose.dev.yml`, crea `nando_test` e applica le migrazioni. Se Docker o Postgres non sono disponibili fallisce con un messaggio azionabile: la suite non viene saltata in silenzio.
 
@@ -55,7 +58,7 @@ pnpm db:seed
 | `pnpm docs:check` | Allineamento route/OpenAPI (NAS-131) |
 | `pnpm verify` | Catena dei gate disponibili |
 
-`pnpm verify` include tutti i gate di M0 solo quando le fette che li possiedono sono atterrate.
+`pnpm verify` = `typecheck` + `lint` + `db:check` + `docs:check` + `test` + `test:integration` + `build`.
 
 ## Workspace
 
