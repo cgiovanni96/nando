@@ -2,10 +2,10 @@ import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import { AppShell } from "../components/shell/AppShell";
-import { theme } from "../theme";
+import { AppShell } from "../components/shared/shell/app-shell";
+import { cssVariablesResolver, theme } from "../lib/theme";
 import "@mantine/core/styles.css";
-import "../styles/app.css";
+import "../styles/global.css";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -23,7 +23,11 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
+      <MantineProvider
+        theme={theme}
+        defaultColorScheme="auto"
+        cssVariablesResolver={cssVariablesResolver}
+      >
         <AppShell>
           <Outlet />
         </AppShell>

@@ -39,6 +39,9 @@ Il mock è un riferimento di gerarchia, densità e navigazione. Non è un protot
 ### Token
 
 - Una sola famiglia system UI; pesi 400/500/600; numeri tabulari.
+- Eccezione dichiarata: il monogramma del marchio (quadrato 28 px con la "N") usa un serif, `Georgia`
+  con fallback, tokenizzato in `theme.other.brandFontFamily` e consumato solo da `.brandMark`. Nessun
+  altro punto dell'interfaccia usa una seconda famiglia.
 - Tipografia 12 / 13 / 14 / 16 / 20 / 28 px.
 - Spaziatura 4 / 8 / 12 / 16 / 24 / 32 px.
 - Raggi 6 / 8 px; bordi 1 px.

@@ -43,7 +43,7 @@ Non è Notion e non deve sembrarlo. Non ci sono database creati dall'utente, cos
 
 - **Tono:** sobrio, denso ma respirabile, da strumento di lavoro quotidiano. Niente dashboard "marketing" con card enormi e gradienti.
 - **Tema:** light come default, dark come pari dignità. Specifica i token per entrambi.
-- **Tipografia:** una sola famiglia sans (Inter o system UI), scala 12/13/14/16/20/28, peso 400/500/600. I numeri in tabular figures dove sono allineati in colonna.
+- **Tipografia:** una sola famiglia sans (Inter o system UI), scala 12/13/14/16/20/28, peso 400/500/600. I numeri in tabular figures dove sono allineati in colonna. Eccezione dichiarata: il monogramma del marchio (quadrato 28 px con la "N") usa un serif, `Georgia` con fallback, tokenizzato in `theme.other.brandFontFamily` (ADR-0023).
 - **Spaziatura:** base 4 px, passi 4/8/12/16/24/32. Raggio 6–8 px. Bordi 1 px, non ombre pesanti.
 - **Colore:** neutro dominante, un solo accento per azioni e stato attivo. Il colore non deve mai essere l'unico portatore di significato: abitini, stati e badge hanno sempre etichetta testuale.
 - **Icone:** set coerente, 16/20 px, tratto sottile. Niente icone colorate.
