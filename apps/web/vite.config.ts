@@ -3,8 +3,8 @@ import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
-export default defineConfig({
-  logLevel: "error",
+export default defineConfig(({ command }) => ({
+  logLevel: command === "build" ? "error" : "info",
   server: {
     port: 3001,
     strictPort: true,
@@ -21,4 +21,4 @@ export default defineConfig({
     },
   },
   plugins: [tanstackStart({ srcDirectory: "src" }), viteReact(), nitro()],
-});
+}));

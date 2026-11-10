@@ -1,7 +1,7 @@
 import { execFileSync, execSync } from "node:child_process";
 
 const composeFile = "deploy/compose.dev.yml";
-const defaultTestDatabaseUrl = "postgres://nando:nando@127.0.0.1:5432/nando_test";
+const defaultTestDatabaseUrl = "postgres://nando:nando@127.0.0.1:5433/nando_test";
 
 function fail(message) {
   console.error(`[nando] ${message}`);
