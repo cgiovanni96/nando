@@ -1,0 +1,28 @@
+/*
+ * Global styling is limited to resets, base elements, and policies that apply to
+ * every screen. Component styles belong in a `*.module.css` next to the component;
+ * see docs/agents/architecture.md, "Web styling".
+ */
+
+html,
+body {
+  min-height: 100%;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
