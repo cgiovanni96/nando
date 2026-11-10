@@ -18,6 +18,12 @@ Use the five default triage labels on Linear issues. Read `docs/agents/triage-la
 
 Single-context layout: root `GLOSSARY.md` and `docs/adr/`. Read `docs/agents/domain.md` before exploring the codebase or proposing domain changes.
 
+### Architecture
+
+Read `docs/agents/architecture.md` before adding a package, a module, or a route group. It also owns
+the web naming and styling rules: every file is kebab-case (`app-shell.tsx`), Mantine components come
+before hand-written markup, and `global.css` holds resets only.
+
 ### API contract
 
 Read `docs/agents/api-contract.md` before changing anything under `apps/api` or the web API client.
@@ -31,3 +37,7 @@ Read `docs/agents/api-contract.md` before changing anything under `apps/api` or 
 ### VPS
 
 Hosting and operations documentation lives in `docs/vps/`. Read `docs/vps/README.md` before touching the VPS; for maintenance work, read `docs/vps/AGENT.md` first.
+
+### TanStack Start
+
+Start and Router ship version-matched skills inside the installed packages. List them with `npx @tanstack/intent@latest list`, then load the one that owns the boundary, for example `npx @tanstack/intent@latest load @tanstack/start-client-core#start-core/server-functions`. Do not install third-party TanStack skills: they can drift from the versions in `pnpm-lock.yaml`.
