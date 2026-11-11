@@ -28,17 +28,22 @@ Se questi target non sono realistici, vanno decisi prima di chiamare la VPS "dai
 
 - Repository restic su **R2** (`nando-backups`), cifrato lato client.
 - Copia locale breve in `/srv/nando/backups/db` (7 giorni) per restore rapidi.
-- Bucket **`nando-assets`** per gli allegati, con **versioning degli oggetti** attivo e lifecycle delle versioni non correnti a 90 giorni: il dump e restic non toccano gli oggetti.
+- Bucket **`nando-assets`** per gli allegati, con copia giornaliera in **`nando-assets-snapshots`** (lifecycle 90 giorni): il dump e restic non toccano gli oggetti, e R2 non offre versioning S3.
 - Bucket **`nando-exports`** privato per gli archivi di export (12 mesi).
 - Snapshot SSDNodes come ultima spiaggia, non come strategia.
 
-### R2: bucket e versioning
+### R2: bucket e snapshot degli allegati
+
+R2 **non supporta il versioning S3**: `PutBucketVersioning` è assente e `GetBucketVersioning` è un dummy che risponde sempre "mai versionato". La copia fuori dal bucket è quindi uno **snapshot giornaliero** in un secondo bucket, non una versione dell'oggetto.
 
 Da configurare una volta, dal dashboard R2 o con `aws s3api --endpoint-url <R2_ENDPOINT>`:
 
-1. **`nando-assets`**: versioning attivo; regola lifecycle che scade le versioni non correnti dopo 90 giorni. Verifica caricando un oggetto di prova, cancellandolo e ripristinandolo da una versione precedente.
-2. **`nando-exports`**: bucket privato; lifecycle che scade gli oggetti dopo 365 giorni (12 archivi mensili). Nessun dominio pubblico, nessun `r2.dev`.
-3. Token R2 con object read/write sui tre bucket; le chiavi stanno in `/srv/nando/secrets/restic.env`. Un token limitato a `nando-backups` non basta per l'export.
+1. **`nando-assets`**: bucket privato degli allegati.
+2. **`nando-assets-snapshots`**: privato; lifecycle che scade gli oggetti dopo 90 giorni. Il prefisso usato è `snapshots/<YYYY-MM-DD>/`.
+3. **`nando-exports`**: privato; lifecycle dopo 365 giorni (12 archivi mensili). Nessun dominio pubblico, nessun `r2.dev`.
+4. Token R2 con object read/write sui quattro bucket (`nando-backups`, `nando-assets`, `nando-assets-snapshots`, `nando-exports`). Un token limitato a `nando-backups` non basta per export e snapshot.
+
+La copia la fa `nando-assets-snapshot` (sotto), non il versioning: un oggetto cancellato dal bucket live resta negli snapshot precedenti finché la lifecycle non li scade. Non si usa un **bucket lock**, che impedirebbe anche le cancellazioni legittime previste da ADR-0011.
 
 ### Script
 
@@ -123,6 +128,47 @@ sudo systemctl enable --now nando-backup.timer
 systemctl list-timers --all | grep nando
 ```
 
+### Snapshot degli allegati
+
+`nando-assets-snapshot` copia `nando-assets` in `nando-assets-snapshots/snapshots/<YYYY-MM-DD>/`:
+
+```bash
+sudo install -m 755 docs/vps/scripts/nando-assets-snapshot.sh /usr/local/sbin/nando-assets-snapshot
+sudo /usr/local/sbin/nando-assets-snapshot
+```
+
+Variabili opzionali in `restic.env`: `ASSETS_BUCKET`, `ASSETS_SNAPSHOT_BUCKET`, `SNAPSHOT_PREFIX`, `HEALTHCHECKS_ASSETS_URL`.
+
+`/etc/systemd/system/nando-assets-snapshot.service`:
+
+```ini
+[Unit]
+Description=Nando assets snapshot
+After=docker.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/nando-assets-snapshot
+```
+
+`/etc/systemd/system/nando-assets-snapshot.timer`:
+
+```ini
+[Unit]
+Description=Daily Nando assets snapshot
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+```
+
+Con zero allegati lo snapshot è vuoto e lo dice (`0 oggetti`): non è un errore. Gli allegati esistono da M4a.
+
 ### Restore test
 
 ```bash
@@ -150,6 +196,8 @@ sudo /usr/local/sbin/nando-export
 ```
 
 Contenuto e formato sono in ADR-0011: `database.dump`, `schema.sql` derivato dal dump (non dal database), conteggi per tabella, `sha256` di ogni parte, tag immagine e versione del journal.
+
+Gli **allegati** entrano nell'export con Knowledge (M4a): fino ad allora `attachments` è vuoto e i file vivono negli snapshot di `nando-assets-snapshots`. Quando M4a arriva, `nando-export` deve scaricarli da R2 e includerli con il proprio `sha256`.
 
 Chiave:
 
