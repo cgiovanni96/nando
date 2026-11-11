@@ -18,7 +18,8 @@ Se questi target non sono realistici, vanno decisi prima di chiamare la VPS "dai
 
 ### Cosa si salva
 
-- **Postgres**: dump logico `pg_dump -Fc` giornaliero.
+- **Postgres**: dump logico `pg_dump -Fc` giornaliero, dal database dell'applicazione in Dokploy (`nando_staging`). Il container viene risolto per etichetta Compose (`project=nando-staging`, `service=db`), perché Dokploy genera nomi che cambiano; il vecchio database del progetto `/srv/nando/compose` (`nando`) non è più quello dei dati.
+- **Manifest**: accanto a ogni dump, `nando-backup` scrive `*.manifest.json` con conteggi per tabella, versione del journal Drizzle, `sha256` e dimensione del dump. Senza manifest un dump non è verificabile.
 - **File applicativi**: `/srv/nando` (compose, env cifrato? no: env escluso dal repo ma incluso nel backup cifrato), volumi non-database.
 - **Configurazione**: `/srv/nando/compose`, `/srv/nando/secrets` (il repository restic è cifrato), `/etc/cloudflared`, `/etc/dokploy` se usato, le unità `nando-*` e `/etc/docker/daemon.json`.
 - **Segreti**: inclusi nel restic cifrato; la password del repository e le credenziali R2 stanno nel password manager, non solo sulla VPS.
@@ -50,6 +51,24 @@ AWS_DEFAULT_REGION=auto
 HEALTHCHECKS_BACKUP_URL=
 HEALTHCHECKS_RESTORE_URL=
 ```
+
+Variabili opzionali per il database, con questi default:
+
+```text
+DB_PROJECT=nando-staging
+DB_SERVICE=db
+DB_NAME=nando_staging
+DB_USER=nando
+# DB_CONTAINER=   # ha precedenza; utile se le etichette non bastano
+```
+
+Se il progetto Dokploy cambia nome, il backup si ferma e stampa i candidati. Per trovarli:
+
+```bash
+sudo docker ps --format '{{.Names}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.service"}}'
+```
+
+Poi si aggiorna `DB_PROJECT` in `restic.env`. La produzione di M7 avrà il proprio progetto: lo stesso file dovrà puntare lì al cutover.
 
 ### Timer giornaliero
 
@@ -100,12 +119,13 @@ sudo /usr/local/sbin/nando-restore-test
 Lo script:
 
 1. prende il dump più recente;
-2. crea un database `nando_restore_test_*`;
-3. esegue `pg_restore`;
-4. verifica che le tabelle esistano e che una query semplice risponda;
-5. elimina il database di test.
+2. confronta lo `sha256` del dump con il manifest, se presente;
+3. crea un database `nando_restore_test_*`;
+4. esegue `pg_restore`;
+5. verifica che le tabelle esistano e che una query semplice risponda;
+6. elimina il database di test.
 
-Non tocca il database di produzione. Va eseguito **almeno una volta al mese**; l'esito va annotato in `maintenance-log.md`.
+Non tocca il database dell'applicazione. Va eseguito **almeno una volta al mese**; l'esito va annotato in `maintenance-log.md`.
 
 ## Monitoraggio
 
@@ -278,6 +298,30 @@ sudo docker compose restart db
 ```
 
 Se il volume è corrotto: ferma l'app, ripristina l'ultimo dump su un database nuovo, verifica, ripunta l'app. Non cancellare il volume finché il dump non è verificato.
+
+### Ripristino da backup (ADR-0011)
+
+Il database vive nel progetto Dokploy `nando-staging`. Il ripristino non è un `docker compose up` del vecchio stack.
+
+```bash
+# 1. dump e manifest più recenti
+sudo ls -lt /srv/nando/backups/db | head
+sudo sha256sum /srv/nando/backups/db/nando-<stamp>.dump
+# confronta lo sha256 con nando-<stamp>.manifest.json
+
+# 2. container del database (nome generato da Dokploy)
+sudo docker ps --format '{{.Names}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.service"}}'
+```
+
+1. Ferma `web` e `api` da Dokploy; lascia `db` attivo.
+2. Ripristina in un database nuovo per non distruggere quello corrente:
+   `createdb nando_restore`, poi `pg_restore --no-owner --no-privileges --exit-on-error -d nando_restore`.
+3. Confronta i conteggi per tabella con `counts` nel manifest; se tornano, rinomina o ripunta `DATABASE_URL` e `POSTGRES_DB` al database ripristinato.
+4. Ripristina `/srv/nando` da restic (`restic restore latest --target /`), poi riavvia i servizi da Dokploy con il tag del manifest.
+5. Verifica `/healthz`, `/api/health` e la lettura di alcune entità reali.
+6. Annota esito e durata in `maintenance-log.md`: l'RTO di 2–4 ore si misura.
+
+Il ripristino in place (drop e recreate di `nando_staging`) è ammesso solo con l'app ferma e dopo che il dump ha superato il restore test: un dump mai ripristinato non è un backup.
 
 ### Disco pieno
 
