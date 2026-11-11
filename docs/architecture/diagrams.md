@@ -850,53 +850,40 @@ flowchart TD
 
 ## 19. Ticket aperti e roadmap
 
-Stato al 2026-11-06. La roadmap NAS-53 parte quando i suoi blocchi sono chiusi.
+Stato al 2026-11-11. M0 è chiusa: staging deploya dal repository, il workflow attende il
+deployment Dokploy `done` e il rollback è provato. La roadmap ufficiale è il documento Linear
+[NAS-53](https://linear.app/giocosta/issue/NAS-53/roadmap-v1-sequenza-milestone-criteri-di-done);
+questa sezione ne riporta solo la posizione.
 
 ```mermaid
 flowchart LR
-    subgraph DONE["Decisioni chiuse"]
-        D1["NAS-51 repo e processi"]
-        D2["NAS-47 persistenza"]
-        D3["NAS-50 autenticazione"]
-        D4["NAS-45 scope v1"]
-        D5["NAS-61 e NAS-63 Habits"]
-        D6["NAS-54 e NAS-59 Knowledge"]
-        D7["NAS-129 forza dell'abitudine"]
-        D8["NAS-103 test, CI e ambienti"]
-        D9["ADR-0022 contratto HTTP"]
-        D10["NAS-62 mock shell e dashboard"]
-        D11["ADR-0024 property locali"]
-    end
-
-    subgraph OPEN["Aperti"]
-        O2["NAS-60 UI Habits"]
-    end
-
-    subgraph IMPL["Implementazione"]
-        I1["NAS-131 contratto HTTP"]
-    end
-
-    subgraph HUMAN["Lavoro umano sull'infrastruttura"]
-        H1["NAS-102 doc e compose a tre processi"]
-        H2["NAS-104 backup allegati e chiave age"]
-        H3["NAS-105 Access, MFA, break-glass"]
+    subgraph DONE["Chiuse"]
+        M0["M0 fondazione deployabile<br/>staging, compose dal repo, rollback"]
+        D["Decisioni e mock<br/>NAS-41, NAS-45, NAS-60, NAS-62, ADR-0022/0025"]
     end
 
     subgraph NEXT["Prossimo"]
-        R["NAS-53 roadmap v1"]
+        P1["P1 — NAS-104<br/>backup, restore, export"]
+        M1["M1 — cattura e collocazione"]
     end
 
-    O2 --> R
-    I1 -.->|"non blocca"| R
-    H1 -.->|"non blocca"| R
-    H2 -.->|"non blocca"| R
-    H3 -.->|"non blocca"| R
-    D1 --> R
-    D2 --> R
-    D7 --> O2
-    D8 --> R
-    D10 --> R
+    subgraph LATER["Dopo"]
+        M2["M2 → M6<br/>giornata, ricorrenze, Knowledge, Habits, AI"]
+        P2["P2 — NAS-102, NAS-105<br/>doc VPS, Access"]
+        M7["M7 — cutover e v1"]
+    end
+
+    D --> M0
+    M0 --> P1
+    P1 --> M1
+    M1 --> M2
+    M2 --> M7
+    P2 --> M7
 ```
+
+P1 non è un'attività finale: M1 inizia a scrivere dati, quindi backup e restore devono
+funzionare prima. P2 arriva con il cutover.
+
 
 ---
 
