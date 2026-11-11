@@ -1,4 +1,4 @@
-import { changedServices, readCompose, sameComposeSemantics } from "./dokploy-compose.mjs";
+import { firstDifferenceLine, readCompose, sameCompose } from "./dokploy-compose.mjs";
 import { envValue, replaceImageTag } from "./dokploy-env.mjs";
 
 const { DOKPLOY_URL, DOKPLOY_API_KEY, DOKPLOY_COMPOSE_ID, IMAGE_TAG, STAGING_URL } = process.env;
@@ -120,11 +120,10 @@ async function main() {
   const stored = await dokploy(`compose.one?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`);
   const storedCompose = stored.composeFile ?? "";
 
-  if (!sameComposeSemantics(composeFile, storedCompose)) {
-    const services = changedServices(composeFile, storedCompose);
+  if (!sameCompose(composeFile, storedCompose)) {
     fail(
-      "Dokploy ha salvato un compose diverso da deploy/compose.staging.yml" +
-        `${services.length > 0 ? ` (servizi: ${services.join(", ")})` : ""}. ` +
+      "Dokploy ha salvato un compose diverso da deploy/compose.staging.yml " +
+        `(prima differenza alla riga ${firstDifferenceLine(composeFile, storedCompose)}). ` +
         "Il deploy è fermo prima di toccare i container: la versione Dokploy installata " +
         "probabilmente non accetta composeFile dall'API.",
     );

@@ -1,10 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { isDeepStrictEqual } from "node:util";
-
-import { parse } from "yaml";
 
 /**
- * Normalizza il testo del compose per l'invio a Dokploy e per i confronti:
+ * Normalizza il testo del compose per l'invio a Dokploy e per il confronto:
  * BOM, CRLF, spazi a fondo riga e righe vuote finali non contano.
  */
 export function normalizeCompose(text) {
@@ -20,37 +17,28 @@ export function normalizeCompose(text) {
   return `${lines.join("\n")}\n`;
 }
 
-export function composeSemantics(text, source = "compose") {
-  try {
-    // Compose ammette le merge key YAML (`<<: *app`): vanno risolte, altrimenti
-    // lo stesso servizio scritto con o senza anchor sembrerebbe diverso.
-    return parse(normalizeCompose(text), { merge: true });
-  } catch (error) {
-    throw new Error(
-      `${source}: YAML non valido: ${error instanceof Error ? error.message : error}`,
-      { cause: error },
-    );
-  }
-}
-
-/** Confronto semantico: commenti, indentazione e forma degli anchor non sono differenze. */
-export function sameComposeSemantics(localText, storedText) {
-  return isDeepStrictEqual(
-    composeSemantics(localText, "compose locale"),
-    composeSemantics(storedText, "compose Dokploy"),
-  );
-}
-
 /**
- * Nomi dei servizi il cui contenuto differisce fra i due compose.
- * Serve a rendere leggibile un errore che altrimenti direbbe solo "diverso".
+ * Il corpo inviato è quello che Dokploy deve restituire: a meno di BOM, CRLF e
+ * spazi finali, il confronto è testuale. Nessuna dipendenza da installare:
+ * questo script gira nel job di deploy senza `pnpm install`.
  */
-export function changedServices(localText, storedText) {
-  const local = composeSemantics(localText, "compose locale")?.services ?? {};
-  const stored = composeSemantics(storedText, "compose Dokploy")?.services ?? {};
-  const names = new Set([...Object.keys(local), ...Object.keys(stored)]);
+export function sameCompose(localText, storedText) {
+  return normalizeCompose(localText) === normalizeCompose(storedText);
+}
 
-  return [...names].filter((name) => !isDeepStrictEqual(local[name], stored[name])).toSorted();
+/** Riga (1-based) della prima differenza, per un errore leggibile. */
+export function firstDifferenceLine(localText, storedText) {
+  const local = normalizeCompose(localText).split("\n");
+  const stored = normalizeCompose(storedText).split("\n");
+  const length = Math.max(local.length, stored.length);
+
+  for (let index = 0; index < length; index++) {
+    if (local[index] !== stored[index]) {
+      return index + 1;
+    }
+  }
+
+  return 0;
 }
 
 export async function readCompose(path) {
