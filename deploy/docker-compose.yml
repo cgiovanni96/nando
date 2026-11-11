@@ -9,6 +9,8 @@
 # Lo staging è un progetto separato e usa deploy/compose.staging.yml.
 #
 # L'immagine è una sola: web, api, worker e migrate sono comandi diversi.
+# L'immagine ha un solo CMD (web): ogni servizio deve dichiarare il proprio
+# `command`, altrimenti api e worker eseguono il server web.
 # `api.env` e `worker.env` devono contenere OWNER_USER_ID; `web.env` deve
 # contenere API_URL e INTERNAL_TOKEN, con lo stesso INTERNAL_TOKEN di api.env.
 
@@ -79,6 +81,7 @@ services:
 
   api:
     <<: *app
+    command: ["node", "/app/api/index.mjs"]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -103,6 +106,7 @@ services:
 
   web:
     <<: *app
+    command: ["node", "/app/web/server/index.mjs"]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -130,6 +134,7 @@ services:
 
   worker:
     <<: *app
+    command: ["node", "/app/worker/index.mjs"]
     depends_on:
       migrate:
         condition: service_completed_successfully
