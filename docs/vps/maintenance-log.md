@@ -28,6 +28,7 @@ Registro append-only delle manutenzioni. Una riga per intervento; i dettagli sta
 | 2026-10-28 08:35 | agente | setup | GitHub: environment `staging` e `production` (required reviewer), secret `VPS_*` e `TS_*` sui due | OK | Secret environment-scoped, non di repository |
 | 2026-10-28 08:53 | agente | review | Workflow `ci-smoke` eseguito: runner GitHub → Tailscale `tag:ci` → SSH `nando-deploy` → wrapper | OK | Verificato anche che `sudo docker ps` sia negato dal runner. Run `40660000026` |
 | 2026-11-11 09:45 | umano+agente | deploy | Primo deploy staging su Dokploy (`nando-staging`, `sha-7c4c298`), smoke sul tailnet | OK | `api`/`web`/`worker` healthy. Causa dei fallimenti precedenti: `command` espliciti mancanti nel compose, `api` e `worker` eseguivano il server web |
+| 2026-11-11 10:46 | agente | deploy | `deploy-staging` allinea il corpo del compose dal repository e deploya `sha-d92400d` | OK | Il workflow invia `composeFile` e `IMAGE_TAG`, rilegge il salvato e si ferma prima del deploy se differiscono. Il tentativo precedente (`sha-9e5b302`) è fallito prima di Dokploy per `yaml` non installato nel job: container non toccati, staging resta sul tag precedente |
 
 ## Tipi
 
