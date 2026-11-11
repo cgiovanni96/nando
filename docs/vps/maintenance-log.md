@@ -34,6 +34,9 @@ Registro append-only delle manutenzioni. Una riga per intervento; i dettagli sta
 | 2026-11-11 11:37 | agente | deploy | Rollback provato su staging: `sha-d72fb6e` → `sha-fbe3308` → `sha-d72fb6e` | OK | Entrambi i passaggi con deployment `done` e smoke verde; il compose viene riallineato dal repository a ogni deploy |
 | 2026-11-11 12:34 | umano+agente | backup | `nando-backup` sul database di staging in Dokploy: dump `nando-20261111T123409Z.dump` (8 KB) + manifest, restic ok | OK | Il backup non legge più il database legacy `nando`; container risolto per prefisso di progetto (`nando-staging-iilphp`) |
 | 2026-11-11 12:35 | umano+agente | restore-test | Restore del dump `20261111T123409Z` in `nando_restore_test_*`, con confronto dello `sha256` dal manifest | OK | `manifest coerente`, `restore ok: 3 tabelle pubbliche`, healthchecks ping ok |
+| 2026-11-11 14:23 | umano+agente | backup | Primo export cifrato: `nando-export-20261111T142329Z.tar.age` (20 KB) caricato in `nando-exports` | OK | `schema.sql` derivato dal dump; manifest con `sha256` di dump, schema, counts e README; chiave pubblica in `/srv/nando/secrets/age-public.key` |
+| 2026-11-11 15:00 | umano | setup | `nando-assets-snapshot.timer` attivo (03:30 UTC); snapshot in `nando-assets-snapshots/snapshots/<data>/` | OK | Un oggetto di prova cancellato dal bucket live è rimasto nello snapshot; lifecycle 90 giorni sul bucket. R2 non offre versioning S3 |
+| 2026-11-11 | umano+agente | restore-test | Verifica dell'archivio di export con la chiave privata age: manifest e conteggi coerenti | OK | Chiave copiata temporaneamente in `/root/age-test.key`, usata e cancellata. Il file iniziale aveva 75 caratteri (uno di troppo) ed è stato corretto prima della verifica |
 
 ## Tipi
 
