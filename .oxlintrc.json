@@ -1,12 +1,112 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "react"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn"
   },
   "rules": {
     "no-unused-vars": "error",
-    "no-console": "off"
+    "no-console": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-imports": "error",
+    "import/no-cycle": "error",
+    "import/no-unassigned-import": "off",
+    "react/react-in-jsx-scope": "off"
   },
+  "overrides": [
+    {
+      "files": ["apps/web/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "drizzle-orm",
+                  "drizzle-orm/**",
+                  "postgres",
+                  "@nando/platform",
+                  "@nando/platform/**"
+                ],
+                "message": "web non tocca il database: usa il client API."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/api/src/http/**"],
+      "excludeFiles": ["apps/api/src/http/health.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["drizzle-orm", "drizzle-orm/**", "postgres"],
+                "message": "I route non parlano col database: passa da commands/queries del modulo."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/kernel/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@nando/*"],
+                "message": "kernel è una foglia: nessuna dipendenza dai workspace."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@nando/capability-*",
+                  "@nando/capability-*/**",
+                  "@nando/platform",
+                  "@nando/platform/**"
+                ],
+                "message": "core non dipende dalle capability né dagli adapter di platform."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/capability-*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@nando/capability-*", "@nando/capability-*/**"],
+                "message": "Le capability non dipendono l'una dall'altra."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "ignorePatterns": ["**/routeTree.gen.ts", "**/dist/**", "docs/**", "prototypes/**"]
 }
