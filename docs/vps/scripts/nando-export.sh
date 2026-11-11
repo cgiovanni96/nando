@@ -117,7 +117,7 @@ fi
 
 echo "== schema.sql derivato dal dump =="
 docker exec -i "$(resolve_db_container)" \
-  pg_restore --schema-only --no-owner --no-privileges < "$WORK/database.dump" > "$WORK/schema.sql"
+  pg_restore -f - --schema-only --no-owner --no-privileges < "$WORK/database.dump" > "$WORK/schema.sql"
 [[ -s "$WORK/schema.sql" ]] || { echo "schema.sql vuoto"; exit 1; }
 
 IMAGE_TAG_VALUE="$(grep -m1 '"imageTag"' "$MANIFEST" | sed 's/.*"imageTag": //; s/,$//')"
