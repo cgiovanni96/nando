@@ -158,7 +158,6 @@ La chiave privata `age` non è sulla VPS: senza di essa l'archivio non è leggib
 Gli allegati non sono inclusi finché Knowledge (M4a) non introduce il primo upload:
 `MANIFEST.json` ha `attachments: []` e i file restano negli snapshot del bucket.
 README
-README
 
 {
   printf '{\n'
