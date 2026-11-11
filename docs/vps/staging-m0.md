@@ -99,8 +99,8 @@ Al termine, `deploy-staging` parte da `workflow_run` e:
 1. legge `deploy/compose.staging.yml` dal commit deployato;
 2. invia a Dokploy l'ambiente (`IMAGE_TAG` = `sha-<full sha>`) e il corpo del compose in un'unica `compose.update`;
 3. rilegge il salvato: se il compose non è identico al file o `IMAGE_TAG` non è quello inviato, si ferma prima del deploy;
-4. deploya;
-5. fa smoke su `/healthz`, `/api/openapi.json`, `/api/system/info` e `/api/reference`.
+4. deploya e attende che il deployment Dokploy arrivi a `done`;
+5. fa smoke su `/healthz`, `/api/openapi.json`, `/api/system/info` e `/api/reference`, e considera il deploy riuscito solo quando deployment `done` e smoke sono entrambi verdi. Se il deployment va in `error`/`cancelled`, o dopo 10 minuti non è `done`, il job fallisce e stampa il `logPath` da leggere sulla VPS.
 
 Manuale:
 
@@ -132,6 +132,8 @@ gh workflow run deploy-staging -f image_tag=sha-<tag-precedente>
 gh run watch
 ```
 
+Anche il rollback passa dallo stesso wait: il job è verde solo quando il deployment Dokploy è `done` e lo smoke è ok. La verifica finale è l'immagine in esecuzione sulla VPS, non la pagina: `sudo docker ps --format '{{.Names}}\t{{.Image}}' | grep nando-staging`.
+
 Il servizio `migrate` riesegue la catena forward-only: se il journal è già avanzato non applica nulla. Se la migrazione nuova non è compatibile con l'immagine precedente, il rollback sicuro è ripristinare il backup pre-deploy (procedura di ADR-0011), non improvvisare.
 
 Il corpo del compose, invece, arriva sempre dal repository: un `workflow_dispatch` con un tag precedente riallinea anche `deploy/compose.staging.yml`. Se il rollback attraversa una modifica di compose incompatibile con l'immagine vecchia, prima fai revert di quel file su `main` e poi lancia il rollback.
@@ -151,4 +153,5 @@ Il percorso canonico rimane il tailnet (`https://<vps>.<tailnet>.ts.net`): lo sm
 - **Pull GHCR negato:** rifai `docker login ghcr.io` sulla VPS o rendi pubblico il package.
 - **Dokploy API 401:** la chiave è errata, scaduta, oppure un limite di frequenza sull'API ha bloccato la verifica: Dokploy risponde `{"message":"Unauthorized"}` in tutti i casi. Le richieste dal tailnet arrivano da `127.0.0.1` perché passano da `tailscale serve`, quindi un limite per IP è di fatto globale e il polling della dashboard può consumarlo prima del deploy. Controlla i log di Dokploy (`Error verifying API key`) prima di rigenerare la chiave.
 - **`composeFile` diverso dopo l'update:** la versione Dokploy installata non accetta il corpo del compose dall'API. Il deploy si ferma prima di toccare i container: aggiorna Dokploy e rilancia.
+- **Deploy verde ma immagini vecchie:** non può succedere: il workflow attende il deployment Dokploy `done`, non solo una URL che risponde. Se il deployment resta `running` o va in `error`, il job fallisce e stampa il `logPath` da leggere sulla VPS.
 - **Tailscale serve non raggiungibile:** `tailscale serve status`, MagicDNS e ACL `tag:ci`.
