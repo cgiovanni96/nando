@@ -1,17 +1,21 @@
 import { AppShell as MantineAppShell, Box, Button, Group, Stack, Text } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 import { AppNav } from "./app-nav";
 import classes from "./app-shell.module.css";
 
 export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
+  const { t } = useTranslation();
+  const unavailable = { label: t("shell.capture"), milestone: "M1" };
+
   return (
     <MantineAppShell.Navbar
       className={classes.navbar}
       px={{ base: 12, md: 16 }}
       pt={{ base: 12, md: 24 }}
       pb={{ base: 12, md: 16 }}
-      aria-label="Navigazione principale"
+      aria-label={t("nav.primary.ariaLabel")}
     >
       <Stack h="100%" gap="xl">
         <Group gap={10} px={8} wrap="nowrap">
@@ -19,7 +23,7 @@ export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
             N
           </Box>
           <Text fz={22} fw={600} lts="-0.8px" visibleFrom="md">
-            Nando
+            {t("app.name")}
           </Text>
         </Group>
 
@@ -29,11 +33,11 @@ export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
           justify="flex-start"
           leftSection={<IconPlus size={16} stroke={1.6} />}
           disabled
-          title="Cattura — disponibile in M1"
-          aria-label="Cattura, disponibile in M1"
+          title={t("comingSoon.title", unavailable)}
+          aria-label={t("comingSoon.ariaLabel", unavailable)}
         >
           <Box component="span" visibleFrom="md">
-            Cattura
+            {t("shell.capture")}
           </Box>
         </Button>
 
@@ -47,10 +51,10 @@ export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
           </Box>
           <Stack gap={0} visibleFrom="md">
             <Text fz="sm" fw={500}>
-              Spazio personale
+              {t("shell.workspace.name")}
             </Text>
             <Text fz={11} c="dimmed">
-              Owner
+              {t("shell.workspace.role")}
             </Text>
           </Stack>
         </Group>

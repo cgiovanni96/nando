@@ -7,14 +7,18 @@ import {
   IconLayoutDashboard,
   IconRepeat,
 } from "@tabler/icons-react";
+import type { ParseKeysWithoutVariables } from "i18next";
 import type { ComponentType } from "react";
 
 import type { AppPath } from "./paths";
 
 type TablerIcon = ComponentType<IconProps>;
 
+/** A catalog key with no interpolation variables: the label is complete as it is. */
+type NavLabelKey = ParseKeysWithoutVariables<"translation">;
+
 type NavEntryBase = {
-  label: string;
+  labelKey: NavLabelKey;
   icon: TablerIcon;
 };
 
@@ -35,13 +39,13 @@ export function isNavigable(entry: NavEntry): entry is NavigableNavEntry {
 }
 
 export const primaryNav: NavEntry[] = [
-  { label: "Dashboard", icon: IconLayoutDashboard, to: "/" },
-  { label: "Calendario", icon: IconCalendarEvent, milestone: "M2" },
-  { label: "Knowledge", icon: IconBook2, milestone: "M4" },
-  { label: "Habits", icon: IconRepeat, milestone: "M5" },
+  { labelKey: "nav.items.dashboard", icon: IconLayoutDashboard, to: "/" },
+  { labelKey: "nav.items.calendar", icon: IconCalendarEvent, milestone: "M2" },
+  { labelKey: "nav.items.knowledge", icon: IconBook2, milestone: "M4" },
+  { labelKey: "nav.items.habits", icon: IconRepeat, milestone: "M5" },
 ];
 
 export const workspaceNav: NavEntry[] = [
-  { label: "Inbox", icon: IconInbox, milestone: "M1" },
-  { label: "Tutti gli Space", icon: IconFolders, milestone: "M1" },
+  { labelKey: "nav.items.inbox", icon: IconInbox, milestone: "M1" },
+  { labelKey: "nav.items.allSpaces", icon: IconFolders, milestone: "M1" },
 ];

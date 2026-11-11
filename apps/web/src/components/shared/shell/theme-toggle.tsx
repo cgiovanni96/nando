@@ -1,11 +1,13 @@
 import { ActionIcon, Tooltip, useComputedColorScheme, useMantineColorScheme } from "@mantine/core";
 import { IconMoon, IconSun } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 export function ThemeToggle() {
+  const { t } = useTranslation();
   const { setColorScheme } = useMantineColorScheme();
   const computed = useComputedColorScheme("light", { getInitialValueInEffect: true });
   const dark = computed === "dark";
-  const label = dark ? "Passa al tema chiaro" : "Passa al tema scuro";
+  const label = t(dark ? "shell.theme.toLight" : "shell.theme.toDark");
 
   return (
     <Tooltip label={label}>

@@ -104,7 +104,8 @@ apps/web/src/
       dashboard/
         dashboard-page.tsx
         dashboard-page.module.css
-  lib/                      codice non-React: helper, client API, tema
+  lib/                      codice non-React: helper, client API, tema, i18n
+    i18n/                   istanza, catalogo per locale, tipi delle chiavi
     router/                 route paths (from routeTree.gen.ts) and navigation config
   styles/                   CSS globale
   server/                   server-only: config, API client, proxy
@@ -126,7 +127,12 @@ Rules:
   here; moving is not extraction, and ADR-0013 still forbids building generic components before the
   third occurrence.
 - `lib/router/` owns route paths and the navigation config. `AppPath` comes from
-  `routeTree.gen.ts`; components consume it and never hand-type a path.
+  `routeTree.gen.ts`; components consume it and never hand-type a path. Navigation entries carry a
+  `labelKey`, not a label.
+- `lib/i18n/` owns the messages: one catalog per locale under `resources/`, the instance in
+  `i18n.ts`, and the key types in `i18next.d.ts` (ADR-0026). Components call `t("...")` and never
+  inline a user-facing string, including `aria-label`, `placeholder` and `title`;
+  `react/jsx-no-literals` fails literal JSX text.
 - `server/` is never imported from client code. The internal token never enters the browser bundle.
 - The browser talks to `apps/api` through the same-origin `/api/*` proxy.
 
@@ -143,6 +149,7 @@ Rules:
 | UI of a screen | `apps/web/src/components/pages/<screen>` |
 | Shell, cross-screen component | `apps/web/src/components/shared` |
 | Route paths, navigation config | `apps/web/src/lib/router` |
+| Testi dell'interfaccia | `apps/web/src/lib/i18n/resources/<locale>.ts` |
 | Tema e default Mantine | `apps/web/src/lib/theme` |
 | Browser-only helper | `apps/web/src/lib` |
 | Server-only proxy or config | `apps/web/src/server` |
