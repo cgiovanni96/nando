@@ -5,6 +5,8 @@ name: nando-staging
 # deploy aggiorna IMAGE_TAG via API. La password Postgres deve essere
 # alfanumerica (esadecimale) perché entra nella DATABASE_URL.
 
+# L'immagine ha un solo CMD (web): ogni servizio deve dichiarare il proprio
+# `command`, altrimenti api e worker eseguono il server web.
 x-app: &app
   image: ghcr.io/cgiovanni96/nando:${IMAGE_TAG:?IMAGE_TAG required}
   restart: unless-stopped
@@ -66,6 +68,7 @@ services:
 
   api:
     <<: *app
+    command: ["node", "/app/api/index.mjs"]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -91,6 +94,7 @@ services:
 
   web:
     <<: *app
+    command: ["node", "/app/web/server/index.mjs"]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -118,6 +122,7 @@ services:
 
   worker:
     <<: *app
+    command: ["node", "/app/worker/index.mjs"]
     depends_on:
       migrate:
         condition: service_completed_successfully

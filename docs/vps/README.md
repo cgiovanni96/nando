@@ -1,6 +1,6 @@
 # VPS Nando — documentazione operativa
 
-> **⚠️ Superato in parte da [ADR-0010](../adr/0010-forma-del-repository-e-processi.md).** Questo documento descrive ancora un unico container `app`, un solo `app.env` e staging dietro Cloudflare Access. La topologia vigente è a tre processi (`web`, `api`, `worker`) più `migrate`, con staging solo sul tailnet e gestito da Dokploy. La riscrittura è tracciata in NAS-102.
+> **⚠️ Superato in parte da [ADR-0010](../adr/0010-forma-del-repository-e-processi.md).** Questo documento descrive ancora un unico container `app`, un solo `app.env` e staging dietro Cloudflare Access. La topologia vigente è a tre processi (`web`, `api`, `worker`) più `migrate`; staging è gestito da Dokploy, raggiungibile dal tailnet e, in aggiunta, dall'hostname dietro Access (emendamento 2026-11-11). La riscrittura è tracciata in NAS-102.
 
 **Stato:** infrastruttura configurata (2026-10-27); app non ancora deployata. I documenti descrivono lo stato attuale e le procedure per completarlo.
 **Ultimo aggiornamento:** 2026-10-27

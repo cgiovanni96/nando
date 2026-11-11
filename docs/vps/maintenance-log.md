@@ -27,6 +27,7 @@ Registro append-only delle manutenzioni. Una riga per intervento; i dettagli sta
 | 2026-10-28 08:27 | agente | setup | `nando-deploy` creato, wrapper installato, sudoers ristretto; progetto Compose rinominato `compose` → `nando` | OK | Errore iniziale per ordine sbagliato (backup dopo la sostituzione del compose): corretto |
 | 2026-10-28 08:35 | agente | setup | GitHub: environment `staging` e `production` (required reviewer), secret `VPS_*` e `TS_*` sui due | OK | Secret environment-scoped, non di repository |
 | 2026-10-28 08:53 | agente | review | Workflow `ci-smoke` eseguito: runner GitHub → Tailscale `tag:ci` → SSH `nando-deploy` → wrapper | OK | Verificato anche che `sudo docker ps` sia negato dal runner. Run `40660000026` |
+| 2026-11-11 09:45 | umano+agente | deploy | Primo deploy staging su Dokploy (`nando-staging`, `sha-7c4c298`), smoke sul tailnet | OK | `api`/`web`/`worker` healthy. Causa dei fallimenti precedenti: `command` espliciti mancanti nel compose, `api` e `worker` eseguivano il server web |
 
 ## Tipi
 

@@ -52,7 +52,7 @@ Un'applicazione a un solo processo non reggerebbe la separazione voluta: `web` �
 ### Ingresso
 
 - **Produzione:** Cloudflare Tunnel + Access davanti al solo `web`. L'API non ha route sul tunnel e non è raggiungibile dall'esterno.
-- **Staging:** nessuna route pubblica. `tailscale serve --bg` pubblica `127.0.0.1:3002` come `https://<host>.<tailnet>.ts.net`, raggiungibile da laptop e telefono, con certificato valido. Il vecchio hostname `nando-staging.giovannicosta.me`, la sua route e la sua app Access vanno rimossi.
+- **Staging:** nessuna route pubblica. `tailscale serve --bg` pubblica `127.0.0.1:3002` come `https://<host>.<tailnet>.ts.net`, raggiungibile da laptop e telefono, con certificato valido. Il vecchio hostname `nando-staging.giovannicosta.me`, la sua route e la sua app Access vanno rimossi (superato dall'emendamento 2026-11-11 qui sotto).
 - **Fiducia `web` → `api`:** bearer token interno letto da un file di segreti, confronto constant-time, mai nei log. L'API non valida il JWT di Access: non è raggiungibile dal bordo, quindi non c'è nessun token da validare.
 - **Streaming:** `web` espone `/events` e inoltra lo stream SSE prodotto da `api`. Compressione e buffering disattivati su quella route. Un solo origin per il browser, sia per le notifiche in-app sia per lo streaming delle risposte AI.
 - Il codice non assume mai Access: staging gira senza, quindi nessun header `CF-Access-*` è una fonte di identità.
@@ -137,3 +137,16 @@ Deploy
 - **Due proprietari sullo stesso progetto Compose:** drift silenzioso fra due sorgenti di verità.
 - **Turborepo subito:** un file e un modello mentale in più per una cache che serve quando la CI supera i minuti, non prima.
 - **ESLint + Prettier:** ecosistema più ricco, ma i confini non sono una regola di lint e due tool costano più di uno.
+
+## Emendamento 2026-11-11 — staging raggiungibile anche tramite Access
+
+**Stato:** accettato. Supera l'ultima frase di *Ingresso → Staging* e l'alternativa scartata *Access anche su staging*.
+
+Il tailnet resta il percorso canonico dello staging, ma non è più l'unico: `nando-staging.giovannicosta.me` resta attivo dietro Cloudflare Access con la policy `allow-owner`, come seconda porta d'ingresso per i dispositivi che non hanno Tailscale attivo. La route del Tunnel resta su `127.0.0.1:3002`; non si aggiungono route verso `api`.
+
+Conseguenze:
+
+- L'invariante 10 non cambia: Access è solo al bordo, nessun header `CF-Access-*` autentica una richiesta, e il codice non assume che staging giri senza Access.
+- Lo smoke di `deploy-staging` continua a girare sul tailnet: l'hostname pubblico è una comodità, non una dipendenza del deploy.
+- La superficie pubblica cresce di un hostname. Route, app Access e policy vanno trattate come parte dell'ambiente: se Access viene rimossa o riconfigurata, lo staging diventa raggiungibile da internet.
+- Resta un secondo ingresso allo stesso `web`, non un canale verso `api`: il contratto `web`↔`api` (ADR-0022) non cambia.

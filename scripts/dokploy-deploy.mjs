@@ -60,6 +60,42 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function reportDeployment() {
+  try {
+    const deployments = await dokploy(
+      `deployment.allByCompose?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`,
+    );
+
+    if (!Array.isArray(deployments) || deployments.length === 0) {
+      console.error("[nando] nessun deployment Dokploy trovato per questo compose.");
+      return;
+    }
+
+    const latest = deployments.toSorted(
+      (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+    )[0];
+
+    console.error(
+      `[nando] ultimo deployment Dokploy: ${latest.status ?? "sconosciuto"} ` +
+        `(${latest.title ?? "senza titolo"}), creato ${latest.createdAt ?? "?"}`,
+    );
+
+    if (latest.errorMessage) {
+      console.error(`[nando] errore riportato da Dokploy: ${latest.errorMessage}`);
+    }
+
+    if (latest.logPath) {
+      console.error(`[nando] log del deployment sulla VPS: sudo tail -n 200 ${latest.logPath}`);
+    }
+  } catch (error) {
+    console.error(
+      `[nando] stato del deployment non disponibile: ${
+        error instanceof Error ? error.message : error
+      }`,
+    );
+  }
+}
+
 async function main() {
   const compose = await dokploy(`compose.one?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`);
   const env = replaceImageTag(compose.env ?? "", IMAGE_TAG);
@@ -85,7 +121,10 @@ async function main() {
       console.log(`[nando] staging healthy su ${stagingUrl} (${IMAGE_TAG})`);
       return;
     } catch (error) {
-      if (attempt === 60) throw error;
+      if (attempt === 60) {
+        await reportDeployment();
+        throw error;
+      }
       console.log(
         `[nando] smoke ${attempt}/60 non ancora pronto: ${
           error instanceof Error ? error.message : error
