@@ -16,6 +16,18 @@
   },
   "overrides": [
     {
+      "files": ["apps/web/src/**"],
+      "rules": {
+        "unicorn/filename-case": [
+          "error",
+          {
+            "case": "kebabCase",
+            "ignore": ["^__", "^\\$"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/web/**"],
       "rules": {
         "no-restricted-imports": [
