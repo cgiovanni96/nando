@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "vitest": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vitest/SKILL.md",
+      "computedHash": "b26b7f8d10e860e944e0334c003207771707c4906514cb96c971faae13fba875",
+      "installMode": "copy"
+    }
+  }
+}
