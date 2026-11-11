@@ -4,9 +4,12 @@ import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
 
 const COMPOSE_FILES = [
-  "deploy/docker-compose.yml",
-  "deploy/compose.staging.yml",
-  "deploy/compose.dev.yml",
+  { file: "deploy/docker-compose.yml" },
+  {
+    file: "deploy/compose.staging.yml",
+    requiredServices: ["migrate", "api", "web", "worker"],
+  },
+  { file: "deploy/compose.dev.yml" },
 ];
 
 // I servizi dell'immagine applicativa derivano IMAGE_TAG; le immagini esterne
@@ -32,14 +35,25 @@ export function servicesMissingCommand(document) {
     .map(([name]) => name);
 }
 
+/** Servizi dichiarati nell'elenco atteso ma assenti dal documento. */
+export function missingServices(document, required = []) {
+  const services = document?.services ?? {};
+
+  return required.filter((name) => !(name in services));
+}
+
 async function main() {
   const problems = [];
 
-  for (const file of COMPOSE_FILES) {
+  for (const { file, requiredServices = [] } of COMPOSE_FILES) {
     const document = parse(await readFile(file, "utf8"));
 
     for (const service of servicesMissingCommand(document)) {
       problems.push(`${file}: il servizio "${service}" non dichiara command`);
+    }
+
+    for (const service of missingServices(document, requiredServices)) {
+      problems.push(`${file}: manca il servizio "${service}"`);
     }
   }
 
@@ -54,7 +68,9 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`[nando] command esplicito presente in ${COMPOSE_FILES.join(", ")}`);
+  console.log(
+    `[nando] command espliciti e servizi attesi presenti in ${COMPOSE_FILES.map(({ file }) => file).join(", ")}`,
+  );
 }
 
 const invokedDirectly =

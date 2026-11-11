@@ -54,7 +54,7 @@ sudo tailscale serve status
 2. Crea il progetto `Nando` e l'ambiente `staging`.
 3. Crea una **Compose** app `nando-staging`, sorgente **raw**, e incolla `deploy/compose.staging.yml`.
 
-   Il corpo del compose è copiato a mano: il workflow aggiorna solo `IMAGE_TAG`. Ogni modifica a `deploy/compose.staging.yml` va ri-incollata in Dokploy, altrimenti lo staging resta sulla versione precedente. `pnpm deploy:check` verifica che `api`, `web`, `worker` e `migrate` dichiarino il proprio `command`: l'immagine ha un solo `CMD` (web), quindi un servizio senza `command` esegue il server sbagliato.
+   Il corpo del compose è inviato dal repository a ogni deploy: l'incolla qui serve solo al bootstrap. Il workflow chiama `compose.update` con `composeFile` preso da `deploy/compose.staging.yml` e poi rilegge il salvato: se il corpo salvato non è semanticamente uguale al file, il deploy si ferma prima di toccare i container. Modificare il compose dalla UI di Dokploy è inutile, perché il deploy successivo lo sovrascrive: la modifica va fatta nel repository. `pnpm deploy:check` verifica che `api`, `web`, `worker` e `migrate` esistano e dichiarino il proprio `command`: l'immagine ha un solo `CMD` (web), quindi un servizio senza `command` esegue il server sbagliato.
 4. Nell'ambiente dell'app imposta:
 
 ```dotenv
@@ -96,10 +96,11 @@ Il merge su `main` esegue `ci`: il job `build` pubblica:
 
 Al termine, `deploy-staging` parte da `workflow_run` e:
 
-1. legge il compose da Dokploy;
-2. sostituisce `IMAGE_TAG` con `sha-<full sha>`;
-3. aggiorna l'ambiente e deploya;
-4. fa smoke su `/healthz`, `/api/openapi.json`, `/api/system/info` e `/api/reference`.
+1. legge `deploy/compose.staging.yml` dal commit deployato;
+2. invia a Dokploy l'ambiente (`IMAGE_TAG` = `sha-<full sha>`) e il corpo del compose in un'unica `compose.update`;
+3. rilegge il salvato: se il compose non è semanticamente uguale al file o `IMAGE_TAG` non è quello inviato, si ferma prima del deploy;
+4. deploya;
+5. fa smoke su `/healthz`, `/api/openapi.json`, `/api/system/info` e `/api/reference`.
 
 Manuale:
 
@@ -133,6 +134,8 @@ gh run watch
 
 Il servizio `migrate` riesegue la catena forward-only: se il journal è già avanzato non applica nulla. Se la migrazione nuova non è compatibile con l'immagine precedente, il rollback sicuro è ripristinare il backup pre-deploy (procedura di ADR-0011), non improvvisare.
 
+Il corpo del compose, invece, arriva sempre dal repository: un `workflow_dispatch` con un tag precedente riallinea anche `deploy/compose.staging.yml`. Se il rollback attraversa una modifica di compose incompatibile con l'immagine vecchia, prima fai revert di quel file su `main` e poi lancia il rollback.
+
 ## 8. Hostname pubblico
 
 Decisione del 2026-11-11 (emendamento in [ADR-0010](../adr/0010-forma-del-repository-e-processi.md)): `nando-staging.giovannicosta.me` **resta attivo**, dietro Cloudflare Access con policy `allow-owner`, come seconda porta d'ingresso allo staging. La route del Tunnel resta su `127.0.0.1:3002` e non esistono route verso `api`.
@@ -147,4 +150,5 @@ Il percorso canonico rimane il tailnet (`https://<vps>.<tailnet>.ts.net`): lo sm
 - **401 dal proxy:** `INTERNAL_TOKEN` diverso fra `web` e `api`.
 - **Pull GHCR negato:** rifai `docker login ghcr.io` sulla VPS o rendi pubblico il package.
 - **Dokploy API 401:** API key errata o scaduta.
+- **`composeFile` diverso dopo l'update:** la versione Dokploy installata non accetta il corpo del compose dall'API. Il deploy si ferma prima di toccare i container: aggiorna Dokploy e rilancia.
 - **Tailscale serve non raggiungibile:** `tailscale serve status`, MagicDNS e ACL `tag:ci`.

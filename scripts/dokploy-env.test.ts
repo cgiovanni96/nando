@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { replaceImageTag } from "./dokploy-env.mjs";
+import { envValue, replaceImageTag } from "./dokploy-env.mjs";
 
 describe("replaceImageTag", () => {
   it("replaces an existing IMAGE_TAG", () => {
@@ -23,5 +23,20 @@ describe("replaceImageTag", () => {
     expect(replaceImageTag("IMAGE_TAG=one\nIMAGE_TAG=two\n", "sha-new")).toBe(
       "IMAGE_TAG=sha-new\n",
     );
+  });
+});
+
+describe("envValue", () => {
+  it("legge il valore di una variabile", () => {
+    expect(envValue("POSTGRES_DB=nando_staging\nIMAGE_TAG=sha-abc\n", "IMAGE_TAG")).toBe("sha-abc");
+  });
+
+  it("regge CRLF e righe senza value", () => {
+    expect(envValue("IMAGE_TAG=sha-abc\r\nALTRA=1\r\n", "IMAGE_TAG")).toBe("sha-abc");
+  });
+
+  it("restituisce undefined quando la variabile manca", () => {
+    expect(envValue("POSTGRES_DB=nando_staging\n", "IMAGE_TAG")).toBeUndefined();
+    expect(envValue(undefined, "IMAGE_TAG")).toBeUndefined();
   });
 });

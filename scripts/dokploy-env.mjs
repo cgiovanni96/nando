@@ -10,3 +10,16 @@ export function replaceImageTag(env, imageTag) {
 
   return `${kept.join("\n")}\n`;
 }
+
+/** Valore di una variabile nell'ambiente testuale; `undefined` se assente. */
+export function envValue(env, key) {
+  const prefix = `${key}=`;
+
+  for (const line of (env ?? "").split(/\r?\n/)) {
+    if (line.startsWith(prefix)) {
+      return line.slice(prefix.length);
+    }
+  }
+
+  return undefined;
+}
