@@ -28,7 +28,17 @@ Se questi target non sono realistici, vanno decisi prima di chiamare la VPS "dai
 
 - Repository restic su **R2** (`nando-backups`), cifrato lato client.
 - Copia locale breve in `/srv/nando/backups/db` (7 giorni) per restore rapidi.
+- Bucket **`nando-assets`** per gli allegati, con **versioning degli oggetti** attivo e lifecycle delle versioni non correnti a 90 giorni: il dump e restic non toccano gli oggetti.
+- Bucket **`nando-exports`** privato per gli archivi di export (12 mesi).
 - Snapshot SSDNodes come ultima spiaggia, non come strategia.
+
+### R2: bucket e versioning
+
+Da configurare una volta, dal dashboard R2 o con `aws s3api --endpoint-url <R2_ENDPOINT>`:
+
+1. **`nando-assets`**: versioning attivo; regola lifecycle che scade le versioni non correnti dopo 90 giorni. Verifica caricando un oggetto di prova, cancellandolo e ripristinandolo da una versione precedente.
+2. **`nando-exports`**: bucket privato; lifecycle che scade gli oggetti dopo 365 giorni (12 archivi mensili). Nessun dominio pubblico, nessun `r2.dev`.
+3. Token R2 con object read/write sui tre bucket; le chiavi stanno in `/srv/nando/secrets/restic.env`. Un token limitato a `nando-backups` non basta per l'export.
 
 ### Script
 
@@ -130,6 +140,43 @@ Lo script:
 
 Non tocca il database dell'applicazione. Va eseguito **almeno una volta al mese**; l'esito va annotato in `maintenance-log.md`.
 
+### Export
+
+`nando-export` prende l'ultimo dump, ne deriva `schema.sql`, costruisce `counts.tsv`, `MANIFEST.json` e `README.md`, cifra tutto con `age` e carica l'archivio su `nando-exports`.
+
+```bash
+sudo apt-get install -y age awscli    # una tantum
+sudo /usr/local/sbin/nando-export
+```
+
+Contenuto e formato sono in ADR-0011: `database.dump`, `schema.sql` derivato dal dump (non dal database), conteggi per tabella, `sha256` di ogni parte, tag immagine e versione del journal.
+
+Chiave:
+
+- **pubblica** in `/srv/nando/secrets/age-public.key` (root, `600`), usata dal job;
+- **privata** solo nel password manager, mai sulla VPS;
+- senza la privata l'archivio non è leggibile, per scelta.
+
+Variabili (in `restic.env` o nell'ambiente):
+
+```text
+EXPORTS_BUCKET=nando-exports
+AGE_RECIPIENT_FILE=/srv/nando/secrets/age-public.key
+# R2_ENDPOINT è derivato da RESTIC_REPOSITORY
+```
+
+Retention: 12 archivi, sia in `/srv/nando/exports` sia sul bucket (lifecycle 365 giorni).
+
+Verifica mensile, con la chiave privata presa dal password manager solo per il test:
+
+```bash
+# copia la privata in /root/age-test.key, poi
+sudo AGE_IDENTITY_FILE=/root/age-test.key /usr/local/sbin/nando-restore-test --export
+sudo shred -u /root/age-test.key
+```
+
+Lo script decifra l'archivio, confronta lo `sha256` di ogni parte con il manifest, ripristina `database.dump` in un database temporaneo e confronta i conteggi per tabella. Se il manifest non torna, fallisce.
+
 ## Monitoraggio
 
 ### Esterno
@@ -228,7 +275,7 @@ Eseguire ogni lunedì, o su richiesta. Non fare upgrade senza approvazione.
 4. **Immagini Docker non-app** (Postgres minor, cloudflared, Dokploy): aggiorna i tag in modo controllato, `docker compose pull`, `up -d`, verifica. Non fare major upgrade di Postgres senza piano.
 5. **App**: aggiorna solo via CI/CD, non con `docker compose pull` manuale in produzione.
 6. **Pulizia**: `sudo docker image prune -f`; non `-a`, non `--volumes`.
-7. **Restore test**: `sudo /usr/local/sbin/nando-restore-test`.
+7. **Restore test**: `sudo /usr/local/sbin/nando-restore-test`; una volta al mese `sudo /usr/local/sbin/nando-export` seguito da `--export` con la chiave age, come sopra.
 8. **Restic check**: `sudo bash -c 'set -a; . /srv/nando/secrets/restic.env; set +a; restic check --read-data-subset=10%'`.
 9. **Postgres**: `pg_stat_statements`, query lente, connessioni, dimensione DB; valuta `VACUUM (ANALYZE)` solo se necessario. Non `VACUUM FULL` senza piano.
 10. **Accessi**: `getent passwd`, `sudo -l`, `authorized_keys`, `last`; rimuovi chiavi non più usate.
