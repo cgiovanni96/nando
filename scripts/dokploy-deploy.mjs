@@ -1,4 +1,10 @@
 import { firstDifferenceLine, readCompose, sameCompose } from "./dokploy-compose.mjs";
+import {
+  deploymentId,
+  deploymentIds,
+  deploymentState,
+  findTriggeredDeployment,
+} from "./dokploy-deployment.mjs";
 import { envValue, replaceImageTag } from "./dokploy-env.mjs";
 
 const { DOKPLOY_URL, DOKPLOY_API_KEY, DOKPLOY_COMPOSE_ID, IMAGE_TAG, STAGING_URL } = process.env;
@@ -67,39 +73,35 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function reportDeployment() {
-  try {
-    const deployments = await dokploy(
-      `deployment.allByCompose?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`,
-    );
+async function listDeployments() {
+  const response = await dokploy(
+    `deployment.allByCompose?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`,
+  );
 
-    if (!Array.isArray(deployments) || deployments.length === 0) {
-      console.error("[nando] nessun deployment Dokploy trovato per questo compose.");
-      return;
-    }
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.items)) return response.items;
 
-    const latest = deployments.toSorted(
-      (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
-    )[0];
+  return [];
+}
 
-    console.error(
-      `[nando] ultimo deployment Dokploy: ${latest.status ?? "sconosciuto"} ` +
-        `(${latest.title ?? "senza titolo"}), creato ${latest.createdAt ?? "?"}`,
-    );
+function reportDeployment(deployment) {
+  if (!deployment) {
+    console.error("[nando] nessun deployment Dokploy registrato per questo run.");
+    return;
+  }
 
-    if (latest.errorMessage) {
-      console.error(`[nando] errore riportato da Dokploy: ${latest.errorMessage}`);
-    }
+  console.error(
+    `[nando] deployment ${deploymentId(deployment) ?? "senza id"}: ` +
+      `${deployment.status ?? "stato sconosciuto"} ` +
+      `(${deployment.title ?? "senza titolo"}), creato ${deployment.createdAt ?? "?"}`,
+  );
 
-    if (latest.logPath) {
-      console.error(`[nando] log del deployment sulla VPS: sudo tail -n 200 ${latest.logPath}`);
-    }
-  } catch (error) {
-    console.error(
-      `[nando] stato del deployment non disponibile: ${
-        error instanceof Error ? error.message : error
-      }`,
-    );
+  if (deployment.errorMessage) {
+    console.error(`[nando] errore riportato da Dokploy: ${deployment.errorMessage}`);
+  }
+
+  if (deployment.logPath) {
+    console.error(`[nando] log del deployment sulla VPS: sudo tail -n 200 ${deployment.logPath}`);
   }
 }
 
@@ -142,33 +144,79 @@ async function main() {
 
   console.log(`[nando] compose allineato a deploy/compose.staging.yml (${IMAGE_TAG})`);
 
+  const deployTitle = `deploy ${IMAGE_TAG}`;
+  const knownIds = deploymentIds(await listDeployments());
+
   await dokploy("compose.deploy", {
     method: "POST",
     body: JSON.stringify({
       composeId: DOKPLOY_COMPOSE_ID,
-      title: `deploy ${IMAGE_TAG}`,
+      title: deployTitle,
     }),
   });
 
   console.log(`[nando] deploy Dokploy avviato per ${IMAGE_TAG}`);
 
+  let triggered = null;
+
   for (let attempt = 1; attempt <= 60; attempt++) {
+    let smokeError = null;
+
     try {
       await smoke();
-      console.log(`[nando] staging healthy su ${stagingUrl} (${IMAGE_TAG})`);
-      return;
     } catch (error) {
-      if (attempt === 60) {
-        await reportDeployment();
-        throw error;
-      }
-      console.log(
-        `[nando] smoke ${attempt}/60 non ancora pronto: ${
+      smokeError = error;
+    }
+
+    try {
+      triggered =
+        findTriggeredDeployment(await listDeployments(), { knownIds, title: deployTitle }) ??
+        triggered;
+    } catch (error) {
+      console.error(
+        `[nando] stato del deployment non disponibile: ${
           error instanceof Error ? error.message : error
         }`,
       );
-      await sleep(10_000);
     }
+
+    const state = deploymentState(triggered);
+
+    if (state === "failed") {
+      reportDeployment(triggered);
+      fail(
+        `il deployment Dokploy di ${IMAGE_TAG} è ${triggered.status}: ` +
+          "le immagini in esecuzione non sono quelle del tag richiesto.",
+      );
+    }
+
+    if (state === "done" && !smokeError) {
+      console.log(
+        `[nando] deployment ${deploymentId(triggered)} done; ` +
+          `staging healthy su ${stagingUrl} (${IMAGE_TAG})`,
+      );
+      return;
+    }
+
+    if (attempt === 60) {
+      reportDeployment(triggered);
+      fail(
+        `timeout dopo 10 minuti: ${
+          triggered
+            ? `deployment ${deploymentId(triggered)} ancora ${triggered.status}`
+            : "nessun deployment Dokploy registrato per questo run"
+        }, smoke ${smokeError ? "non pronto" : "ok"}.`,
+      );
+    }
+
+    console.log(
+      `[nando] tentativo ${attempt}/60: ` +
+        `deployment ${triggered ? deploymentState(triggered) : "assente"}, ` +
+        `smoke ${smokeError ? "non pronto" : "ok"}` +
+        `${smokeError ? ` (${smokeError instanceof Error ? smokeError.message : smokeError})` : ""}`,
+    );
+
+    await sleep(10_000);
   }
 }
 
