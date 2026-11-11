@@ -38,7 +38,8 @@ DB_USER="${DB_USER:-nando}"
 : "${RESTIC_PASSWORD_FILE:?RESTIC_PASSWORD_FILE mancante}"
 
 # Il container del database si riconosce dalle etichette Compose: Dokploy genera
-# nomi diversi da quelli del compose, ma project e service restano stabili.
+# nomi e suffissi diversi (`nando-staging-iilphp`), ma project e service restano
+# stabili. Prima si cerca il progetto esatto, poi il prefisso `$DB_PROJECT-`.
 resolve_db_container() {
   if [[ -n "$DB_CONTAINER" ]]; then
     docker inspect "$DB_CONTAINER" >/dev/null 2>&1 || {
@@ -49,14 +50,17 @@ resolve_db_container() {
     return
   fi
 
-  local matches count
-  matches="$(docker ps --format '{{.ID}} {{.Label "com.docker.compose.project"}}' \
-    --filter "label=com.docker.compose.service=$DB_SERVICE" \
-    | awk -v project="$DB_PROJECT" '$2 == project { print $1 }')"
+  local rows matches count
+  rows="$(docker ps --format '{{.ID}} {{.Label "com.docker.compose.project"}}' \
+    --filter "label=com.docker.compose.service=$DB_SERVICE")"
+  matches="$(printf '%s\n' "$rows" | awk -v project="$DB_PROJECT" '$2 == project { print $1 }')"
+  if [[ -z "$matches" ]]; then
+    matches="$(printf '%s\n' "$rows" | awk -v prefix="$DB_PROJECT-" 'index($2, prefix) == 1 { print $1 }')"
+  fi
   count="$(printf '%s\n' "$matches" | grep -c . || true)"
 
   if [[ "$count" -ne 1 ]]; then
-    echo "trovati $count container per service=$DB_SERVICE project=$DB_PROJECT" >&2
+    echo "trovati $count container per service=$DB_SERVICE e project=$DB_PROJECT (esatto o prefisso)" >&2
     echo "candidati:" >&2
     docker ps --format '  {{.Names}}	project={{.Label "com.docker.compose.project"}}	service={{.Label "com.docker.compose.service"}}' >&2
     echo "imposta DB_PROJECT (o DB_CONTAINER) in $RESTIC_ENV" >&2
