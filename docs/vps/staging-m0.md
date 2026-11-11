@@ -149,6 +149,6 @@ Il percorso canonico rimane il tailnet (`https://<vps>.<tailnet>.ts.net`): lo sm
 - **`web` unhealthy:** il healthcheck chiama `/healthz`; controlla `PORT=3002`.
 - **401 dal proxy:** `INTERNAL_TOKEN` diverso fra `web` e `api`.
 - **Pull GHCR negato:** rifai `docker login ghcr.io` sulla VPS o rendi pubblico il package.
-- **Dokploy API 401:** API key errata o scaduta.
+- **Dokploy API 401:** la chiave è errata, scaduta, oppure un limite di frequenza sull'API ha bloccato la verifica: Dokploy risponde `{"message":"Unauthorized"}` in tutti i casi. Le richieste dal tailnet arrivano da `127.0.0.1` perché passano da `tailscale serve`, quindi un limite per IP è di fatto globale e il polling della dashboard può consumarlo prima del deploy. Controlla i log di Dokploy (`Error verifying API key`) prima di rigenerare la chiave.
 - **`composeFile` diverso dopo l'update:** la versione Dokploy installata non accetta il corpo del compose dall'API. Il deploy si ferma prima di toccare i container: aggiorna Dokploy e rilancia.
 - **Tailscale serve non raggiungibile:** `tailscale serve status`, MagicDNS e ACL `tag:ci`.
