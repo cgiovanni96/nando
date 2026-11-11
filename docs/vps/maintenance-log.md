@@ -32,6 +32,8 @@ Registro append-only delle manutenzioni. Una riga per intervento; i dettagli sta
 | 2026-11-11 10:48 | agente | deploy | `deploy-staging` respinto con 401 dall'API Dokploy (`sha-76e86e5`) | WARN | Nessun container toccato. Causa nei log Dokploy: `Error verifying API key Error: Rate limit exceeded` (rate limit sulla chiave API, non chiave errata). Stessa chiave e nessun secret modificato: deploy riuscito alle 10:57 con `sha-76e86e5` |
 | 2026-11-11 11:36 | agente | deploy | `deploy-staging` attende il deployment Dokploy `done` prima dello smoke (`sha-d72fb6e`) | OK | Un deploy fallito non può più passare verde sui container precedenti; unit test su selezione e stati del deployment |
 | 2026-11-11 11:37 | agente | deploy | Rollback provato su staging: `sha-d72fb6e` → `sha-fbe3308` → `sha-d72fb6e` | OK | Entrambi i passaggi con deployment `done` e smoke verde; il compose viene riallineato dal repository a ogni deploy |
+| 2026-11-11 12:34 | umano+agente | backup | `nando-backup` sul database di staging in Dokploy: dump `nando-20261111T123409Z.dump` (8 KB) + manifest, restic ok | OK | Il backup non legge più il database legacy `nando`; container risolto per prefisso di progetto (`nando-staging-iilphp`) |
+| 2026-11-11 12:35 | umano+agente | restore-test | Restore del dump `20261111T123409Z` in `nando_restore_test_*`, con confronto dello `sha256` dal manifest | OK | `manifest coerente`, `restore ok: 3 tabelle pubbliche`, healthchecks ping ok |
 
 ## Tipi
 
