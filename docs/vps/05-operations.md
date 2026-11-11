@@ -62,7 +62,10 @@ DB_USER=nando
 # DB_CONTAINER=   # ha precedenza; utile se le etichette non bastano
 ```
 
-Se il progetto Dokploy cambia nome, il backup si ferma e stampa i candidati. Per trovarli:
+`DB_PROJECT` vale come nome esatto oppure come prefisso: Dokploy aggiunge un suffisso
+(`nando-staging-iilphp`), quindi `nando-staging` trova il progetto giusto. Se il prefisso
+corrisponde a più progetti, lo script si ferma e li elenca — meglio nessun dump che il dump
+sbagliato. Se il progetto Dokploy cambia nome:
 
 ```bash
 sudo docker ps --format '{{.Names}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.service"}}'
