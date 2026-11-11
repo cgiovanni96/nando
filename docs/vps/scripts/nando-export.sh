@@ -154,6 +154,9 @@ pg_restore -d <database-vuoto> --no-owner --no-privileges /tmp/nando-export/data
 
 Confronta i conteggi con `MANIFEST.json` prima di dichiarare il ripristino riuscito.
 La chiave privata `age` non è sulla VPS: senza di essa l'archivio non è leggibile.
+
+Gli allegati non sono inclusi finché Knowledge (M4a) non introduce il primo upload:
+`MANIFEST.json` ha `attachments: []` e i file restano negli snapshot del bucket.
 README
 README
 
