@@ -1,6 +1,9 @@
-import { replaceImageTag } from "./dokploy-env.mjs";
+import { changedServices, readCompose, sameComposeSemantics } from "./dokploy-compose.mjs";
+import { envValue, replaceImageTag } from "./dokploy-env.mjs";
 
 const { DOKPLOY_URL, DOKPLOY_API_KEY, DOKPLOY_COMPOSE_ID, IMAGE_TAG, STAGING_URL } = process.env;
+
+const COMPOSE_FILE = new URL("../deploy/compose.staging.yml", import.meta.url);
 
 function fail(message) {
   console.error(`[nando] ${message}`);
@@ -97,13 +100,44 @@ async function reportDeployment() {
 }
 
 async function main() {
+  const composeFile = await readCompose(COMPOSE_FILE);
   const compose = await dokploy(`compose.one?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`);
+
+  if (compose.sourceType !== "raw") {
+    fail(
+      `il compose Dokploy ha sourceType "${compose.sourceType ?? "sconosciuto"}": ` +
+        "il corpo inviato dal repository non verrebbe applicato. Riporta l'app a sorgente raw.",
+    );
+  }
+
   const env = replaceImageTag(compose.env ?? "", IMAGE_TAG);
 
   await dokploy("compose.update", {
     method: "POST",
-    body: JSON.stringify({ composeId: DOKPLOY_COMPOSE_ID, env }),
+    body: JSON.stringify({ composeId: DOKPLOY_COMPOSE_ID, env, composeFile }),
   });
+
+  const stored = await dokploy(`compose.one?composeId=${encodeURIComponent(DOKPLOY_COMPOSE_ID)}`);
+  const storedCompose = stored.composeFile ?? "";
+
+  if (!sameComposeSemantics(composeFile, storedCompose)) {
+    const services = changedServices(composeFile, storedCompose);
+    fail(
+      "Dokploy ha salvato un compose diverso da deploy/compose.staging.yml" +
+        `${services.length > 0 ? ` (servizi: ${services.join(", ")})` : ""}. ` +
+        "Il deploy è fermo prima di toccare i container: la versione Dokploy installata " +
+        "probabilmente non accetta composeFile dall'API.",
+    );
+  }
+
+  if (envValue(stored.env ?? "", "IMAGE_TAG") !== IMAGE_TAG) {
+    fail(
+      `Dokploy ha salvato IMAGE_TAG=${envValue(stored.env ?? "", "IMAGE_TAG") ?? "assente"} ` +
+        `invece di ${IMAGE_TAG}. Il deploy è fermo prima di toccare i container.`,
+    );
+  }
+
+  console.log(`[nando] compose allineato a deploy/compose.staging.yml (${IMAGE_TAG})`);
 
   await dokploy("compose.deploy", {
     method: "POST",
