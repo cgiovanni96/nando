@@ -35,7 +35,11 @@ async function dokploy(path, init = {}) {
   const text = await response.text();
 
   if (!response.ok) {
-    throw new Error(`Dokploy ${path} -> ${response.status}: ${text.slice(0, 500)}`);
+    const hint =
+      response.status === 401
+        ? " (chiave non valida oppure rate limit sull'API: i log Dokploy dicono quale)"
+        : "";
+    throw new Error(`Dokploy ${path} -> ${response.status}${hint}: ${text.slice(0, 500)}`);
   }
 
   return text ? JSON.parse(text) : null;
