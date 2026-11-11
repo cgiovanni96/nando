@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { changedServices, normalizeCompose, sameComposeSemantics } from "./dokploy-compose.mjs";
-
-const image = '"ghcr.io/cgiovanni96/nando:${IMAGE_TAG:?IMAGE_TAG required}"';
+import { firstDifferenceLine, normalizeCompose, sameCompose } from "./dokploy-compose.mjs";
 
 const compose = `x-app: &app
-  image: ${image}
+  image: "ghcr.io/cgiovanni96/nando:\${IMAGE_TAG:?IMAGE_TAG required}"
   restart: unless-stopped
 services:
   api:
@@ -34,58 +32,42 @@ describe("normalizeCompose", () => {
   });
 });
 
-describe("sameComposeSemantics", () => {
-  it("ignora CRLF, commenti e spazi", () => {
-    const stored = `# commento aggiunto da Dokploy\r\n${compose.replace(/\n/g, "\r\n")}`;
+describe("sameCompose", () => {
+  it("ignora CRLF e spazi finali", () => {
+    const stored = compose.replace(/\n/g, "\r\n").replace("x-app: &app\r\n", "x-app: &app   \r\n");
 
-    expect(sameComposeSemantics(compose, stored)).toBe(true);
+    expect(sameCompose(compose, stored)).toBe(true);
   });
 
   it("riconosce un command diverso", () => {
     const stored = compose.replace("/app/web/server/index.mjs", "/app/api/index.mjs");
 
-    expect(sameComposeSemantics(compose, stored)).toBe(false);
+    expect(sameCompose(compose, stored)).toBe(false);
   });
 
   it("riconosce una porta diversa", () => {
     const stored = compose.replace("127.0.0.1:3002:3002", "127.0.0.1:3003:3002");
 
-    expect(sameComposeSemantics(compose, stored)).toBe(false);
+    expect(sameCompose(compose, stored)).toBe(false);
   });
 
   it("tratta un compose vuoto come diverso", () => {
-    expect(sameComposeSemantics(compose, "")).toBe(false);
+    expect(sameCompose(compose, "")).toBe(false);
   });
 });
 
-describe("changedServices", () => {
-  it("elenca solo i servizi che differiscono", () => {
+describe("firstDifferenceLine", () => {
+  it("indica la riga della prima differenza", () => {
     const stored = compose.replace("127.0.0.1:3002:3002", "127.0.0.1:3003:3002");
 
-    expect(changedServices(compose, stored)).toEqual(["web"]);
+    expect(firstDifferenceLine(compose, stored)).toBe(12);
   });
 
-  it("non segnala nulla quando gli anchor sono scritti in forma diversa", () => {
-    const expanded = `services:
-  api:
-    image: ${image}
-    restart: unless-stopped
-    command: ["node", "/app/api/index.mjs"]
-  web:
-    image: ${image}
-    restart: unless-stopped
-    command: ["node", "/app/web/server/index.mjs"]
-    ports:
-      - "127.0.0.1:3002:3002"
-`;
-
-    expect(changedServices(compose, expanded)).toEqual([]);
+  it("con testi uguali restituisce 0", () => {
+    expect(firstDifferenceLine(compose, compose)).toBe(0);
   });
 
-  it("segnala un servizio mancante o aggiunto", () => {
-    const withoutWeb = compose.slice(0, compose.indexOf("  web:"));
-
-    expect(changedServices(compose, withoutWeb)).toEqual(["web"]);
-    expect(changedServices(withoutWeb, compose)).toEqual(["web"]);
+  it("segnala un compose troncato", () => {
+    expect(firstDifferenceLine(compose, "")).toBe(1);
   });
 });

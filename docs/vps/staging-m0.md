@@ -54,7 +54,7 @@ sudo tailscale serve status
 2. Crea il progetto `Nando` e l'ambiente `staging`.
 3. Crea una **Compose** app `nando-staging`, sorgente **raw**, e incolla `deploy/compose.staging.yml`.
 
-   Il corpo del compose è inviato dal repository a ogni deploy: l'incolla qui serve solo al bootstrap. Il workflow chiama `compose.update` con `composeFile` preso da `deploy/compose.staging.yml` e poi rilegge il salvato: se il corpo salvato non è semanticamente uguale al file, il deploy si ferma prima di toccare i container. Modificare il compose dalla UI di Dokploy è inutile, perché il deploy successivo lo sovrascrive: la modifica va fatta nel repository. `pnpm deploy:check` verifica che `api`, `web`, `worker` e `migrate` esistano e dichiarino il proprio `command`: l'immagine ha un solo `CMD` (web), quindi un servizio senza `command` esegue il server sbagliato.
+   Il corpo del compose è inviato dal repository a ogni deploy: l'incolla qui serve solo al bootstrap. Il workflow chiama `compose.update` con `composeFile` preso da `deploy/compose.staging.yml` e poi rilegge il salvato: se il corpo salvato non è identico al file (a meno di BOM, CRLF e spazi finali), il deploy si ferma prima di toccare i container. Modificare il compose dalla UI di Dokploy è inutile, perché il deploy successivo lo sovrascrive: la modifica va fatta nel repository. `pnpm deploy:check` verifica che `api`, `web`, `worker` e `migrate` esistano e dichiarino il proprio `command`: l'immagine ha un solo `CMD` (web), quindi un servizio senza `command` esegue il server sbagliato.
 4. Nell'ambiente dell'app imposta:
 
 ```dotenv
@@ -98,7 +98,7 @@ Al termine, `deploy-staging` parte da `workflow_run` e:
 
 1. legge `deploy/compose.staging.yml` dal commit deployato;
 2. invia a Dokploy l'ambiente (`IMAGE_TAG` = `sha-<full sha>`) e il corpo del compose in un'unica `compose.update`;
-3. rilegge il salvato: se il compose non è semanticamente uguale al file o `IMAGE_TAG` non è quello inviato, si ferma prima del deploy;
+3. rilegge il salvato: se il compose non è identico al file o `IMAGE_TAG` non è quello inviato, si ferma prima del deploy;
 4. deploya;
 5. fa smoke su `/healthz`, `/api/openapi.json`, `/api/system/info` e `/api/reference`.
 
