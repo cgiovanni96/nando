@@ -1,3 +1,5 @@
+import { test } from "@fast-check/vitest";
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -9,7 +11,18 @@ import {
   spaceStatus,
   SPACE_KINDS,
   SPACE_NAME_MAX_LENGTH,
+  type SpaceKind,
 } from "./domain";
+
+const spaceKind = fc.constantFrom(...SPACE_KINDS);
+const maybeDate = fc.option(fc.date(), { nil: null });
+
+/** La grammatica PARA, riscritta come tabella: se cambia, deve cambiare qui. */
+const CONTAINMENT: Record<SpaceKind, readonly SpaceKind[]> = {
+  area: ["area", "project"],
+  project: ["resource"],
+  resource: [],
+};
 
 describe("PARA grammar", () => {
   it("lets an area contain areas and projects", () => {
@@ -88,5 +101,33 @@ describe("space name", () => {
     expect(nameViolation("x".repeat(SPACE_NAME_MAX_LENGTH + 1))).toMatchObject({
       code: "validation_error",
     });
+  });
+});
+
+describe("space rules (properties)", () => {
+  test.prop([spaceKind, spaceKind])("canContain follows the PARA table", (parent, child) => {
+    expect(canContain(parent, child)).toBe(CONTAINMENT[parent].includes(child));
+  });
+
+  test.prop([maybeDate, maybeDate])(
+    "deleted wins over archived and active",
+    (archivedAt, deletedAt) => {
+      const expected = deletedAt ? "deleted" : archivedAt ? "archived" : "active";
+
+      expect(spaceStatus({ archivedAt, deletedAt })).toBe(expected);
+    },
+  );
+
+  test.prop([fc.string()])("normalization is idempotent", (name) => {
+    const normalized = normalizeSpaceName(name);
+
+    expect(normalizeSpaceName(normalized)).toBe(normalized);
+  });
+
+  test.prop([fc.string()])("validity depends only on the normalized length", (name) => {
+    const normalized = normalizeSpaceName(name);
+    const valid = normalized.length > 0 && normalized.length <= SPACE_NAME_MAX_LENGTH;
+
+    expect(nameViolation(name) === null).toBe(valid);
   });
 });
