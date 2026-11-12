@@ -109,6 +109,8 @@ export function QuickCaptureForm({
         color: "gray",
         autoClose: 2000,
         withCloseButton: false,
+        p: "sm",
+        radius: "sm",
       });
       onCreated?.();
     } catch {
