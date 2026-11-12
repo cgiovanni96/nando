@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
+    "@nando/core": "workspace:*",
     "@nando/kernel": "workspace:*",
     "@nando/platform": "workspace:*",
     "@scalar/hono-api-reference": "^0.12.18",

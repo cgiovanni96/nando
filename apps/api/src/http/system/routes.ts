@@ -4,11 +4,10 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 
 import { errorEnvelope } from "../envelope";
 import { bearerAuth } from "../middleware/auth";
-import { errorResponse } from "../openapi";
+import { errorExamples, errorResponse } from "../openapi";
 import type { ApiDeps, ApiEnv } from "../types";
 import {
   API_VERSION,
-  errorExamples,
   systemEchoRequestSchema,
   systemEchoResponseExample,
   systemEchoResponseSchema,
@@ -16,6 +15,10 @@ import {
   systemInfoResponseSchema,
 } from "./contract";
 
+/**
+ * Route group di prova del contratto: info di sistema e comando echo
+ * idempotente. Resta il banco di prova di envelope, auth e OpenAPI.
+ */
 export function createSystemRoutes(deps: ApiDeps) {
   const system = new Hono<ApiEnv>();
   const auth = bearerAuth(deps.config.INTERNAL_TOKEN, deps.config.OWNER_USER_ID);

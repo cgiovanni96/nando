@@ -1,6 +1,8 @@
+// Contratto wire del route group di sistema: schemi, esempi e tipi DTO.
+
 import { z } from "zod";
 
-import { errorExample, successEnvelopeSchema, uuidV7Schema } from "../envelope";
+import { successEnvelopeSchema, uuidV7Schema } from "../envelope";
 
 export const API_VERSION = "0.0.0";
 
@@ -47,22 +49,3 @@ export const systemEchoResponseExample = systemEchoResponseSchema.parse({
     message: systemEchoRequestExample.message,
   },
 });
-
-export const errorExamples = {
-  validation: errorExample({
-    code: "validation_error",
-    message: "Dati non validi.",
-  }),
-  unauthorized: errorExample({
-    code: "unauthorized",
-    message: "Token interno mancante o errato.",
-  }),
-  idempotencyKeyReuse: errorExample({
-    code: "idempotency_key_reuse",
-    message: "Lo stesso commandId è già stato usato con un payload diverso.",
-  }),
-  internal: errorExample({
-    code: "internal_error",
-    message: "Errore interno.",
-  }),
-};
