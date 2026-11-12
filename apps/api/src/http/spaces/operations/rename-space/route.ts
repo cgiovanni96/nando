@@ -56,8 +56,8 @@ export function registerRenameSpaceRoute(router: ApiRouter, deps: ApiDeps, space
         commandId: payload.commandId,
         payload: { spaceId, name: payload.name },
         responseSchema: spaceResponseSchema,
-        execute: async () => {
-          const result = await spaces.commands.rename({ spaceId, name: payload.name });
+        execute: async (tx) => {
+          const result = await spaces.commands.rename({ spaceId, name: payload.name }, tx);
           const renamed = unwrapResult(result);
 
           return toSpaceDto(renamed);

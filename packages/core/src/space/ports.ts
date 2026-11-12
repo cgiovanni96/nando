@@ -4,6 +4,12 @@ import type { InboxCursor, InboxItem } from "./domain";
 
 export type SpaceDatabase = PostgresJsDatabase;
 
+/** Transazione Drizzle compatibile con le query dei comandi. */
+export type SpaceTransaction = Parameters<Parameters<SpaceDatabase["transaction"]>[0]>[0];
+
+/** Connessione usata da un comando: il db del modulo o la transazione di idempotenza. */
+export type SpaceCommandDb = SpaceDatabase | SpaceTransaction;
+
 export type InboxSourceQuery = {
   cursor: InboxCursor | null;
   limit: number;
