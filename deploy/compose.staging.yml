@@ -61,6 +61,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      LOG_LEVEL: "info"
       DATABASE_URL: "postgres://${POSTGRES_USER:-nando}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@db:5432/${POSTGRES_DB:-nando_staging}"
       OWNER_USER_ID: "${OWNER_USER_ID:?OWNER_USER_ID required}"
       MIGRATIONS_DIR: /app/migrations
@@ -79,6 +80,7 @@ services:
       OWNER_USER_ID: "${OWNER_USER_ID:?OWNER_USER_ID required}"
       INTERNAL_TOKEN: "${INTERNAL_TOKEN:?INTERNAL_TOKEN required}"
       DOCS_ENABLED: "true"
+      LOG_LEVEL: "info"
     healthcheck:
       test:
         [
@@ -130,6 +132,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: "postgres://${POSTGRES_USER:-nando}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@db:5432/${POSTGRES_DB:-nando_staging}"
       OWNER_USER_ID: "${OWNER_USER_ID:?OWNER_USER_ID required}"
+      LOG_LEVEL: "info"
 
 volumes:
   nando_staging_pgdata:

@@ -17,6 +17,7 @@ const validEnv = {
   API_URL: "http://127.0.0.1:3000",
   PORT: "3000",
   DOCS_ENABLED: "true",
+  LOG_LEVEL: "warn",
 };
 
 describe("parseApiConfig", () => {
@@ -28,6 +29,7 @@ describe("parseApiConfig", () => {
       INTERNAL_TOKEN: validEnv.INTERNAL_TOKEN,
       DOCS_ENABLED: true,
       PORT: 3000,
+      LOG_LEVEL: "warn",
     });
   });
 
@@ -41,6 +43,16 @@ describe("parseApiConfig", () => {
     expect(config.DOCS_ENABLED).toBe(false);
     expect(config.PORT).toBe(3000);
     expect(config.NODE_ENV).toBe("development");
+    expect(config.LOG_LEVEL).toBe("info");
+  });
+
+  it("rejects an unknown log level", () => {
+    expect(() =>
+      parseApiConfig({
+        ...validEnv,
+        LOG_LEVEL: "verbose",
+      }),
+    ).toThrow(/LOG_LEVEL/);
   });
 
   it("fails with an actionable message when the owner is missing", () => {
@@ -66,6 +78,7 @@ describe("parseWorkerConfig", () => {
       NODE_ENV: "test",
       DATABASE_URL: validEnv.DATABASE_URL,
       OWNER_USER_ID: validEnv.OWNER_USER_ID,
+      LOG_LEVEL: "warn",
     });
   });
 });
@@ -89,6 +102,7 @@ describe("parseSeedConfig", () => {
       NODE_ENV: "test",
       DATABASE_URL: validEnv.DATABASE_URL,
       OWNER_USER_ID: validEnv.OWNER_USER_ID,
+      LOG_LEVEL: "warn",
     });
   });
 });

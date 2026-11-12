@@ -76,6 +76,7 @@ services:
       - /srv/nando/secrets/api.env
     environment:
       NODE_ENV: production
+      LOG_LEVEL: "info"
       MIGRATIONS_DIR: /app/migrations
     command: ["node", "/app/api/migrate.mjs"]
 
@@ -91,6 +92,7 @@ services:
       NODE_ENV: production
       PORT: "3000"
       DOCS_ENABLED: "false"
+      LOG_LEVEL: "info"
     healthcheck:
       test:
         [
@@ -142,6 +144,7 @@ services:
       - /srv/nando/secrets/worker.env
     environment:
       NODE_ENV: production
+      LOG_LEVEL: "info"
 
 volumes:
   nando_pgdata:
