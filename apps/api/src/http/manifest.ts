@@ -14,6 +14,13 @@ export const contractRoutes = [
   { method: "POST", path: "/api/spaces/{spaceId}/archive" },
   { method: "POST", path: "/api/spaces/{spaceId}/unarchive" },
   { method: "GET", path: "/api/inbox" },
+  { method: "GET", path: "/api/tasks" },
+  { method: "POST", path: "/api/tasks" },
+  { method: "GET", path: "/api/tasks/{taskId}" },
+  { method: "POST", path: "/api/tasks/{taskId}/update" },
+  { method: "POST", path: "/api/tasks/{taskId}/complete" },
+  { method: "POST", path: "/api/tasks/{taskId}/skip" },
+  { method: "POST", path: "/api/tasks/{taskId}/cancel" },
 ] as const;
 
 export type ContractRoute = (typeof contractRoutes)[number];

@@ -32,6 +32,10 @@ export const openApiOptions = {
         name: "inbox",
         description: "Vista globale delle entità senza Space proprietario.",
       },
+      {
+        name: "tasks",
+        description: "Task core: titolo, stato, scadenza e Space.",
+      },
     ],
   },
   defaultValidationErrorResponse: false,
@@ -63,6 +67,10 @@ export const errorExamples = {
   idempotencyKeyReuse: errorExample({
     code: "idempotency_key_reuse",
     message: "Lo stesso commandId è già stato usato con un payload diverso.",
+  }),
+  versionConflict: errorExample({
+    code: "version_conflict",
+    message: "La versione attesa non corrisponde a quella corrente.",
   }),
   internal: errorExample({
     code: "internal_error",

@@ -1,4 +1,4 @@
-import { createSpaceModule } from "@nando/core";
+import { createSpaceModule, createTaskModule } from "@nando/core";
 import { newId, systemClock } from "@nando/kernel";
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
@@ -12,6 +12,7 @@ import { requestId } from "./middleware/request-id";
 import { openApiOptions } from "./openapi";
 import { createSpaceRoutes } from "./spaces/routes";
 import { createSystemRoutes } from "./system/routes";
+import { createTaskRoutes } from "./tasks/routes";
 import type { ApiDeps, ApiEnv } from "./types";
 
 // Composizione dell'app HTTP.
@@ -40,10 +41,19 @@ export function createContractApp(deps: ApiDeps) {
     ids: newId,
     inboxSources: deps.inboxSources ?? [],
   });
+  const tasks = createTaskModule({
+    db: deps.db,
+    clock: systemClock,
+    ids: newId,
+    spacePort: {
+      get: (spaceId) => spaces.queries.get(spaceId),
+    },
+  });
 
   app.route("/", createSystemRoutes(deps));
   app.route("/", createSpaceRoutes(deps, spaces));
   app.route("/", createInboxRoutes(deps, spaces));
+  app.route("/", createTaskRoutes(deps, tasks));
   return app;
 }
 

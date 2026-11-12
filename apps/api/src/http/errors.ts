@@ -44,6 +44,8 @@ export function domainErrorToHttp(error: DomainError): HttpError {
       return new HttpError(404, error.code, error.message, error.details);
     case "domain_rule_violation":
       return new HttpError(422, error.code, error.message, error.details);
+    case "version_conflict":
+      return new HttpError(409, error.code, error.message, error.details);
     default:
       return new HttpError(500, "internal_error", "Errore interno.");
   }

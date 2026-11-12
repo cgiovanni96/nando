@@ -145,3 +145,11 @@ export function notFoundResponse(description: string) {
 export function domainRuleViolationResponse(description: string) {
   return errorResponse(description, errorExamples.domainRuleViolation);
 }
+
+/** Response 409 per un update con `expectedVersion` superata. */
+export function versionConflictResponse() {
+  return errorResponse(
+    "La versione attesa non corrisponde a quella corrente.",
+    errorExamples.versionConflict,
+  );
+}
