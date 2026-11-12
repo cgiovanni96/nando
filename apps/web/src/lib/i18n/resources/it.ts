@@ -38,16 +38,28 @@ export const it = {
       toLight: "Passa al tema chiaro",
     },
   },
+  capture: {
+    eyebrow: "Cattura",
+    title: "Cattura rapida",
+    description: "Scrivi il task e premi Invio. Lo Space è opzionale.",
+    titleLabel: "Titolo del task",
+    titlePlaceholder: "Cosa devi fare?",
+    spaceLabel: "Space",
+    spacePlaceholder: "Inbox",
+    noSpaces: "Nessuno Space",
+    submit: "Aggiungi",
+    success: "Task creato.",
+    error: "Non è stato possibile creare il task.",
+    emptyTitle: "Scrivi il titolo del task.",
+    spacesError: "Non è stato possibile caricare gli Space.",
+  },
   dashboard: {
     eyebrow: "Dashboard",
     title: "Oggi",
-    intro:
-      "La dashboard si popola con M1: cattura, Inbox e Oggi. Per ora c'è solo la shell, senza widget e senza dati finti.",
-    empty: {
-      title: "Nessun widget ancora",
-      description:
-        "La dashboard è vuota per scelta. Il primo widget arriva con la cattura dei task in M1, poi Oggi e Prossimi sette giorni in M2.",
-      action: "Nuovo task",
+    intro: "Cattura un task qui sotto; l'elenco di Oggi arriverà con il prossimo passo.",
+    today: {
+      title: "Nessun task per Oggi",
+      description: "La cattura è attiva. L'elenco dei task di oggi arriverà presto.",
     },
   },
 } as const;

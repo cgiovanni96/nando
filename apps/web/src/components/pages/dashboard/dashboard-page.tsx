@@ -1,7 +1,8 @@
-import { Button, EmptyState, Stack, Text, Title } from "@mantine/core";
-import { IconLayoutDashboard, IconPlus } from "@tabler/icons-react";
+import { EmptyState, Stack, Text, Title } from "@mantine/core";
+import { IconCalendarEvent } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { QuickCaptureCard } from "../../shared/capture/quick-capture-card";
 import classes from "./dashboard-page.module.css";
 
 export function DashboardPage() {
@@ -19,20 +20,16 @@ export function DashboardPage() {
         </Text>
       </Stack>
 
+      <QuickCaptureCard />
+
       <EmptyState
         className={classes.emptyState}
         p={{ base: 32, sm: 48 }}
         bdrs="lg"
-        icon={<IconLayoutDashboard size={28} stroke={1.5} />}
-        title={t("dashboard.empty.title")}
-        description={t("dashboard.empty.description")}
-      >
-        <EmptyState.Actions>
-          <Button variant="filled" leftSection={<IconPlus size={16} stroke={1.6} />} disabled>
-            {t("dashboard.empty.action")}
-          </Button>
-        </EmptyState.Actions>
-      </EmptyState>
+        icon={<IconCalendarEvent size={28} stroke={1.5} />}
+        title={t("dashboard.today.title")}
+        description={t("dashboard.today.description")}
+      />
     </Stack>
   );
 }
