@@ -1,32 +1,65 @@
+import { createSpaceModule } from "@nando/core";
+import { newId, systemClock } from "@nando/kernel";
 import { Scalar } from "@scalar/hono-api-reference";
-import { newId } from "@nando/kernel";
 import { Hono } from "hono";
 import { openAPIRouteHandler } from "hono-openapi";
 
 import { errorEnvelope } from "./envelope";
 import { HttpError, toHttpError } from "./errors";
 import { createHealthRoutes } from "./health";
+import { createInboxRoutes } from "./inbox/routes";
 import { requestId } from "./middleware/request-id";
 import { openApiOptions } from "./openapi";
+import { createSpaceRoutes } from "./spaces/routes";
 import { createSystemRoutes } from "./system/routes";
 import type { ApiDeps, ApiEnv } from "./types";
 
+// Composizione dell'app HTTP.
+//
+// `createContractApp` monta solo il contratto: non registra health, docs o il
+// gestore degli errori. È la superficie che `docs:check` usa per generare lo
+// spec senza avviare il server.
+//
+// `createApiApp` aggiunge l'infrastruttura del processo: request id, envelope
+// d'errore, health e documentazione opzionale.
+
 export type { ApiDeps } from "./types";
 
+/**
+ * Costruisce i moduli di dominio una volta e monta i route group.
+ *
+ * I moduli non toccano il database alla costruzione: ricevono solo le
+ * dipendenze. Per questo `docs:check` può passare un database finto e limitarsi
+ * a generare la spec.
+ */
 export function createContractApp(deps: ApiDeps) {
   const app = new Hono<ApiEnv>();
+  const spaces = createSpaceModule({
+    db: deps.db,
+    clock: systemClock,
+    ids: newId,
+    inboxSources: deps.inboxSources ?? [],
+  });
+
   app.route("/", createSystemRoutes(deps));
+  app.route("/", createSpaceRoutes(deps, spaces));
+  app.route("/", createInboxRoutes(deps, spaces));
   return app;
 }
 
+/** App completa del processo api: richieste, errori, health, contratto e docs. */
 export function createApiApp(deps: ApiDeps) {
   const app = new Hono<ApiEnv>();
 
+  // Ogni risposta porta un requestId stabile: lo riusa se il proxy lo invia,
+  // altrimenti ne genera uno nuovo.
   app.use("*", requestId);
 
   app.onError((error, c) => {
     const httpError = toHttpError(error);
 
+    // Gli errori 5xx si loggano qui una volta; gli errori imprevisti non
+    // espongono stack o dettagli interni, solo code, message e requestId.
     if (httpError.status >= 500) {
       console.error(error);
     }
@@ -34,6 +67,8 @@ export function createApiApp(deps: ApiDeps) {
     return c.json(errorEnvelope(httpError, c.get("requestId") ?? newId()), httpError.status);
   });
 
+  // Anche una route sconosciuta passa dallo stesso envelope: il client non
+  // deve distinguere un 404 di routing da un 404 di dominio.
   app.notFound((c) =>
     c.json(
       errorEnvelope(
@@ -47,6 +82,8 @@ export function createApiApp(deps: ApiDeps) {
   app.route("/", createHealthRoutes(deps));
   app.route("/", createContractApp(deps));
 
+  // La documentazione è strumentazione di sviluppo: spenta per default in
+  // produzione e, se accesa, resta dietro Access (ADR-0022).
   if (deps.config.DOCS_ENABLED) {
     app.get("/api/openapi.json", openAPIRouteHandler(createContractApp(deps), openApiOptions));
     app.get(

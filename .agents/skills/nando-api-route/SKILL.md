@@ -10,28 +10,60 @@ client. The decision record is ADR-0022.
 
 ## One route group, one contract
 
+A group with more than one operation splits by operation:
+
 ```text
 apps/api/src/http/<group>/
-  contract.ts   Zod schemas, DTO types, examples, factories
-  routes.ts     describeRoute + validator + handler
-  mapper.ts     domain -> DTO
+  contract/
+    index.ts                  public surface: shared + operation contracts
+    shared.ts                 schemas and DTOs shared by operations
+  operations/
+    <operation>/
+      contract.ts             schemas, DTOs, examples, factories
+      route.ts                describeRoute + validator + handler
+  mapper.ts                   domain -> DTO
+  routes.ts                   composition + group auth
 ```
 
-- `contract.ts` is the only place where wire shapes are declared.
+A group with a single operation may keep `contract.ts` + `routes.ts`. `apps/api/src/http/route-support.ts`
+holds the validation callback, shared error responses, and the router type.
+
+- Wire shapes live only in `contract/` or `operations/<operation>/contract.ts`.
+- Operation contracts import `contract/shared.ts`, never `contract/index.ts`; the barrel must not cycle.
 - The request schema feeds both `validator` and `describeRoute`.
 - Response schemas feed `describeRoute`, examples, and tests.
 - DTO types are `z.infer` of those schemas. Never use a domain entity as a DTO.
+- `route.ts` declares no schema.
+
+## Route helpers
+
+- `http/openapi.ts`: `jsonResponse(description, schema, example)`, `jsonRequestBody(schema, example)`,
+  `errorResponse(...)`. The example is typed from the schema.
+- `http/route-support.ts`: `validateJson`, `validateParam`, `validateQuery`, `commandResponse`, the
+  error response sets, and the router type.
+- `describeRoute` stays in `route.ts`: review the Scalar prose together with the handler.
+- Do not create `describe.ts` or `validators.ts` per operation.
+- Inside `execute`, unwrap and map in named steps, never a nested expression:
+
+```ts
+execute: async () => {
+  const result = await spaces.commands.archive({ spaceId });
+  const archived = unwrapResult(result);
+  return toSpaceDto(archived);
+},
+```
 
 ## Steps
 
-1. Add request and response schemas to `contract.ts`.
+1. Add request and response schemas to `operations/<operation>/contract.ts`; shared DTOs and schemas go in `contract/shared.ts`.
 2. Add a mapper from the domain result to the DTO.
-3. Register the route with `describeRoute` and the shared request schema through `validator`.
-4. Return the success or error envelope.
-5. Add one example per documented response, typed from the response schema.
-6. Add an integration test in `apps/api/test/integration/` that `safeParse`s the response.
-7. Use the route from `apps/web` in the same PR.
-8. Run `pnpm typecheck`, `pnpm docs:check`, `pnpm test:integration`.
+3. Register the route in `operations/<operation>/route.ts` with `describeRoute`, the `validate*` helpers, and `commandResponse` where they apply.
+4. Re-export the operation contract from `contract/index.ts`.
+5. Return the success or error envelope.
+6. Add one example per documented response, typed from the response schema.
+7. Add an integration test in `apps/api/test/integration/` that `safeParse`s the response.
+8. Use the route from `apps/web` in the same PR.
+9. Run `pnpm typecheck`, `pnpm docs:check`, `pnpm test:integration`.
 
 ## Wire rules
 
@@ -47,11 +79,13 @@ apps/api/src/http/<group>/
 
 ## Common mistakes
 
-- A second copy of a schema outside `contract.ts`.
+- A second copy of a schema outside `contract/` or `operations/<operation>/contract.ts`.
 - A hand-written example or mock object that does not come from the schema.
 - A route that imports `drizzle-orm` or `postgres`; call commands and queries instead.
 - Changing behavior without updating the Scalar description.
 - Forgetting the web client in the same PR.
+- Splitting `describeRoute` or the validators into per-operation files.
+- A nested `unwrapResult(await ...)` composition inside `execute`.
 
 ## Definition of done
 

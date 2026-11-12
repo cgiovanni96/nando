@@ -75,12 +75,21 @@ apps/api/src/
     errors.ts
     envelope.ts
     openapi.ts
+    route-support.ts        validazione, response d'errore e router condivisi
     middleware/
     <group>/
-      contract.ts           Zod schemas, DTOs, examples, factories
-      routes.ts             describeRoute + validator + handler
+      contract/
+        index.ts            superficie pubblica: shared + operazioni
+        shared.ts           schemi e DTO condivisi
+      operations/
+        <operation>/
+          contract.ts       schemi, DTO, esempi, factory dell'operazione
+          route.ts          describeRoute + validator + handler
       mapper.ts             domain -> DTO
+      routes.ts             composizione + auth del gruppo
 ```
+
+Un gruppo con una sola operazione può restare `contract.ts` + `routes.ts`.
 
 Rules:
 
@@ -88,8 +97,11 @@ Rules:
 - Routes never import `drizzle-orm` or `postgres`. They call commands and queries.
 - `http/health.ts` is infrastructure, not a contract route: it may query the database and is
   excluded from the database ban.
-- `contract.ts` is the only place where wire shapes are declared. See
+- Wire shapes live only in `contract/` or in `operations/<operation>/contract.ts`. See
   [api-contract.md](api-contract.md).
+- Shared route helpers live in `http/route-support.ts` (validators, command runner, error responses)
+  and `http/openapi.ts` (response and request-body builders). `describeRoute` stays in the operation
+  route.
 - Integration tests live in `apps/api/test/integration/` and `safeParse` the documented response.
 
 ## Web shape
@@ -184,8 +196,11 @@ Rules:
 
 ## Adding a route group
 
-1. Write `contract.ts` first: request schema, response schemas, DTO types, examples, factories.
-2. Add `routes.ts` with `describeRoute`, `validator`, and the shared schemas.
+1. Write the contract first: shared schemas in `contract/shared.ts`, then
+   `operations/<operation>/contract.ts` with request schema, response schemas, DTO types, examples,
+   factories; expose them through `contract/index.ts`.
+2. Add `operations/<operation>/route.ts` with `describeRoute`, `validator`, and the shared schemas;
+   compose it in `routes.ts`.
 3. Add an integration test that `safeParse`s the response.
 4. Use the route from `apps/web` in the same PR.
 5. Run `pnpm typecheck`, `pnpm docs:check`, `pnpm test:integration`.

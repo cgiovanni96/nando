@@ -5,6 +5,13 @@ import { errorEnvelope, successEnvelope } from "./envelope";
 import { HttpError } from "./errors";
 import type { ApiDeps, ApiEnv } from "./types";
 
+/**
+ * Readiness dell'api.
+ *
+ * È infrastruttura, non contratto: non passa da `describeRoute`, non è nel
+ * manifest e non è proxata da `web`. Verifica il database ma non espone
+ * dettagli del guasto al chiamante.
+ */
 export function createHealthRoutes(deps: ApiDeps) {
   const health = new Hono<ApiEnv>();
 
