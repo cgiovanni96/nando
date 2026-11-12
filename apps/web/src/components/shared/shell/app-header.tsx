@@ -11,6 +11,7 @@ import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { isNavigable, primaryNav } from "../../../lib/router/navigation";
+import { QuickCapturePopover } from "../capture/quick-capture-popover";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
@@ -18,7 +19,6 @@ export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
   const currentEntry = primaryNav.find((entry) => isNavigable(entry) && entry.to === pathname);
   const currentLabel = t(currentEntry?.labelKey ?? "nav.items.dashboard");
   const searchUnavailable = { label: t("shell.search"), milestone: "M4b" };
-  const createUnavailable = { label: t("shell.create"), milestone: "M1" };
 
   return (
     <MantineAppShell.Header>
@@ -42,24 +42,28 @@ export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
 
         <ThemeToggle />
 
-        <Button
-          variant="filled"
-          visibleFrom="sm"
-          leftSection={<IconPlus size={16} stroke={1.6} />}
-          disabled
-          title={t("comingSoon.title", createUnavailable)}
-        >
-          {t("shell.create")}
-        </Button>
+        <QuickCapturePopover>
+          <Group gap="xs" wrap="nowrap">
+            <Button
+              variant="filled"
+              visibleFrom="sm"
+              leftSection={<IconPlus size={16} stroke={1.6} />}
+              aria-label={t("capture.title")}
+              title={t("capture.title")}
+            >
+              {t("shell.create")}
+            </Button>
 
-        <ActionIcon
-          hiddenFrom="sm"
-          disabled
-          aria-label={t("comingSoon.ariaLabel", createUnavailable)}
-          title={t("comingSoon.title", createUnavailable)}
-        >
-          <IconPlus size={18} stroke={1.6} />
-        </ActionIcon>
+            <ActionIcon
+              hiddenFrom="sm"
+              variant="filled"
+              aria-label={t("capture.title")}
+              title={t("capture.title")}
+            >
+              <IconPlus size={18} stroke={1.6} />
+            </ActionIcon>
+          </Group>
+        </QuickCapturePopover>
       </Group>
     </MantineAppShell.Header>
   );

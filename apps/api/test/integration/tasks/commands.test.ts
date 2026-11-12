@@ -27,6 +27,38 @@ describe("task commands", () => {
     });
   });
 
+  it("captures a task without a Space", async () => {
+    const response = await post(
+      "/api/tasks",
+      createTaskRequestFactory({
+        commandId: newId(),
+        title: "Cattura dalla dashboard",
+        spaceId: null,
+        dueAt: null,
+      }),
+    );
+    const parsed = taskResponseSchema.safeParse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.data).toMatchObject({
+        title: "Cattura dalla dashboard",
+        status: "open",
+        spaceId: null,
+        dueAt: null,
+      });
+    }
+
+    const list = await get("/api/tasks");
+    const listParsed = taskListResponseSchema.safeParse(await list.json());
+
+    expect(listParsed.success).toBe(true);
+    if (listParsed.success) {
+      expect(listParsed.data.data.items).toHaveLength(1);
+    }
+  });
+
   it("creates a task in a Space with a due date", async () => {
     const space = await createSpace();
     const dueAt = "2026-11-12T18:00:00.000Z";

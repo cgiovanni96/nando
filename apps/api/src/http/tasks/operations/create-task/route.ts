@@ -1,25 +1,25 @@
 import type { TaskModule } from "@nando/core";
+import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
 import { unwrapResult } from "../../../errors";
 import { jsonRequestBody, jsonResponse } from "../../../openapi";
 import {
-  type ApiRouter,
   commandErrorResponses,
   commandResponse,
   domainRuleViolationResponse,
   notFoundResponse,
   validateJson,
 } from "../../../route-support";
-import type { ApiDeps } from "../../../types";
+import type { ApiDeps, ApiEnv } from "../../../types";
 import { taskResponseExample, taskResponseSchema } from "../../contract/shared";
 import { toTaskDto } from "../../mapper";
 import { createTaskRequestExample, createTaskRequestSchema } from "./contract";
 
 const path = "/api/tasks";
 
-export function registerCreateTaskRoute(router: ApiRouter, deps: ApiDeps, tasks: TaskModule) {
-  router.post(
+export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
+  return new Hono<ApiEnv>().post(
     path,
     describeRoute({
       tags: ["tasks"],

@@ -42,7 +42,9 @@ type.
 
 Operation contracts import `contract/shared.ts`, never `contract/index.ts`, so the barrel does not
 create a cycle. `route.ts` declares no schema: it imports its operation contract and the shared
-support.
+support. Each operation route returns `new Hono<ApiEnv>().get/post(...)`; the group composes the
+returned routers with `.route(...)`. Chaining preserves the endpoint types in `hc<AppType>`: a route
+registration whose result is discarded still works at runtime but disappears from the client type.
 
 `AppType` is assembled from the registered routes in `apps/api`. `apps/web` imports it type-only, through the types-only entrypoint. It must never import the runtime of `apps/api`.
 
@@ -53,8 +55,8 @@ Two shared modules keep the operation files small without splitting them:
 - `http/openapi.ts` owns the OpenAPI builders: `jsonResponse(description, schema, example)`,
   `jsonRequestBody(schema, example)`, `errorResponse(...)`. The example is typed from the schema.
 - `http/route-support.ts` owns `validateJson`, `validateParam`, `validateQuery` (validator plus the
-  shared 400 envelope), `commandResponse` (actor, idempotency, envelope, status 200), the error
-  response sets, and the router type. `commandResponse` passes the idempotency transaction to
+  shared 400 envelope), `commandResponse` (actor, idempotency, envelope, status 200), and the error
+  response sets. `commandResponse` passes the idempotency transaction to
   `execute`: the command writes and the idempotency record commit or roll back together. A command
   that writes must use that `tx`, not the module database.
 

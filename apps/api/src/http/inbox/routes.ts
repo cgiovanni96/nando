@@ -16,12 +16,9 @@ const path = "/api/inbox";
  * La lista viene dal modulo Space, ma l'Inbox non è un sotto-resource.
  */
 export function createInboxRoutes(deps: ApiDeps, spaces: SpaceModule) {
-  const routes = new Hono<ApiEnv>();
   const auth = bearerAuth(deps.config.INTERNAL_TOKEN, deps.config.OWNER_USER_ID);
 
-  routes.use(path, auth);
-
-  routes.get(
+  return new Hono<ApiEnv>().use(path, auth).get(
     path,
     describeRoute({
       tags: ["inbox"],
@@ -59,6 +56,4 @@ export function createInboxRoutes(deps: ApiDeps, spaces: SpaceModule) {
       );
     },
   );
-
-  return routes;
 }

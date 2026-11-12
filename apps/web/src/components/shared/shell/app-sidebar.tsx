@@ -2,12 +2,12 @@ import { AppShell as MantineAppShell, Box, Button, Group, Stack, Text } from "@m
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { QuickCapturePopover } from "../capture/quick-capture-popover";
 import { AppNav } from "./app-nav";
 import classes from "./app-shell.module.css";
 
 export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
   const { t } = useTranslation();
-  const unavailable = { label: t("shell.capture"), milestone: "M1" };
 
   return (
     <MantineAppShell.Navbar
@@ -27,19 +27,20 @@ export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
           </Text>
         </Group>
 
-        <Button
-          variant="default"
-          fullWidth
-          justify="flex-start"
-          leftSection={<IconPlus size={16} stroke={1.6} />}
-          disabled
-          title={t("comingSoon.title", unavailable)}
-          aria-label={t("comingSoon.ariaLabel", unavailable)}
-        >
-          <Box component="span" visibleFrom="md">
-            {t("shell.capture")}
-          </Box>
-        </Button>
+        <QuickCapturePopover position="right-start">
+          <Button
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<IconPlus size={16} stroke={1.6} />}
+            aria-label={t("capture.title")}
+            title={t("capture.title")}
+          >
+            <Box component="span" visibleFrom="md">
+              {t("shell.capture")}
+            </Box>
+          </Button>
+        </QuickCapturePopover>
 
         <Box flex={1} c="dimmed">
           <AppNav pathname={pathname} />

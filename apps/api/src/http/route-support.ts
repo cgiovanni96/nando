@@ -1,6 +1,5 @@
 import { runIdempotentCommand, type CommandTransaction } from "@nando/platform";
 import type { Context } from "hono";
-import type { Hono } from "hono";
 import { validator } from "hono-openapi";
 import type { z } from "zod";
 
@@ -14,9 +13,6 @@ import type { ApiDeps, ApiEnv } from "./types";
 // Le route importano questi helper invece di ripetere il callback di
 // validazione e l'envelope: così il comportamento resta uno solo per tutti
 // i gruppi e un cambio qui vale per l'intera API.
-
-/** Router Hono con le variabili impostate da `requestId` e `bearerAuth`. */
-export type ApiRouter = Hono<ApiEnv>;
 
 /**
  * Risposta 400 per un validator fallito.
