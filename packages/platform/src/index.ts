@@ -17,6 +17,13 @@ export {
   type WorkerConfig,
 } from "./config/config";
 export { loadEnv } from "./config/env";
+export {
+  createLogger,
+  LOG_LEVELS,
+  type LogFields,
+  type Logger,
+  type LogLevel,
+} from "./logging/logger";
 export { createDatabase, type Database, type DatabaseHandle } from "./db/client";
 export { defaultMigrationsFolder, resolveMigrationsFolder, runMigrations } from "./db/migrate";
 export { assertOwner, ownerExists, seedOwner } from "./db/owner";

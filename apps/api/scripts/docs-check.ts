@@ -15,6 +15,7 @@ const config: ApiConfig = {
   INTERNAL_TOKEN: "0123456789abcdef0123456789abcdef",
   DOCS_ENABLED: true,
   PORT: 3000,
+  LOG_LEVEL: "silent",
 };
 
 const db = new Proxy(

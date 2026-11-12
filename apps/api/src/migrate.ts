@@ -1,14 +1,26 @@
 import {
   createDatabase,
+  createLogger,
   loadEnv,
   parseSeedConfig,
   runMigrations,
   seedOwner,
 } from "@nando/platform";
 
+const bootstrapLogger = createLogger({
+  level: "info",
+  service: "migrate",
+  pretty: process.env.NODE_ENV !== "production",
+});
+
 async function main() {
   loadEnv();
   const config = parseSeedConfig();
+  const logger = createLogger({
+    level: config.LOG_LEVEL,
+    service: "migrate",
+    pretty: config.NODE_ENV === "development",
+  });
   const migrationsFolder = process.env.MIGRATIONS_DIR;
 
   await runMigrations(config.DATABASE_URL, migrationsFolder);
@@ -21,10 +33,10 @@ async function main() {
     await close();
   }
 
-  console.log("[nando] migrations applied and owner seeded");
+  logger.info({}, "migrations applied and owner seeded");
 }
 
 main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+  bootstrapLogger.error({ err: error }, "migration failed");
   process.exit(1);
 });

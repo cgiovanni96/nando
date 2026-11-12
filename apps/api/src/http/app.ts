@@ -1,5 +1,6 @@
 import { createSpaceModule, createTaskModule } from "@nando/core";
 import { newId, systemClock } from "@nando/kernel";
+import { createLogger } from "@nando/platform";
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { openAPIRouteHandler } from "hono-openapi";
@@ -9,6 +10,7 @@ import { HttpError, toHttpError } from "./errors";
 import { createHealthRoutes } from "./health";
 import { createInboxRoutes } from "./inbox/routes";
 import { requestId } from "./middleware/request-id";
+import { requestLogging } from "./middleware/request-logging";
 import { openApiOptions } from "./openapi";
 import { createSpaceRoutes } from "./spaces/routes";
 import { createSystemRoutes } from "./system/routes";
@@ -58,11 +60,20 @@ export function createContractApp(deps: ApiDeps) {
 
 /** App completa del processo api: richieste, errori, health, contratto e docs. */
 export function createApiApp(deps: ApiDeps) {
+  const logger =
+    deps.logger ??
+    createLogger({
+      level: deps.config.NODE_ENV === "test" ? "silent" : deps.config.LOG_LEVEL,
+      service: "api",
+      pretty: deps.config.NODE_ENV === "development",
+    });
+
   const base = new Hono<ApiEnv>();
 
   // Ogni risposta porta un requestId stabile: lo riusa se il proxy lo invia,
   // altrimenti ne genera uno nuovo.
   base.use("*", requestId);
+  base.use("*", requestLogging(logger));
 
   base.onError((error, c) => {
     const httpError = toHttpError(error);
@@ -70,7 +81,10 @@ export function createApiApp(deps: ApiDeps) {
     // Gli errori 5xx si loggano qui una volta; gli errori imprevisti non
     // espongono stack o dettagli interni, solo code, message e requestId.
     if (httpError.status >= 500) {
-      console.error(error);
+      (c.get("logger") ?? logger).error(
+        { err: error, requestId: c.get("requestId") },
+        "unhandled error",
+      );
     }
 
     return c.json(errorEnvelope(httpError, c.get("requestId") ?? newId()), httpError.status);

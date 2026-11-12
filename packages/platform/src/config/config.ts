@@ -9,6 +9,10 @@ const booleanFromEnv = z
 
 const port = z.coerce.number().int().min(1).max(65535);
 
+const logLevel = z
+  .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+  .default("info");
+
 export const apiConfigSchema = z
   .object({
     NODE_ENV: nodeEnv,
@@ -17,6 +21,7 @@ export const apiConfigSchema = z
     INTERNAL_TOKEN: z.string().min(16),
     DOCS_ENABLED: booleanFromEnv,
     PORT: port.default(3000),
+    LOG_LEVEL: logLevel,
   })
   .strict();
 
@@ -25,6 +30,7 @@ export const workerConfigSchema = z
     NODE_ENV: nodeEnv,
     DATABASE_URL: z.url(),
     OWNER_USER_ID: z.uuid(),
+    LOG_LEVEL: logLevel,
   })
   .strict();
 
@@ -40,6 +46,7 @@ export const seedConfigSchema = z
     NODE_ENV: nodeEnv,
     DATABASE_URL: z.url(),
     OWNER_USER_ID: z.uuid(),
+    LOG_LEVEL: logLevel,
   })
   .strict();
 
@@ -80,6 +87,7 @@ export function parseApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig 
       INTERNAL_TOKEN: env.INTERNAL_TOKEN,
       DOCS_ENABLED: env.DOCS_ENABLED,
       PORT: env.PORT,
+      LOG_LEVEL: env.LOG_LEVEL,
     },
     "api",
   );
@@ -92,6 +100,7 @@ export function parseWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerC
       NODE_ENV: env.NODE_ENV,
       DATABASE_URL: env.DATABASE_URL,
       OWNER_USER_ID: env.OWNER_USER_ID,
+      LOG_LEVEL: env.LOG_LEVEL,
     },
     "worker",
   );
@@ -115,6 +124,7 @@ export function parseSeedConfig(env: NodeJS.ProcessEnv = process.env): SeedConfi
       NODE_ENV: env.NODE_ENV,
       DATABASE_URL: env.DATABASE_URL,
       OWNER_USER_ID: env.OWNER_USER_ID,
+      LOG_LEVEL: env.LOG_LEVEL,
     },
     "seed",
   );
