@@ -10,8 +10,8 @@ import {
 import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { isNavigable, primaryNav } from "../../../lib/router/navigation";
-import { QuickCapturePopover } from "../capture/quick-capture-popover";
+import { isNavigable, primaryNav } from "@web/lib/router/navigation";
+import { QuickCapturePopover } from "@web/components/shared/capture/quick-capture-popover";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {

@@ -2,10 +2,10 @@ import type { TaskModule } from "@nando/core";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
-import { jsonResponse } from "../../../openapi";
-import { queryErrorResponses, validateQuery } from "../../../route-support";
-import type { ApiEnv } from "../../../types";
-import { toTaskDto } from "../../mapper";
+import { jsonResponse } from "@api/http/openapi";
+import { queryErrorResponses, validateQuery } from "@api/http/route-support";
+import type { ApiEnv } from "@api/http/types";
+import { toTaskDto } from "@api/http/tasks/mapper";
 import { listTasksQuerySchema, taskListResponseExample, taskListResponseSchema } from "./contract";
 
 const path = "/api/tasks";

@@ -1,13 +1,13 @@
 import { newId } from "@nando/kernel";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { errorEnvelopeSchema } from "../../../src/http/envelope";
+import { errorEnvelopeSchema } from "@api/http/envelope";
 import {
   renameSpaceRequestFactory,
   spaceCommandRequestFactory,
   spaceListResponseSchema,
   spaceResponseSchema,
-} from "../../../src/http/spaces/contract";
+} from "@api/http/spaces/contract";
 import { createSpace, get, handle, post, readSpace } from "./helpers";
 
 afterAll(async () => {

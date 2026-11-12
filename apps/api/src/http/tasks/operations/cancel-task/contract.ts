@@ -1,4 +1,4 @@
-import { taskDtoFactory, taskResponseSchema } from "../../contract/shared";
+import { taskDtoFactory, taskResponseSchema } from "@api/http/tasks/contract/shared";
 
 export const cancelledTaskResponseExample = taskResponseSchema.parse({
   ok: true,

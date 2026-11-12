@@ -1,6 +1,11 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Vitest gira dalla root del workspace: la risoluzione deve leggere i
+  // `paths` del tsconfig più vicino a ogni file (web, api, worker, packages).
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     projects: [
       {

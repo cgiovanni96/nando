@@ -2,12 +2,7 @@ import { Badge, Box, NavLink, Stack, Text, Tooltip } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import {
-  isNavigable,
-  primaryNav,
-  workspaceNav,
-  type NavEntry,
-} from "../../../lib/router/navigation";
+import { isNavigable, primaryNav, workspaceNav, type NavEntry } from "@web/lib/router/navigation";
 import classes from "./app-shell.module.css";
 
 export function AppNav({ pathname }: Readonly<{ pathname: string }>) {

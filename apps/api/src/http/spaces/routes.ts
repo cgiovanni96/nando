@@ -1,8 +1,8 @@
 import type { SpaceModule } from "@nando/core";
 import { Hono } from "hono";
 
-import { bearerAuth } from "../middleware/auth";
-import type { ApiDeps, ApiEnv } from "../types";
+import { bearerAuth } from "@api/http/middleware/auth";
+import type { ApiDeps, ApiEnv } from "@api/http/types";
 import { createArchiveSpaceRoute } from "./operations/archive-space/route";
 import { createCreateSpaceRoute } from "./operations/create-space/route";
 import { createGetSpaceRoute } from "./operations/get-space/route";

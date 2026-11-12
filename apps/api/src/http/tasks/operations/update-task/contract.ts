@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { uuidV7Schema } from "../../../envelope";
+import { uuidV7Schema } from "@api/http/envelope";
 import {
   EXAMPLE_COMMAND_ID,
   EXAMPLE_DUE_AT,
   taskDtoFactory,
   taskResponseSchema,
   taskTitleSchema,
-} from "../../contract/shared";
+} from "@api/http/tasks/contract/shared";
 
 export const updateTaskRequestSchema = z.object({
   commandId: uuidV7Schema,

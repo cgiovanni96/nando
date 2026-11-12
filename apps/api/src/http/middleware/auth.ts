@@ -2,8 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 
 import { createMiddleware } from "hono/factory";
 
-import { HttpError } from "../errors";
-import type { ApiEnv } from "../types";
+import { HttpError } from "@api/http/errors";
+import type { ApiEnv } from "@api/http/types";
 
 /**
  * Confronta il bearer interno in tempo costante.

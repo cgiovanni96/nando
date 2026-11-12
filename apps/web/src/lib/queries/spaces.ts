@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { InferResponseType } from "hono/client";
 
-import { browserApiClient } from "../browser-api-client";
+import { browserApiClient } from "@web/lib/browser-api-client";
 
 export type SpaceOption = {
   value: string;

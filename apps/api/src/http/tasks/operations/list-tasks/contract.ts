@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { successEnvelopeSchema } from "../../../envelope";
+import { successEnvelopeSchema } from "@api/http/envelope";
 import {
   EXAMPLE_DUE_AT,
   EXAMPLE_TASK_SPACE_ID,
   taskDtoFactory,
   taskDtoSchema,
   taskStatusSchema,
-} from "../../contract/shared";
+} from "@api/http/tasks/contract/shared";
 
 export const listTasksQuerySchema = z.object({
   spaceId: z.uuid().optional(),

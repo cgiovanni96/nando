@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { uuidV7Schema } from "../../../envelope";
-import { EXAMPLE_COMMAND_ID, taskTitleSchema } from "../../contract/shared";
+import { uuidV7Schema } from "@api/http/envelope";
+import { EXAMPLE_COMMAND_ID, taskTitleSchema } from "@api/http/tasks/contract/shared";
 
 export const createTaskRequestSchema = z.object({
   commandId: uuidV7Schema,

@@ -2,7 +2,7 @@ import { AppShell as MantineAppShell, Box, Button, Group, Stack, Text } from "@m
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { QuickCapturePopover } from "../capture/quick-capture-popover";
+import { QuickCapturePopover } from "@web/components/shared/capture/quick-capture-popover";
 import { AppNav } from "./app-nav";
 import classes from "./app-shell.module.css";
 

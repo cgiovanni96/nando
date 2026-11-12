@@ -5,9 +5,9 @@ import type { FormEvent } from "react";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import { newCommandId } from "../../../lib/ids";
-import { createTaskMutationOptions, type CreateTaskInput } from "../../../lib/mutations/tasks";
-import { spaceOptionsQueryOptions } from "../../../lib/queries/spaces";
+import { newCommandId } from "@web/lib/ids";
+import { createTaskMutationOptions, type CreateTaskInput } from "@web/lib/mutations/tasks";
+import { spaceOptionsQueryOptions } from "@web/lib/queries/spaces";
 
 export type CaptureValues = Pick<CreateTaskInput, "title" | "spaceId">;
 

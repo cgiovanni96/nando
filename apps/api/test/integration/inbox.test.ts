@@ -1,9 +1,9 @@
 import type { InboxSource } from "@nando/core";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { createApiApp } from "../../src/http/app";
-import { errorEnvelopeSchema } from "../../src/http/envelope";
-import { EXAMPLE_INBOX_ITEM_ID, inboxResponseSchema } from "../../src/http/inbox/contract";
+import { createApiApp } from "@api/http/app";
+import { errorEnvelopeSchema } from "@api/http/envelope";
+import { EXAMPLE_INBOX_ITEM_ID, inboxResponseSchema } from "@api/http/inbox/contract";
 import { authHeaders, config, handle } from "./spaces/helpers";
 
 afterAll(async () => {

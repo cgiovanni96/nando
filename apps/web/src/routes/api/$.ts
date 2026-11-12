@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { proxyApiRequest } from "../../server/proxy";
+import { proxyApiRequest } from "@web/server/proxy";
 
 const proxy = ({ request }: { request: Request }) => proxyApiRequest(request);
 

@@ -4,7 +4,11 @@
     "jsx": "react-jsx",
     "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "types": ["node", "vite/client"],
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "paths": {
+      "@web/*": ["./src/*"],
+      "@api/*": ["../api/src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
 }

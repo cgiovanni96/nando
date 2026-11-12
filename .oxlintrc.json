@@ -48,9 +48,63 @@
                   "drizzle-orm/**",
                   "postgres",
                   "@nando/platform",
-                  "@nando/platform/**"
+                  "@nando/platform/**",
+                  "@api",
+                  "@api/**"
                 ],
                 "message": "web non tocca il database: usa il client API."
+              },
+              {
+                "group": ["../*", "../**"],
+                "message": "Usa @web/… invece di ../."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/web/src/components/**", "apps/web/src/lib/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "drizzle-orm",
+                  "drizzle-orm/**",
+                  "postgres",
+                  "@nando/platform",
+                  "@nando/platform/**",
+                  "@api",
+                  "@api/**"
+                ],
+                "message": "web non tocca il database: usa il client API."
+              },
+              {
+                "group": ["../*", "../**"],
+                "message": "Usa @web/… invece di ../."
+              },
+              {
+                "group": ["@web/server", "@web/server/**"],
+                "message": "Il server non entra nel bundle client: passa da una route o da un handler."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/api/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "../**"],
+                "message": "Usa @api/… invece di ../."
               }
             ]
           }
@@ -68,6 +122,26 @@
               {
                 "group": ["drizzle-orm", "drizzle-orm/**", "postgres"],
                 "message": "I route non parlano col database: passa da commands/queries del modulo."
+              },
+              {
+                "group": ["../*", "../**"],
+                "message": "Usa @api/… invece di ../."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/worker/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "../**"],
+                "message": "Usa @worker/… invece di ../."
               }
             ]
           }

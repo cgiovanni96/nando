@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { successEnvelopeSchema } from "../../../envelope";
+import { successEnvelopeSchema } from "@api/http/envelope";
 import {
   EXAMPLE_CHILD_SPACE_ID,
   EXAMPLE_SPACE_ID,
   spaceDtoFactory,
   spaceDtoSchema,
   spaceKindSchema,
-} from "../../contract/shared";
+} from "@api/http/spaces/contract/shared";
 
 export const listSpacesQuerySchema = z.object({
   kind: spaceKindSchema.optional(),

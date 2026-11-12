@@ -26,20 +26,20 @@ export {
   spaceListDataSchema,
   spaceListResponseExample,
   spaceListResponseSchema,
-} from "../operations/list-spaces/contract";
-export { childSpaceResponseExample } from "../operations/get-space/contract";
+} from "@api/http/spaces/operations/list-spaces/contract";
+export { childSpaceResponseExample } from "@api/http/spaces/operations/get-space/contract";
 export {
   createSpaceRequestExample,
   createSpaceRequestFactory,
   createSpaceRequestSchema,
   type CreateSpaceRequest,
-} from "../operations/create-space/contract";
+} from "@api/http/spaces/operations/create-space/contract";
 export {
   renameSpaceRequestExample,
   renameSpaceRequestFactory,
   renameSpaceRequestSchema,
   renamedSpaceResponseExample,
   type RenameSpaceRequest,
-} from "../operations/rename-space/contract";
-export { archivedSpaceResponseExample } from "../operations/archive-space/contract";
-export { unarchivedSpaceResponseExample } from "../operations/unarchive-space/contract";
+} from "@api/http/spaces/operations/rename-space/contract";
+export { archivedSpaceResponseExample } from "@api/http/spaces/operations/archive-space/contract";
+export { unarchivedSpaceResponseExample } from "@api/http/spaces/operations/unarchive-space/contract";

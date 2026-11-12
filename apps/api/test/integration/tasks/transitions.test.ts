@@ -1,8 +1,8 @@
 import { newId } from "@nando/kernel";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { errorEnvelopeSchema } from "../../../src/http/envelope";
-import { taskCommandRequestFactory, taskResponseSchema } from "../../../src/http/tasks/contract";
+import { errorEnvelopeSchema } from "@api/http/envelope";
+import { taskCommandRequestFactory, taskResponseSchema } from "@api/http/tasks/contract";
 import { createTask, handle, post } from "./helpers";
 
 afterAll(async () => {

@@ -2,9 +2,9 @@ import { Validator } from "@seriousme/openapi-schema-validator";
 import type { ApiConfig, Database } from "@nando/platform";
 import { generateSpecs } from "hono-openapi";
 
-import { createContractApp } from "../src/http/app";
-import { contractRoutes } from "../src/http/manifest";
-import { openApiOptions } from "../src/http/openapi";
+import { createContractApp } from "@api/http/app";
+import { contractRoutes } from "@api/http/manifest";
+import { openApiOptions } from "@api/http/openapi";
 
 const METHOD_SET = new Set(["get", "put", "post", "delete", "options", "head", "patch", "trace"]);
 
