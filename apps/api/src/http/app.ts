@@ -1,4 +1,4 @@
-import { createSpaceModule, createTaskModule } from "@nando/core";
+import { createSpaceModule, createTaskModule, type InboxSource } from "@nando/core";
 import { newId, systemClock } from "@nando/kernel";
 import { createLogger } from "@nando/platform";
 import { Scalar } from "@scalar/hono-api-reference";
@@ -36,11 +36,16 @@ export type { ApiDeps } from "./types";
  * a generare la spec.
  */
 export function createContractApp(deps: ApiDeps) {
+  // Le sorgenti dell'Inbox sono un array condiviso: il modulo Space lo legge a
+  // ogni query, quindi il modulo Task può registrarsi dopo la sua costruzione.
+  // Serve perché Task dipende da Space (porta) e Space dalla sorgente di Task.
+  const inboxSources: InboxSource[] = [...(deps.inboxSources ?? [])];
+
   const spaces = createSpaceModule({
     db: deps.db,
     clock: systemClock,
     ids: newId,
-    inboxSources: deps.inboxSources ?? [],
+    inboxSources,
   });
   const tasks = createTaskModule({
     db: deps.db,
@@ -49,6 +54,10 @@ export function createContractApp(deps: ApiDeps) {
     spacePort: {
       get: (spaceId) => spaces.queries.get(spaceId),
     },
+  });
+
+  inboxSources.push({
+    listUnassigned: (query) => tasks.queries.listUnassigned(query),
   });
 
   return new Hono<ApiEnv>()

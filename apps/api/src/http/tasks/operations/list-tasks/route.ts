@@ -17,8 +17,10 @@ export function createListTasksRoute(tasks: TaskModule) {
       tags: ["tasks"],
       summary: "Elenca i task",
       description:
-        "Query senza effetti: restituisce i task non cancellati, ordinati dal più recente. " +
+        "Query senza effetti: restituisce i task ordinati dal più recente. " +
         "`spaceId` filtra per Space proprietario, `status` per stato dell'occorrenza. " +
+        "`state` vale `active` (default) o `deleted`: quest'ultimo elenca solo i task " +
+        "cancellati ancora dentro la finestra di grazia di 7 giorni. " +
         "La paginazione usa `cursor` e `limit` (default 50, massimo 100).",
       responses: {
         200: jsonResponse(
@@ -35,6 +37,7 @@ export function createListTasksRoute(tasks: TaskModule) {
       const result = await tasks.queries.list({
         cursor: query.cursor ?? null,
         limit: query.limit,
+        state: query.state,
         ...(query.spaceId ? { spaceId: query.spaceId } : {}),
         ...(query.status ? { status: query.status } : {}),
       });

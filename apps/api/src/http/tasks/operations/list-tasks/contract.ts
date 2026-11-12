@@ -12,6 +12,7 @@ import {
 export const listTasksQuerySchema = z.object({
   spaceId: z.uuid().optional(),
   status: taskStatusSchema.optional(),
+  state: z.enum(["active", "deleted"]).default("active"),
   cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });

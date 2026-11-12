@@ -19,12 +19,14 @@ export function createGetTaskRoute(tasks: TaskModule) {
       tags: ["tasks"],
       summary: "Legge un task",
       description:
-        "Query senza effetti: restituisce un task non cancellato con stato e scadenza " +
-        "della sua occorrenza. Risponde 404 `not_found` se il task non esiste.",
+        "Query senza effetti: restituisce un task con stato e scadenza della sua occorrenza. " +
+        "Un task cancellato resta leggibile dentro la finestra di grazia, con `deletedAt` e " +
+        "`restorableUntil` valorizzati: la deletion lo nasconde dalle liste, non dai dati. " +
+        "Risponde 404 `not_found` solo se il task non è mai esistito.",
       responses: {
         200: jsonResponse("Task trovato.", taskResponseSchema, getTaskResponseExample),
         ...queryErrorResponses,
-        404: notFoundResponse("Task assente o cancellato."),
+        404: notFoundResponse("Task inesistente."),
       },
     }),
     validateParam(path, taskIdParamsSchema),

@@ -8,6 +8,7 @@ import {
   decodeIdCursor,
   DEFAULT_PAGE_SIZE,
   encodeCursor,
+  isUuid,
   MAX_PAGE_SIZE,
 } from "./cursor";
 
@@ -35,6 +36,18 @@ describe("cursor", () => {
       expect(decodeIdCursor(encodeCursor({ id }))).toBeNull();
     },
   );
+});
+
+describe("isUuid", () => {
+  test.prop([fc.uuid()])("accepts a uuid", (id) => {
+    expect(isUuid(id)).toBe(true);
+  });
+
+  test("rejects what is not a uuid", () => {
+    expect(isUuid("")).toBe(false);
+    expect(isUuid("not-a-uuid")).toBe(false);
+    expect(isUuid("0199a4c2-7a10-7000-8000-00000000030")).toBe(false);
+  });
 });
 
 describe("clampLimit", () => {

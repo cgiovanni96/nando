@@ -1,6 +1,6 @@
 // Mapping dominio -> DTO del gruppo Task: nessun `Date` attraversa il wire.
 
-import type { Task } from "@nando/core";
+import { restorableUntil, type Task } from "@nando/core";
 
 import type { TaskDto } from "./contract/shared";
 
@@ -15,5 +15,7 @@ export function toTaskDto(task: Task): TaskDto {
     version: task.version,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
+    deletedAt: task.deletedAt?.toISOString() ?? null,
+    restorableUntil: task.deletedAt ? restorableUntil(task.deletedAt).toISOString() : null,
   };
 }

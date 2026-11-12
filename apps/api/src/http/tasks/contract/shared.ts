@@ -21,6 +21,8 @@ export const taskDtoSchema = z.object({
   version: z.number().int().positive(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  deletedAt: z.iso.datetime().nullable(),
+  restorableUntil: z.iso.datetime().nullable(),
 });
 
 export const taskIdParamsSchema = z.object({
@@ -46,6 +48,8 @@ export function taskDtoFactory(overrides: Partial<TaskDto> = {}): TaskDto {
     version: 1,
     createdAt: EXAMPLE_TIMESTAMP,
     updatedAt: EXAMPLE_TIMESTAMP,
+    deletedAt: null,
+    restorableUntil: null,
     ...overrides,
   });
 }
