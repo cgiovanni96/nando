@@ -149,6 +149,12 @@
       }
     },
     {
+      "files": ["**/*.test.ts"],
+      "rules": {
+        "import/no-named-as-default-member": "off"
+      }
+    },
+    {
       "files": ["packages/kernel/**"],
       "rules": {
         "no-restricted-imports": [

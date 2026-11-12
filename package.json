@@ -24,7 +24,9 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm deploy:check && pnpm docs:check && pnpm test && pnpm test:integration && pnpm build"
   },
   "devDependencies": {
+    "@fast-check/vitest": "^0.5.0",
     "@types/node": "^24.19.2",
+    "fast-check": "^4.10.2",
     "oxlint": "^1.93.0",
     "prettier": "^3.9.10",
     "tsdown": "^0.23.7",
