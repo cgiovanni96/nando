@@ -62,4 +62,43 @@ export const it = {
       description: "La cattura è attiva. L'elenco dei task di oggi arriverà presto.",
     },
   },
+  inbox: {
+    eyebrow: "Inbox",
+    title: "Da collocare",
+    intro:
+      "I task senza Space. Spostane uno in un progetto o cancellalo: resta nel cestino per 7 giorni.",
+    list: {
+      eyebrow: "Task in Inbox",
+      loading: "Caricamento dei task in Inbox",
+      error: "Non è stato possibile caricare l'Inbox.",
+    },
+    empty: {
+      title: "Inbox vuota",
+      description: "Ogni task ha uno Space. Qui compaiono quelli che non ne hanno ancora uno.",
+    },
+    actions: {
+      move: "Sposta in uno Space",
+      moveAria: "Sposta il task {{title}} in uno Space",
+      noSpaces: "Nessuno Space disponibile",
+      deleteAria: "Cancella il task {{title}}",
+    },
+    delete: {
+      title: "Cancellare il task?",
+      description: 'Il task "{{title}}" sparirà dalle liste e resterà ripristinabile per 7 giorni.',
+      cancel: "Annulla",
+      confirm: "Cancella",
+    },
+    moved: "Task spostato.",
+    moveError: "Non è stato possibile spostare il task.",
+    deleted: "Task cancellato: resta nel cestino per 7 giorni.",
+    deleteError: "Non è stato possibile cancellare il task.",
+    restored: "Task ripristinato.",
+    restoreError: "Non è stato possibile ripristinare il task.",
+    trash: {
+      eyebrow: "Cestino",
+      description: "Task cancellati, ripristinabili entro la finestra di grazia.",
+      restorableUntil: "Ripristinabile fino al {{date}}",
+      restore: "Ripristina",
+    },
+  },
 } as const;

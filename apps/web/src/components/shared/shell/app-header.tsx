@@ -10,13 +10,13 @@ import {
 import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { isNavigable, primaryNav } from "@web/lib/router/navigation";
+import { allNav, isNavigable } from "@web/lib/router/navigation";
 import { QuickCapturePopover } from "@web/components/shared/capture/quick-capture-popover";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
   const { t } = useTranslation();
-  const currentEntry = primaryNav.find((entry) => isNavigable(entry) && entry.to === pathname);
+  const currentEntry = allNav.find((entry) => isNavigable(entry) && entry.to === pathname);
   const currentLabel = t(currentEntry?.labelKey ?? "nav.items.dashboard");
   const searchUnavailable = { label: t("shell.search"), milestone: "M4b" };
 

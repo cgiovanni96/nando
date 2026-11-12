@@ -2,7 +2,7 @@ import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { isNavigable, primaryNav, type NavEntry } from "@web/lib/router/navigation";
+import { bottomNav, isNavigable, type NavEntry } from "@web/lib/router/navigation";
 import classes from "./app-shell.module.css";
 
 export function BottomNav({ pathname }: Readonly<{ pathname: string }>) {
@@ -11,7 +11,7 @@ export function BottomNav({ pathname }: Readonly<{ pathname: string }>) {
   return (
     <Box component="nav" aria-label={t("nav.primary.ariaLabel")} className={classes.bottomNav}>
       <Group h="100%" c="dimmed" justify="space-around" gap="xs" px={8} wrap="nowrap">
-        {primaryNav.map((entry) => (
+        {bottomNav.map((entry) => (
           <BottomNavItem
             key={entry.labelKey}
             entry={entry}
