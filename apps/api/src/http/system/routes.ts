@@ -2,10 +2,10 @@ import { runIdempotentCommand } from "@nando/platform";
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 
-import { errorEnvelope } from "../envelope";
-import { bearerAuth } from "../middleware/auth";
-import { errorExamples, errorResponse } from "../openapi";
-import type { ApiDeps, ApiEnv } from "../types";
+import { errorEnvelope } from "@api/http/envelope";
+import { bearerAuth } from "@api/http/middleware/auth";
+import { errorExamples, errorResponse } from "@api/http/openapi";
+import type { ApiDeps, ApiEnv } from "@api/http/types";
 import {
   API_VERSION,
   systemEchoRequestSchema,

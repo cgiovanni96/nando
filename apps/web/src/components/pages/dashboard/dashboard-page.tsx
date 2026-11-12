@@ -2,7 +2,7 @@ import { EmptyState, Stack, Text, Title } from "@mantine/core";
 import { IconCalendarEvent } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { QuickCaptureCard } from "../../shared/capture/quick-capture-card";
+import { QuickCaptureCard } from "@web/components/shared/capture/quick-capture-card";
 import classes from "./dashboard-page.module.css";
 
 export function DashboardPage() {

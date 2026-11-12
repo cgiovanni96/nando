@@ -2,12 +2,12 @@ import type { SpaceModule } from "@nando/core";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
-import { HttpError } from "../../../errors";
-import { jsonResponse } from "../../../openapi";
-import { notFoundResponse, queryErrorResponses, validateParam } from "../../../route-support";
-import type { ApiEnv } from "../../../types";
-import { spaceIdParamsSchema, spaceResponseSchema } from "../../contract/shared";
-import { toSpaceDto } from "../../mapper";
+import { HttpError } from "@api/http/errors";
+import { jsonResponse } from "@api/http/openapi";
+import { notFoundResponse, queryErrorResponses, validateParam } from "@api/http/route-support";
+import type { ApiEnv } from "@api/http/types";
+import { spaceIdParamsSchema, spaceResponseSchema } from "@api/http/spaces/contract/shared";
+import { toSpaceDto } from "@api/http/spaces/mapper";
 import { childSpaceResponseExample } from "./contract";
 
 const path = "/api/spaces/:spaceId";

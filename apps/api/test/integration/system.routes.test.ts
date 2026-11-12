@@ -2,9 +2,9 @@ import { newId } from "@nando/kernel";
 import { createTestDatabase, parseApiConfig, seedOwner, TEST_OWNER_ID } from "@nando/platform";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createApiApp } from "../../src/http/app";
-import { errorEnvelopeSchema } from "../../src/http/envelope";
-import { systemEchoResponseSchema, systemInfoResponseSchema } from "../../src/http/system/contract";
+import { createApiApp } from "@api/http/app";
+import { errorEnvelopeSchema } from "@api/http/envelope";
+import { systemEchoResponseSchema, systemInfoResponseSchema } from "@api/http/system/contract";
 
 const INTERNAL_TOKEN = "0123456789abcdef0123456789abcdef";
 

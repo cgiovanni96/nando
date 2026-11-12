@@ -1,8 +1,8 @@
 import type { TaskModule } from "@nando/core";
 import { Hono } from "hono";
 
-import { bearerAuth } from "../middleware/auth";
-import type { ApiDeps, ApiEnv } from "../types";
+import { bearerAuth } from "@api/http/middleware/auth";
+import type { ApiDeps, ApiEnv } from "@api/http/types";
 import { createCancelTaskRoute } from "./operations/cancel-task/route";
 import { createCompleteTaskRoute } from "./operations/complete-task/route";
 import { createCreateTaskRoute } from "./operations/create-task/route";

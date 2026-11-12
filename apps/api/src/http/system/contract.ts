@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { successEnvelopeSchema, uuidV7Schema } from "../envelope";
+import { successEnvelopeSchema, uuidV7Schema } from "@api/http/envelope";
 
 export const API_VERSION = "0.0.0";
 

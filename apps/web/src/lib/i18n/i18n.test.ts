@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { primaryNav, workspaceNav } from "../router/navigation";
+import { primaryNav, workspaceNav } from "@web/lib/router/navigation";
 import { defaultLocale } from "./config";
 import { i18n } from "./i18n";
 import { it as itCatalog } from "./resources/it";

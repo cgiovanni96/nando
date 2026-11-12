@@ -2,10 +2,10 @@ import type { SpaceModule } from "@nando/core";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
-import { bearerAuth } from "../middleware/auth";
-import { jsonResponse } from "../openapi";
-import { queryErrorResponses, validateQuery } from "../route-support";
-import type { ApiDeps, ApiEnv } from "../types";
+import { bearerAuth } from "@api/http/middleware/auth";
+import { jsonResponse } from "@api/http/openapi";
+import { queryErrorResponses, validateQuery } from "@api/http/route-support";
+import type { ApiDeps, ApiEnv } from "@api/http/types";
 import { inboxResponseExample, inboxResponseSchema, listInboxQuerySchema } from "./contract";
 import { toInboxItemDto } from "./mapper";
 

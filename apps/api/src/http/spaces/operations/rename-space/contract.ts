@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-import { uuidV7Schema } from "../../../envelope";
+import { uuidV7Schema } from "@api/http/envelope";
 import {
   EXAMPLE_COMMAND_ID,
   spaceDtoFactory,
   spaceNameSchema,
   spaceResponseSchema,
-} from "../../contract/shared";
+} from "@api/http/spaces/contract/shared";
 
 export const renameSpaceRequestSchema = z.object({
   commandId: uuidV7Schema,

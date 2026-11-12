@@ -5,12 +5,12 @@ import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanst
 import type { ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 
-import { AppShell } from "../components/shared/shell/app-shell";
-import { defaultLocale, i18n } from "../lib/i18n";
-import { cssVariablesResolver, theme } from "../lib/theme";
+import { AppShell } from "@web/components/shared/shell/app-shell";
+import { defaultLocale, i18n } from "@web/lib/i18n";
+import { cssVariablesResolver, theme } from "@web/lib/theme";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
-import "../styles/global.css";
+import "@web/styles/global.css";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

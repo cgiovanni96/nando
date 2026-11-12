@@ -1,4 +1,4 @@
-import { spaceDtoFactory, spaceResponseSchema } from "../../contract/shared";
+import { spaceDtoFactory, spaceResponseSchema } from "@api/http/spaces/contract/shared";
 
 export const unarchivedSpaceResponseExample = spaceResponseSchema.parse({
   ok: true,

@@ -1,4 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@worker/*": ["./src/*"]
+    }
+  },
   "include": ["src/**/*.ts", "tsdown.config.ts"]
 }

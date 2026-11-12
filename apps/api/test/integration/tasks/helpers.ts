@@ -2,18 +2,18 @@ import { newId } from "@nando/kernel";
 import { createTestDatabase, parseApiConfig, TEST_OWNER_ID } from "@nando/platform";
 import { expect } from "vitest";
 
-import { createApiApp } from "../../../src/http/app";
+import { createApiApp } from "@api/http/app";
 import {
   createSpaceRequestFactory,
   spaceCommandRequestFactory,
   spaceResponseSchema,
   type SpaceDto,
-} from "../../../src/http/spaces/contract";
+} from "@api/http/spaces/contract";
 import {
   createTaskRequestFactory,
   taskResponseSchema,
   type TaskDto,
-} from "../../../src/http/tasks/contract";
+} from "@api/http/tasks/contract";
 
 export const INTERNAL_TOKEN = "0123456789abcdef0123456789abcdef";
 

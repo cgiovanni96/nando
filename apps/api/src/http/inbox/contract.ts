@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { successEnvelopeSchema } from "../envelope";
+import { successEnvelopeSchema } from "@api/http/envelope";
 
 export const EXAMPLE_INBOX_ITEM_ID = "0199a4c2-7a10-7000-8000-000000000201";
 export const EXAMPLE_TIMESTAMP = "2026-11-11T15:12:23.109Z";

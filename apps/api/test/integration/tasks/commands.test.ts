@@ -1,13 +1,13 @@
 import { newId } from "@nando/kernel";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { errorEnvelopeSchema } from "../../../src/http/envelope";
+import { errorEnvelopeSchema } from "@api/http/envelope";
 import {
   createTaskRequestFactory,
   taskListResponseSchema,
   taskResponseSchema,
   updateTaskRequestFactory,
-} from "../../../src/http/tasks/contract";
+} from "@api/http/tasks/contract";
 import { app, archiveSpace, createSpace, createTask, get, handle, post, readTask } from "./helpers";
 
 afterAll(async () => {

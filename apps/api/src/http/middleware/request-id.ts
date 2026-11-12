@@ -2,7 +2,7 @@ import { newId } from "@nando/kernel";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
 
-import type { ApiEnv } from "../types";
+import type { ApiEnv } from "@api/http/types";
 
 /**
  * Propaga o genera il request id.

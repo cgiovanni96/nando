@@ -3,7 +3,7 @@ import {
   EXAMPLE_SPACE_ID,
   spaceDtoFactory,
   spaceResponseSchema,
-} from "../../contract/shared";
+} from "@api/http/spaces/contract/shared";
 
 export const childSpaceResponseExample = spaceResponseSchema.parse({
   ok: true,

@@ -27,21 +27,21 @@ export {
   taskListDataSchema,
   taskListResponseExample,
   taskListResponseSchema,
-} from "../operations/list-tasks/contract";
-export { getTaskResponseExample } from "../operations/get-task/contract";
+} from "@api/http/tasks/operations/list-tasks/contract";
+export { getTaskResponseExample } from "@api/http/tasks/operations/get-task/contract";
 export {
   createTaskRequestExample,
   createTaskRequestFactory,
   createTaskRequestSchema,
   type CreateTaskRequest,
-} from "../operations/create-task/contract";
+} from "@api/http/tasks/operations/create-task/contract";
 export {
   updateTaskRequestExample,
   updateTaskRequestFactory,
   updateTaskRequestSchema,
   updatedTaskResponseExample,
   type UpdateTaskRequest,
-} from "../operations/update-task/contract";
-export { completedTaskResponseExample } from "../operations/complete-task/contract";
-export { skippedTaskResponseExample } from "../operations/skip-task/contract";
-export { cancelledTaskResponseExample } from "../operations/cancel-task/contract";
+} from "@api/http/tasks/operations/update-task/contract";
+export { completedTaskResponseExample } from "@api/http/tasks/operations/complete-task/contract";
+export { skippedTaskResponseExample } from "@api/http/tasks/operations/skip-task/contract";
+export { cancelledTaskResponseExample } from "@api/http/tasks/operations/cancel-task/contract";

@@ -1,4 +1,4 @@
-import type { FileRouteTypes } from "../../routeTree.gen";
+import type { FileRouteTypes } from "@web/routeTree.gen";
 
 /**
  * A destination a page can link to: generated file routes only.

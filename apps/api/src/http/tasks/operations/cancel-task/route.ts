@@ -2,8 +2,8 @@ import type { TaskModule } from "@nando/core";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
-import { unwrapResult } from "../../../errors";
-import { jsonRequestBody, jsonResponse } from "../../../openapi";
+import { unwrapResult } from "@api/http/errors";
+import { jsonRequestBody, jsonResponse } from "@api/http/openapi";
 import {
   commandErrorResponses,
   commandResponse,
@@ -11,15 +11,15 @@ import {
   notFoundResponse,
   validateJson,
   validateParam,
-} from "../../../route-support";
-import type { ApiDeps, ApiEnv } from "../../../types";
+} from "@api/http/route-support";
+import type { ApiDeps, ApiEnv } from "@api/http/types";
 import {
   taskCommandRequestExample,
   taskCommandRequestSchema,
   taskIdParamsSchema,
   taskResponseSchema,
-} from "../../contract/shared";
-import { toTaskDto } from "../../mapper";
+} from "@api/http/tasks/contract/shared";
+import { toTaskDto } from "@api/http/tasks/mapper";
 import { cancelledTaskResponseExample } from "./contract";
 
 const path = "/api/tasks/:taskId/cancel";

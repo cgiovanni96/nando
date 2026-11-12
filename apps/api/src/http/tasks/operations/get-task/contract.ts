@@ -3,7 +3,7 @@ import {
   EXAMPLE_TASK_SPACE_ID,
   taskDtoFactory,
   taskResponseSchema,
-} from "../../contract/shared";
+} from "@api/http/tasks/contract/shared";
 
 export const getTaskResponseExample = taskResponseSchema.parse({
   ok: true,

@@ -2,7 +2,7 @@ import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { isNavigable, primaryNav, type NavEntry } from "../../../lib/router/navigation";
+import { isNavigable, primaryNav, type NavEntry } from "@web/lib/router/navigation";
 import classes from "./app-shell.module.css";
 
 export function BottomNav({ pathname }: Readonly<{ pathname: string }>) {

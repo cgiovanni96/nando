@@ -6,7 +6,7 @@
 import { SPACE_KINDS } from "@nando/core";
 import { z } from "zod";
 
-import { successEnvelopeSchema, uuidV7Schema } from "../../envelope";
+import { successEnvelopeSchema, uuidV7Schema } from "@api/http/envelope";
 
 export const EXAMPLE_COMMAND_ID = "0199a4c2-7a10-7000-8000-000000000001";
 export const EXAMPLE_SPACE_ID = "0199a4c2-7a10-7000-8000-000000000101";

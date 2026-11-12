@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 
-import { errorEnvelopeSchema } from "../../../src/http/envelope";
-import { spaceListResponseSchema } from "../../../src/http/spaces/contract";
+import { errorEnvelopeSchema } from "@api/http/envelope";
+import { spaceListResponseSchema } from "@api/http/spaces/contract";
 import { createSpace, get, handle } from "./helpers";
 
 afterAll(async () => {

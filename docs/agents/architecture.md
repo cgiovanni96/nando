@@ -170,11 +170,34 @@ Rules:
 
 ## Boundary rules and how they are enforced
 
+### Import aliases
+
+Each app owns its internal alias, defined in its own `tsconfig.json` through `paths` (no
+`baseUrl`, deprecated in TypeScript 6.0):
+
+| Alias | Target | Owner |
+| --- | --- | --- |
+| `@web/*` | `apps/web/src/*` | web |
+| `@api/*` | `apps/api/src/*` | api |
+| `@worker/*` | `apps/worker/src/*` | worker |
+
+Rules:
+
+- `./…` stays relative for siblings; any import that climbs (`../`) uses the app alias.
+- Aliases are app-local. They never live in `tsconfig.base.json`, so `packages/*` cannot reach
+  app internals, and cross-package imports keep using `@nando/*`.
+- `apps/web` also maps `@api/*` because the type-only chain `@nando/api/type` pulls
+  `apps/api/src` into the web program. Web source must not import `@api/*`: lint enforces it, and
+  at runtime the alias does not exist in the browser bundle.
+- `routeTree.gen.ts` is generated and stays relative.
+
 - The workspace graph enforces cross-package imports: pnpm does not resolve an undeclared
   dependency, so a forbidden import does not typecheck or build.
 - `pnpm lint` enforces the rest through `.oxlintrc.json`:
   - `import/no-cycle`;
   - `no-restricted-imports` overrides for `web`, `api/http`, `kernel`, `core`, and capabilities;
+  - `no-restricted-imports` also forbids `../`-prefixed imports in `apps/web`, `apps/api` and
+    `apps/worker`, `@api/*` from web source, and `@web/server` from `components/` and `lib/`;
   - `unicorn/filename-case` on `apps/web/src/**`: kebab-case, with `__root` and `$` route files
     ignored;
   - `typescript/no-explicit-any` and `typescript/consistent-type-imports`.
