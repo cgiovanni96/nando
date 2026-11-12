@@ -1,6 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, isNull, lt } from "drizzle-orm";
 
+import { clampLimit, decodeCursor, decodeIdCursor, encodeCursor } from "../db/cursor";
 import type { InboxCursor, InboxItem, Space, SpaceKind } from "./domain";
 import type { InboxSource, SpaceDatabase } from "./ports";
 import { space } from "./schema";
@@ -22,31 +23,6 @@ export type ListInboxFilter = {
   cursor?: string | null;
   limit?: number;
 };
-
-const DEFAULT_LIMIT = 50;
-const MAX_LIMIT = 100;
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function clampLimit(limit: number | undefined): number {
-  if (limit === undefined || Number.isNaN(limit)) return DEFAULT_LIMIT;
-  return Math.min(Math.max(Math.trunc(limit), 1), MAX_LIMIT);
-}
-
-function encodeCursor(value: unknown): string {
-  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
-}
-
-function decodeCursor(value: string): Record<string, unknown> | null {
-  try {
-    const parsed: unknown = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
-
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
-    return parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
 
 function decodeInboxCursor(value: string): InboxCursor | null {
   const parsed = decodeCursor(value);
@@ -104,10 +80,9 @@ export function createSpaceQueries({ db, inboxSources }: SpaceQueryDeps) {
       }
 
       if (filter.cursor) {
-        const cursor = decodeCursor(filter.cursor);
-        const cursorId = cursor?.id;
+        const cursorId = decodeIdCursor(filter.cursor);
 
-        if (typeof cursorId === "string" && UUID_PATTERN.test(cursorId)) {
+        if (cursorId) {
           conditions.push(lt(space.id, cursorId));
         }
       }
