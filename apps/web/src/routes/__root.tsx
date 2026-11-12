@@ -38,7 +38,7 @@ function RootComponent() {
             <Outlet />
           </AppShell>
         </I18nextProvider>
-        <Notifications position="bottom-right" autoClose={2000} containerWidth={300} />
+        <Notifications position="bottom-right" autoClose={2000} containerWidth={350} />
       </MantineProvider>
     </RootDocument>
   );
