@@ -1,4 +1,5 @@
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -7,6 +8,7 @@ import { AppShell } from "../components/shared/shell/app-shell";
 import { defaultLocale, i18n } from "../lib/i18n";
 import { cssVariablesResolver, theme } from "../lib/theme";
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import "../styles/global.css";
 
 export const Route = createRootRoute({
@@ -35,6 +37,7 @@ function RootComponent() {
             <Outlet />
           </AppShell>
         </I18nextProvider>
+        <Notifications position="bottom-right" autoClose={2000} />
       </MantineProvider>
     </RootDocument>
   );

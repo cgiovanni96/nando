@@ -1,4 +1,5 @@
 import { Box, Button, Grid, Group, Select, Stack, Text, TextInput } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
 import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -11,11 +12,16 @@ import { loadSpaceOptions, type SpaceOption } from "../../../lib/spaces";
 type QuickCaptureFormProps = {
   layout?: "wide" | "compact";
   autoFocus?: boolean;
+  onCreated?: () => void;
 };
 
 type Feedback = "success" | "error" | "emptyTitle" | null;
 
-export function QuickCaptureForm({ layout = "wide", autoFocus = false }: QuickCaptureFormProps) {
+export function QuickCaptureForm({
+  layout = "wide",
+  autoFocus = false,
+  onCreated,
+}: QuickCaptureFormProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [spaceId, setSpaceId] = useState<string | null>(null);
@@ -98,6 +104,13 @@ export function QuickCaptureForm({ layout = "wide", autoFocus = false }: QuickCa
       setTitle("");
       setFeedback("success");
       inputRef.current?.focus();
+      notifications.show({
+        message: t("capture.success"),
+        color: "gray",
+        autoClose: 2000,
+        withCloseButton: false,
+      });
+      onCreated?.();
     } catch {
       setFeedback("error");
     } finally {

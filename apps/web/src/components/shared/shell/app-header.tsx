@@ -43,26 +43,26 @@ export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
         <ThemeToggle />
 
         <QuickCapturePopover>
-          <Group gap="xs" wrap="nowrap">
-            <Button
-              variant="filled"
-              visibleFrom="sm"
-              leftSection={<IconPlus size={16} stroke={1.6} />}
-              aria-label={t("capture.title")}
-              title={t("capture.title")}
-            >
-              {t("shell.create")}
-            </Button>
+          <Button
+            variant="filled"
+            visibleFrom="sm"
+            leftSection={<IconPlus size={16} stroke={1.6} />}
+            aria-label={t("capture.title")}
+            title={t("capture.title")}
+          >
+            {t("shell.create")}
+          </Button>
+        </QuickCapturePopover>
 
-            <ActionIcon
-              hiddenFrom="sm"
-              variant="filled"
-              aria-label={t("capture.title")}
-              title={t("capture.title")}
-            >
-              <IconPlus size={18} stroke={1.6} />
-            </ActionIcon>
-          </Group>
+        <QuickCapturePopover>
+          <ActionIcon
+            hiddenFrom="sm"
+            variant="filled"
+            aria-label={t("capture.title")}
+            title={t("capture.title")}
+          >
+            <IconPlus size={18} stroke={1.6} />
+          </ActionIcon>
         </QuickCapturePopover>
       </Group>
     </MantineAppShell.Header>

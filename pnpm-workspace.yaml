@@ -5,6 +5,13 @@ packages:
 allowBuilds:
   esbuild: true
 
+# Notifications 9.7.4 is the latest published package; core and hooks are 9.7.5.
+# Mantine patch versions are compatible, and this keeps the peer check clean.
+peerDependencyRules:
+  allowedVersions:
+    "@mantine/notifications>@mantine/core": "9.7.5"
+    "@mantine/notifications>@mantine/hooks": "9.7.5"
+
 minimumReleaseAgeExclude:
   - "@oxlint/binding-android-arm-eabi@1.93.0"
   - "@oxlint/binding-android-arm64@1.93.0"
