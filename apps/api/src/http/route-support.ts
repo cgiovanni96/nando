@@ -1,4 +1,4 @@
-import { runIdempotentCommand } from "@nando/platform";
+import { runIdempotentCommand, type CommandTransaction } from "@nando/platform";
 import type { Context } from "hono";
 import type { Hono } from "hono";
 import { validator } from "hono-openapi";
@@ -83,6 +83,7 @@ type SuccessEnvelope<T> = { ok: true; data: T };
  * - ricava `actorId` dal middleware di autenticazione;
  * - usa il database del composition root;
  * - passa a `runIdempotentCommand` il payload che identifica il replay;
+ * - consegna a `execute` la transazione condivisa con l'idempotenza;
  * - valida il risultato contro lo schema documentato e risponde 200.
  *
  * `execute` deve restituire solo il DTO: l'envelope viene costruita da questo
@@ -97,7 +98,7 @@ export async function commandResponse<T>(
     commandId: string;
     payload: unknown;
     responseSchema: z.ZodType<SuccessEnvelope<T>>;
-    execute: () => Promise<T>;
+    execute: (tx: CommandTransaction) => Promise<T>;
   },
 ): Promise<Response> {
   const response = await runIdempotentCommand({
@@ -106,7 +107,7 @@ export async function commandResponse<T>(
     commandName: input.commandName,
     commandId: input.commandId,
     payload: input.payload,
-    execute: async () => input.responseSchema.parse({ ok: true, data: await input.execute() }),
+    execute: async (tx) => input.responseSchema.parse({ ok: true, data: await input.execute(tx) }),
   });
 
   return c.json(response, 200);

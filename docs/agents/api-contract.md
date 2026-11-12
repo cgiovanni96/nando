@@ -54,7 +54,9 @@ Two shared modules keep the operation files small without splitting them:
   `jsonRequestBody(schema, example)`, `errorResponse(...)`. The example is typed from the schema.
 - `http/route-support.ts` owns `validateJson`, `validateParam`, `validateQuery` (validator plus the
   shared 400 envelope), `commandResponse` (actor, idempotency, envelope, status 200), the error
-  response sets, and the router type.
+  response sets, and the router type. `commandResponse` passes the idempotency transaction to
+  `execute`: the command writes and the idempotency record commit or roll back together. A command
+  that writes must use that `tx`, not the module database.
 
 `describeRoute` stays in `operations/<operation>/route.ts`: the Scalar description is reviewed
 together with the behavior it describes. Do not create `describe.ts` or `validators.ts` per

@@ -33,6 +33,7 @@ export {
   IdempotencyInProgressError,
   IdempotencyKeyReuseError,
   runIdempotentCommand,
+  type CommandTransaction,
   type IdempotentCommandInput,
 } from "./idempotency/run";
 

@@ -58,12 +58,15 @@ export function registerCreateSpaceRoute(router: ApiRouter, deps: ApiDeps, space
           parentId: payload.parentId,
         },
         responseSchema: spaceResponseSchema,
-        execute: async () => {
-          const result = await spaces.commands.create({
-            name: payload.name,
-            kind: payload.kind,
-            parentId: payload.parentId,
-          });
+        execute: async (tx) => {
+          const result = await spaces.commands.create(
+            {
+              name: payload.name,
+              kind: payload.kind,
+              parentId: payload.parentId,
+            },
+            tx,
+          );
           const created = unwrapResult(result);
 
           return toSpaceDto(created);

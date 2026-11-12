@@ -19,19 +19,28 @@ export function hashPayload(payload: unknown): string {
   return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
+/**
+ * Connessione transazionale passata a `execute`: le scritture del comando
+ * condividono la transazione della riga di idempotenza.
+ */
+export type CommandTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
 export type IdempotentCommandInput<T> = {
   db: Database;
   actorId: string;
   commandName: string;
   commandId: string;
   payload: unknown;
-  execute: () => Promise<T>;
+  execute: (tx: CommandTransaction) => Promise<T>;
 };
 
 /**
  * Esegue un comando una sola volta per (actorId, commandName, commandId).
  * Un replay con lo stesso payload restituisce il risultato salvato; un
  * payload diverso sulla stessa chiave è un errore di contratto.
+ *
+ * `execute` riceve la transazione e deve usarla per le proprie scritture:
+ * idempotenza e comando committano o falliscono insieme.
  */
 export async function runIdempotentCommand<T>(input: IdempotentCommandInput<T>): Promise<T> {
   const payloadHash = hashPayload(input.payload);
@@ -81,7 +90,7 @@ export async function runIdempotentCommand<T>(input: IdempotentCommandInput<T>):
       return existing.result as T;
     }
 
-    const result = await input.execute();
+    const result = await input.execute(tx);
 
     await tx
       .update(idempotency)

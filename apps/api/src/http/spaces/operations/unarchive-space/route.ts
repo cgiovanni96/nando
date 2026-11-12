@@ -58,8 +58,8 @@ export function registerUnarchiveSpaceRoute(router: ApiRouter, deps: ApiDeps, sp
         commandId: payload.commandId,
         payload: { spaceId },
         responseSchema: spaceResponseSchema,
-        execute: async () => {
-          const result = await spaces.commands.unarchive({ spaceId });
+        execute: async (tx) => {
+          const result = await spaces.commands.unarchive({ spaceId }, tx);
           const unarchived = unwrapResult(result);
 
           return toSpaceDto(unarchived);

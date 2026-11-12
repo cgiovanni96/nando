@@ -55,8 +55,8 @@ export function registerArchiveSpaceRoute(router: ApiRouter, deps: ApiDeps, spac
         commandId: payload.commandId,
         payload: { spaceId },
         responseSchema: spaceResponseSchema,
-        execute: async () => {
-          const result = await spaces.commands.archive({ spaceId });
+        execute: async (tx) => {
+          const result = await spaces.commands.archive({ spaceId }, tx);
           const archived = unwrapResult(result);
 
           return toSpaceDto(archived);

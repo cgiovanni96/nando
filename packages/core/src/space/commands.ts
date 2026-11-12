@@ -10,7 +10,7 @@ import {
   type Space,
   type SpaceKind,
 } from "./domain";
-import type { SpaceDatabase } from "./ports";
+import type { SpaceCommandDb, SpaceDatabase } from "./ports";
 import { space } from "./schema";
 
 export type SpaceCommandDeps = {
@@ -30,21 +30,22 @@ export type RenameSpaceInput = {
   name: string;
 };
 
-async function findSpace(db: SpaceDatabase, spaceId: string): Promise<Space | null> {
+async function findSpace(db: SpaceCommandDb, spaceId: string): Promise<Space | null> {
   const [row] = await db.select().from(space).where(eq(space.id, spaceId)).limit(1);
   return row ?? null;
 }
 
 export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
   return {
-    async create(input: CreateSpaceInput): Promise<Result<Space>> {
+    async create(input: CreateSpaceInput, tx?: SpaceCommandDb): Promise<Result<Space>> {
+      const conn = tx ?? db;
       const name = normalizeSpaceName(input.name);
 
       const invalidName = nameViolation(name);
       if (invalidName) return err(invalidName);
 
       if (input.parentId !== null) {
-        const parent = await findSpace(db, input.parentId);
+        const parent = await findSpace(conn, input.parentId);
 
         if (!parent) {
           return err({ code: "not_found", message: "Space genitore non trovato." });
@@ -55,7 +56,7 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       }
 
       const now = clock.now();
-      const [created] = await db
+      const [created] = await conn
         .insert(space)
         .values({
           id: ids(),
@@ -78,8 +79,9 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       return ok(created);
     },
 
-    async rename(input: RenameSpaceInput): Promise<Result<Space>> {
-      const existing = await findSpace(db, input.spaceId);
+    async rename(input: RenameSpaceInput, tx?: SpaceCommandDb): Promise<Result<Space>> {
+      const conn = tx ?? db;
+      const existing = await findSpace(conn, input.spaceId);
 
       if (!existing) {
         return err({ code: "not_found", message: "Space non trovato." });
@@ -93,7 +95,7 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       const invalidName = nameViolation(name);
       if (invalidName) return err(invalidName);
 
-      const [renamed] = await db
+      const [renamed] = await conn
         .update(space)
         .set({ name, version: existing.version + 1, updatedAt: clock.now() })
         .where(eq(space.id, input.spaceId))
@@ -106,8 +108,9 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       return ok(renamed);
     },
 
-    async archive(input: { spaceId: string }): Promise<Result<Space>> {
-      const existing = await findSpace(db, input.spaceId);
+    async archive(input: { spaceId: string }, tx?: SpaceCommandDb): Promise<Result<Space>> {
+      const conn = tx ?? db;
+      const existing = await findSpace(conn, input.spaceId);
 
       if (!existing || existing.deletedAt) {
         return err({ code: "not_found", message: "Space non trovato." });
@@ -118,7 +121,7 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       }
 
       const now = clock.now();
-      await db.execute(sql`
+      await conn.execute(sql`
         with recursive subtree as (
           select id from space where id = ${input.spaceId}
           union all
@@ -137,8 +140,9 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       return ok({ ...existing, archivedAt: now, updatedAt: now, version: existing.version + 1 });
     },
 
-    async unarchive(input: { spaceId: string }): Promise<Result<Space>> {
-      const existing = await findSpace(db, input.spaceId);
+    async unarchive(input: { spaceId: string }, tx?: SpaceCommandDb): Promise<Result<Space>> {
+      const conn = tx ?? db;
+      const existing = await findSpace(conn, input.spaceId);
 
       if (!existing || existing.deletedAt) {
         return err({ code: "not_found", message: "Space non trovato." });
@@ -149,7 +153,7 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       }
 
       if (existing.parentId) {
-        const [ancestor] = await db.execute<{ archived: boolean }>(sql`
+        const [ancestor] = await conn.execute<{ archived: boolean }>(sql`
           with recursive ancestors as (
             select id, parent_id, archived_at from space where id = ${existing.parentId}
             union all
@@ -169,7 +173,7 @@ export function createSpaceCommands({ db, clock, ids }: SpaceCommandDeps) {
       }
 
       const now = clock.now();
-      await db.execute(sql`
+      await conn.execute(sql`
         with recursive subtree as (
           select id from space where id = ${input.spaceId}
           union all
