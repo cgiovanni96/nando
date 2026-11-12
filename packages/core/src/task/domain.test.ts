@@ -135,13 +135,12 @@ describe("task deletion grace window", () => {
     });
   });
 
-  test.prop([fc.date({ min: new Date("2026-01-01"), max: new Date("2027-01-01") })])(
-    "the window is exactly seven days wide",
-    (candidate) => {
-      const inside = new Date(candidate.getTime() + 7 * 24 * 60 * 60 * 1000);
+  test.prop([
+    fc.date({ min: new Date("2026-01-01"), max: new Date("2027-01-01"), noInvalidDate: true }),
+  ])("the window is exactly seven days wide", (candidate) => {
+    const inside = new Date(candidate.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      expect(restoreViolation(candidate, inside)).toBeNull();
-      expect(restoreViolation(candidate, new Date(inside.getTime() + 1))).not.toBeNull();
-    },
-  );
+    expect(restoreViolation(candidate, inside)).toBeNull();
+    expect(restoreViolation(candidate, new Date(inside.getTime() + 1))).not.toBeNull();
+  });
 });
