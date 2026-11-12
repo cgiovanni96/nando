@@ -181,6 +181,8 @@ apps/api/src/http/tasks/
   routes.test.ts   integration test + safeParse delle risposte
 ```
 
+La forma per un gruppo con più operazioni è precisata nell'emendamento 2026-11-11 in fondo.
+
 `contract.ts` esporta:
 
 - lo schema di request, usato sia da `validator` sia da `describeRoute`;
@@ -331,3 +333,37 @@ Gates
 - Il multiplexing dello streaming AI: la route dedicata è decisa, il formato dei singoli eventi si finalizza con la fetta AI.
 - `meta.affected` per ogni comando: si decide caso per caso, non è obbligatorio.
 - TanStack Query o loader per il consumo lato web: fuori da questo ADR.
+
+## Emendamento 2026-11-11 — contratto e route per operazione
+
+**Stato:** accettato. Precisazione della sezione *Allineamento fra implementazione, Scalar e mock*.
+
+Un route group con più operazioni organizza il contratto in `contract/`: `shared.ts` per le forme
+comuni e `index.ts` come superficie pubblica, che ri-esporta i `contract.ts` delle singole
+operazioni. Le route vivono in `operations/<operation>/route.ts`; `routes.ts` compone i registrar e
+applica l'autenticazione del gruppo. `http/route-support.ts` contiene il supporto condiviso fra
+gruppi: callback di validazione, response d'errore comuni e il tipo del router.
+
+```text
+apps/api/src/http/<group>/
+  contract/
+    index.ts                  superficie pubblica: shared + operazioni
+    shared.ts                 schemi e DTO condivisi
+  operations/
+    <operation>/
+      contract.ts             schemi, DTO, esempi, factory dell'operazione
+      route.ts                describeRoute + validator + handler
+  mapper.ts                   dominio -> DTO condiviso
+  routes.ts                   composizione + auth del gruppo
+```
+
+Regole:
+
+- Nessuna forma wire fuori da `contract/` o da `operations/<operation>/contract.ts`.
+- I contract delle operazioni importano `contract/shared.ts`, mai `contract/index.ts`, così il
+  barrel non crea cicli.
+- `contract/index.ts` resta l'unica superficie usata da test, esempi e strumenti.
+- `route.ts` non dichiara schemi: importa il proprio `contract.ts` e il supporto condiviso.
+- Un gruppo con una sola operazione può restare `contract.ts` + `routes.ts`; la struttura per
+  operazione si adotta quando il gruppo cresce.
+- L'invariante non cambia: un solo contratto per gruppo, nessuna seconda copia, `docs:check` verde.

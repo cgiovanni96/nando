@@ -13,43 +13,80 @@ Read this before changing:
 
 ## Source of truth
 
-Each route group keeps one contract module:
+Each route group keeps one contract module. A group with more than one operation splits it by
+operation:
 
 ```text
-apps/api/src/http/<module>/
-  contract.ts      request and response Zod schemas, DTO types, examples, factories
-  routes.ts        describeRoute + validator + handler
-  mapper.ts        domain -> DTO
-  routes.test.ts   integration test + safeParse of responses
+apps/api/src/http/<group>/
+  contract/
+    index.ts        public surface: re-exports shared + operation contracts
+    shared.ts       schemas and DTOs shared by operations
+  operations/
+    <operation>/
+      contract.ts   request/response schemas, DTOs, examples, factories
+      route.ts      describeRoute + validator + handler
+  mapper.ts         domain -> DTO
+  routes.ts         composition + group auth
 ```
 
-`contract.ts` is the only place where wire shapes are declared. It exports:
+A group with a single operation may keep `contract.ts` + `routes.ts`. `http/route-support.ts`
+holds cross-group HTTP support: the validation callback, shared error responses, and the router
+type.
+
+`contract/index.ts` is the only public place where wire shapes are exposed. It exports:
 
 - the request schema, used by both `validator` and `describeRoute`;
 - the response schemas, used by `describeRoute`, examples, and tests;
 - DTO types as `z.infer` of those schemas;
 - example values and fixture factories.
 
+Operation contracts import `contract/shared.ts`, never `contract/index.ts`, so the barrel does not
+create a cycle. `route.ts` declares no schema: it imports its operation contract and the shared
+support.
+
 `AppType` is assembled from the registered routes in `apps/api`. `apps/web` imports it type-only, through the types-only entrypoint. It must never import the runtime of `apps/api`.
+
+## Route helpers
+
+Two shared modules keep the operation files small without splitting them:
+
+- `http/openapi.ts` owns the OpenAPI builders: `jsonResponse(description, schema, example)`,
+  `jsonRequestBody(schema, example)`, `errorResponse(...)`. The example is typed from the schema.
+- `http/route-support.ts` owns `validateJson`, `validateParam`, `validateQuery` (validator plus the
+  shared 400 envelope), `commandResponse` (actor, idempotency, envelope, status 200), the error
+  response sets, and the router type.
+
+`describeRoute` stays in `operations/<operation>/route.ts`: the Scalar description is reviewed
+together with the behavior it describes. Do not create `describe.ts` or `validators.ts` per
+operation. Inside `execute`, unwrap and map in named steps; never a single nested expression:
+
+```ts
+execute: async () => {
+  const result = await spaces.commands.archive({ spaceId });
+  const archived = unwrapResult(result);
+  return toSpaceDto(archived);
+},
+```
 
 ## Adding a route
 
-1. Add request and response schemas to `contract.ts`. Do not use domain entities as DTOs.
+1. Add request and response schemas to `operations/<operation>/contract.ts`; put the DTOs and schemas shared with other operations in `contract/shared.ts`. Do not use domain entities as DTOs.
 2. Add a mapper from the domain result to the DTO.
-3. Register the route with `describeRoute` and the shared request schema through `validator`.
-4. Return the success or error envelope.
-5. Add at least one example per documented response, typed from the response schema.
-6. Add an integration test that calls the route and `safeParse`s the response against the documented schema.
-7. Regenerate or inspect the OpenAPI document through the docs route.
-8. Run `pnpm typecheck`, `pnpm docs:check`, and `pnpm test:integration`.
-9. Use the route from `apps/web` in the same PR; `pnpm typecheck` must pass.
+3. Register the route in `operations/<operation>/route.ts` with `describeRoute`, `validateJson`, `validateParam`, `validateQuery`, and `commandResponse` where they apply.
+4. Re-export the operation contract from `contract/index.ts`.
+5. Return the success or error envelope.
+6. Add at least one example per documented response, typed from the response schema.
+7. Add an integration test that calls the route and `safeParse`s the response against the documented schema.
+8. Regenerate or inspect the OpenAPI document through the docs route.
+9. Run `pnpm typecheck`, `pnpm docs:check`, and `pnpm test:integration`.
+10. Use the route from `apps/web` in the same PR; `pnpm typecheck` must pass.
 
 ## Endpoint definition of done
 
 An endpoint is done only when all of these are true:
 
 - it is registered with `describeRoute`;
-- request and response schemas come from `contract.ts`, with no copies;
+- request and response schemas come from `contract/`, with no copies;
 - every documented response has a schema and an example;
 - an integration test proves the behavior and `safeParse`s the response;
 - `pnpm typecheck` and `pnpm docs:check` pass;
