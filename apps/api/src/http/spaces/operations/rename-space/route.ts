@@ -1,10 +1,10 @@
 import type { SpaceModule } from "@nando/core";
+import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
 import { unwrapResult } from "../../../errors";
 import { jsonRequestBody, jsonResponse } from "../../../openapi";
 import {
-  type ApiRouter,
   commandErrorResponses,
   commandResponse,
   domainRuleViolationResponse,
@@ -12,7 +12,7 @@ import {
   validateJson,
   validateParam,
 } from "../../../route-support";
-import type { ApiDeps } from "../../../types";
+import type { ApiDeps, ApiEnv } from "../../../types";
 import { spaceIdParamsSchema, spaceResponseSchema } from "../../contract/shared";
 import { toSpaceDto } from "../../mapper";
 import {
@@ -23,8 +23,8 @@ import {
 
 const path = "/api/spaces/:spaceId/rename";
 
-export function registerRenameSpaceRoute(router: ApiRouter, deps: ApiDeps, spaces: SpaceModule) {
-  router.post(
+export function createRenameSpaceRoute(deps: ApiDeps, spaces: SpaceModule) {
+  return new Hono<ApiEnv>().post(
     path,
     describeRoute({
       tags: ["spaces"],

@@ -101,7 +101,8 @@ Rules:
   [api-contract.md](api-contract.md).
 - Shared route helpers live in `http/route-support.ts` (validators, command runner, error responses)
   and `http/openapi.ts` (response and request-body builders). `describeRoute` stays in the operation
-  route.
+  route. Operation routes return Hono routers and groups compose them with `.route(...)`, so
+  `AppType` keeps every endpoint for the typed client.
 - Integration tests live in `apps/api/test/integration/` and `safeParse` the documented response.
 
 ## Web shape

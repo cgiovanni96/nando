@@ -1,8 +1,10 @@
 import type { SpaceModule } from "@nando/core";
+import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
 import { jsonResponse } from "../../../openapi";
-import { type ApiRouter, queryErrorResponses, validateQuery } from "../../../route-support";
+import { queryErrorResponses, validateQuery } from "../../../route-support";
+import type { ApiEnv } from "../../../types";
 import { toSpaceDto } from "../../mapper";
 import {
   listSpacesQuerySchema,
@@ -12,8 +14,8 @@ import {
 
 const path = "/api/spaces";
 
-export function registerListSpacesRoute(router: ApiRouter, spaces: SpaceModule) {
-  router.get(
+export function createListSpacesRoute(spaces: SpaceModule) {
+  return new Hono<ApiEnv>().get(
     path,
     describeRoute({
       tags: ["spaces"],

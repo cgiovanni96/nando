@@ -1,17 +1,17 @@
 import type { SpaceModule } from "@nando/core";
+import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
 import { unwrapResult } from "../../../errors";
 import { jsonRequestBody, jsonResponse } from "../../../openapi";
 import {
-  type ApiRouter,
   commandErrorResponses,
   commandResponse,
   notFoundResponse,
   validateJson,
   validateParam,
 } from "../../../route-support";
-import type { ApiDeps } from "../../../types";
+import type { ApiDeps, ApiEnv } from "../../../types";
 import {
   spaceCommandRequestExample,
   spaceCommandRequestSchema,
@@ -23,8 +23,8 @@ import { archivedSpaceResponseExample } from "./contract";
 
 const path = "/api/spaces/:spaceId/archive";
 
-export function registerArchiveSpaceRoute(router: ApiRouter, deps: ApiDeps, spaces: SpaceModule) {
-  router.post(
+export function createArchiveSpaceRoute(deps: ApiDeps, spaces: SpaceModule) {
+  return new Hono<ApiEnv>().post(
     path,
     describeRoute({
       tags: ["spaces"],

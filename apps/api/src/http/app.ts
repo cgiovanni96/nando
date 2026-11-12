@@ -34,7 +34,6 @@ export type { ApiDeps } from "./types";
  * a generare la spec.
  */
 export function createContractApp(deps: ApiDeps) {
-  const app = new Hono<ApiEnv>();
   const spaces = createSpaceModule({
     db: deps.db,
     clock: systemClock,
@@ -50,22 +49,22 @@ export function createContractApp(deps: ApiDeps) {
     },
   });
 
-  app.route("/", createSystemRoutes(deps));
-  app.route("/", createSpaceRoutes(deps, spaces));
-  app.route("/", createInboxRoutes(deps, spaces));
-  app.route("/", createTaskRoutes(deps, tasks));
-  return app;
+  return new Hono<ApiEnv>()
+    .route("/", createSystemRoutes(deps))
+    .route("/", createSpaceRoutes(deps, spaces))
+    .route("/", createInboxRoutes(deps, spaces))
+    .route("/", createTaskRoutes(deps, tasks));
 }
 
 /** App completa del processo api: richieste, errori, health, contratto e docs. */
 export function createApiApp(deps: ApiDeps) {
-  const app = new Hono<ApiEnv>();
+  const base = new Hono<ApiEnv>();
 
   // Ogni risposta porta un requestId stabile: lo riusa se il proxy lo invia,
   // altrimenti ne genera uno nuovo.
-  app.use("*", requestId);
+  base.use("*", requestId);
 
-  app.onError((error, c) => {
+  base.onError((error, c) => {
     const httpError = toHttpError(error);
 
     // Gli errori 5xx si loggano qui una volta; gli errori imprevisti non
@@ -79,7 +78,7 @@ export function createApiApp(deps: ApiDeps) {
 
   // Anche una route sconosciuta passa dallo stesso envelope: il client non
   // deve distinguere un 404 di routing da un 404 di dominio.
-  app.notFound((c) =>
+  base.notFound((c) =>
     c.json(
       errorEnvelope(
         new HttpError(404, "not_found", "Risorsa non trovata."),
@@ -89,8 +88,7 @@ export function createApiApp(deps: ApiDeps) {
     ),
   );
 
-  app.route("/", createHealthRoutes(deps));
-  app.route("/", createContractApp(deps));
+  const app = base.route("/", createHealthRoutes(deps)).route("/", createContractApp(deps));
 
   // La documentazione è strumentazione di sviluppo: spenta per default in
   // produzione e, se accesa, resta dietro Access (ADR-0022).

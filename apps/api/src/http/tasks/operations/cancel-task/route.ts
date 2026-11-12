@@ -1,10 +1,10 @@
 import type { TaskModule } from "@nando/core";
+import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
 import { unwrapResult } from "../../../errors";
 import { jsonRequestBody, jsonResponse } from "../../../openapi";
 import {
-  type ApiRouter,
   commandErrorResponses,
   commandResponse,
   domainRuleViolationResponse,
@@ -12,7 +12,7 @@ import {
   validateJson,
   validateParam,
 } from "../../../route-support";
-import type { ApiDeps } from "../../../types";
+import type { ApiDeps, ApiEnv } from "../../../types";
 import {
   taskCommandRequestExample,
   taskCommandRequestSchema,
@@ -24,8 +24,8 @@ import { cancelledTaskResponseExample } from "./contract";
 
 const path = "/api/tasks/:taskId/cancel";
 
-export function registerCancelTaskRoute(router: ApiRouter, deps: ApiDeps, tasks: TaskModule) {
-  router.post(
+export function createCancelTaskRoute(deps: ApiDeps, tasks: TaskModule) {
+  return new Hono<ApiEnv>().post(
     path,
     describeRoute({
       tags: ["tasks"],

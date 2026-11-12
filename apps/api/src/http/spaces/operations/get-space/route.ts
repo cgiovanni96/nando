@@ -1,22 +1,19 @@
 import type { SpaceModule } from "@nando/core";
+import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 
 import { HttpError } from "../../../errors";
 import { jsonResponse } from "../../../openapi";
-import {
-  type ApiRouter,
-  notFoundResponse,
-  queryErrorResponses,
-  validateParam,
-} from "../../../route-support";
+import { notFoundResponse, queryErrorResponses, validateParam } from "../../../route-support";
+import type { ApiEnv } from "../../../types";
 import { spaceIdParamsSchema, spaceResponseSchema } from "../../contract/shared";
 import { toSpaceDto } from "../../mapper";
 import { childSpaceResponseExample } from "./contract";
 
 const path = "/api/spaces/:spaceId";
 
-export function registerGetSpaceRoute(router: ApiRouter, spaces: SpaceModule) {
-  router.get(
+export function createGetSpaceRoute(spaces: SpaceModule) {
+  return new Hono<ApiEnv>().get(
     path,
     describeRoute({
       tags: ["spaces"],

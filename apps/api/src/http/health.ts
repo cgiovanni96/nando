@@ -13,9 +13,7 @@ import type { ApiDeps, ApiEnv } from "./types";
  * dettagli del guasto al chiamante.
  */
 export function createHealthRoutes(deps: ApiDeps) {
-  const health = new Hono<ApiEnv>();
-
-  health.get("/api/health", async (c) => {
+  return new Hono<ApiEnv>().get("/api/health", async (c) => {
     const requestId = c.get("requestId");
 
     try {
@@ -31,6 +29,4 @@ export function createHealthRoutes(deps: ApiDeps) {
       );
     }
   });
-
-  return health;
 }

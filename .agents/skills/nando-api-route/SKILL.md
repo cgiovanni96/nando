@@ -39,10 +39,13 @@ holds the validation callback, shared error responses, and the router type.
 
 - `http/openapi.ts`: `jsonResponse(description, schema, example)`, `jsonRequestBody(schema, example)`,
   `errorResponse(...)`. The example is typed from the schema.
-- `http/route-support.ts`: `validateJson`, `validateParam`, `validateQuery`, `commandResponse`, the
-  error response sets, and the router type.
+- `http/route-support.ts`: `validateJson`, `validateParam`, `validateQuery`, `commandResponse`, and
+  the error response sets.
 - `commandResponse` passes the idempotency transaction to `execute`: pass it to the command
   (`spaces.commands.create(input, tx)`) so writes and idempotency commit or roll back together.
+- Each `route.ts` returns `new Hono<ApiEnv>().get/post(...)`; the group composes them with
+  `.route(...)`. Chaining is what keeps every path visible to `hc<AppType>`: a route call whose
+  result is discarded still works at runtime but disappears from the client type.
 - `describeRoute` stays in `route.ts`: review the Scalar prose together with the handler.
 - Do not create `describe.ts` or `validators.ts` per operation.
 - Inside `execute`, unwrap and map in named steps, never a nested expression:
