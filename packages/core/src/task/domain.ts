@@ -6,6 +6,11 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const TASK_TITLE_MAX_LENGTH = 500;
 
+/** Finestra di grazia della deletion prima della purge (ADR-0011). */
+export const TASK_DELETION_GRACE_DAYS = 7;
+
+const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
+
 export const TASK_STATUS_TARGETS = {
   complete: "completed",
   skip: "skipped",
@@ -27,6 +32,7 @@ export type Task = {
   version: number;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 };
 
 /** Ciò che il modulo Task deve sapere di uno Space, senza importarne lo schema. */
@@ -101,6 +107,34 @@ export function spaceViolation(space: TaskSpaceSnapshot | null): DomainError | n
 
   if (space.archivedAt) {
     return { code: "domain_rule_violation", message: "Uno Space archiviato è in sola lettura." };
+  }
+
+  return null;
+}
+
+/**
+ * Ultimo istante in cui un task cancellato è ancora ripristinabile.
+ * Il calcolo è puro: la finestra è un dato di dominio, non una configurazione.
+ */
+export function restorableUntil(deletedAt: Date): Date {
+  return new Date(deletedAt.getTime() + TASK_DELETION_GRACE_DAYS * DAY_IN_MILLISECONDS);
+}
+
+/**
+ * Un task cancellato si ripristina solo dentro la finestra di grazia.
+ * Un task attivo non ha nulla da ripristinare: il comando è un no-op.
+ */
+export function restoreViolation(deletedAt: Date | null, now: Date): DomainError | null {
+  if (!deletedAt) return null;
+
+  const deadline = restorableUntil(deletedAt);
+
+  if (now.getTime() > deadline.getTime()) {
+    return {
+      code: "domain_rule_violation",
+      message: "La finestra di grazia è scaduta: il task non è più ripristinabile.",
+      details: { restorableUntil: deadline.toISOString() },
+    };
   }
 
   return null;

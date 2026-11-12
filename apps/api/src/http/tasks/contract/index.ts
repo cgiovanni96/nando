@@ -45,3 +45,12 @@ export {
 export { completedTaskResponseExample } from "@api/http/tasks/operations/complete-task/contract";
 export { skippedTaskResponseExample } from "@api/http/tasks/operations/skip-task/contract";
 export { cancelledTaskResponseExample } from "@api/http/tasks/operations/cancel-task/contract";
+export {
+  moveTaskRequestExample,
+  moveTaskRequestFactory,
+  moveTaskRequestSchema,
+  movedTaskResponseExample,
+  type MoveTaskRequest,
+} from "@api/http/tasks/operations/move-task/contract";
+export { deletedTaskResponseExample } from "@api/http/tasks/operations/delete-task/contract";
+export { restoredTaskResponseExample } from "@api/http/tasks/operations/restore-task/contract";

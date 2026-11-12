@@ -21,6 +21,9 @@ export const contractRoutes = [
   { method: "POST", path: "/api/tasks/{taskId}/complete" },
   { method: "POST", path: "/api/tasks/{taskId}/skip" },
   { method: "POST", path: "/api/tasks/{taskId}/cancel" },
+  { method: "POST", path: "/api/tasks/{taskId}/move" },
+  { method: "POST", path: "/api/tasks/{taskId}/delete" },
+  { method: "POST", path: "/api/tasks/{taskId}/restore" },
 ] as const;
 
 export type ContractRoute = (typeof contractRoutes)[number];

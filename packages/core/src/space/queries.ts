@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, isNull, lt } from "drizzle-orm";
 
-import { clampLimit, decodeCursor, decodeIdCursor, encodeCursor } from "../db/cursor";
+import { clampLimit, decodeCursor, decodeIdCursor, encodeCursor, isUuid } from "../db/cursor";
 import type { InboxCursor, InboxItem, Space, SpaceKind } from "./domain";
 import type { InboxSource, SpaceDatabase } from "./ports";
 import { space } from "./schema";
@@ -30,8 +30,10 @@ function decodeInboxCursor(value: string): InboxCursor | null {
   if (
     !parsed ||
     typeof parsed.updatedAt !== "string" ||
+    Number.isNaN(Date.parse(parsed.updatedAt)) ||
     typeof parsed.entityType !== "string" ||
-    typeof parsed.id !== "string"
+    typeof parsed.id !== "string" ||
+    !isUuid(parsed.id)
   ) {
     return null;
   }

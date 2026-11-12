@@ -11,6 +11,8 @@ import {
 } from "@api/http/spaces/contract";
 import {
   createTaskRequestFactory,
+  moveTaskRequestFactory,
+  taskCommandRequestFactory,
   taskResponseSchema,
   type TaskDto,
 } from "@api/http/tasks/contract";
@@ -102,6 +104,42 @@ export async function createTask(input: {
 
 export async function readTask(taskId: string): Promise<TaskDto> {
   const response = await get(`/api/tasks/${taskId}`);
+  const parsed = taskResponseSchema.safeParse(await response.json());
+
+  expect(response.status).toBe(200);
+  expect(parsed.success).toBe(true);
+
+  if (!parsed.success) throw new Error(JSON.stringify(parsed.error));
+  return parsed.data.data;
+}
+
+async function taskCommand(path: string, taskId: string): Promise<TaskDto> {
+  const response = await post(
+    `/api/tasks/${taskId}/${path}`,
+    taskCommandRequestFactory({ commandId: newId() }),
+  );
+  const parsed = taskResponseSchema.safeParse(await response.json());
+
+  expect(response.status).toBe(200);
+  expect(parsed.success).toBe(true);
+
+  if (!parsed.success) throw new Error(JSON.stringify(parsed.error));
+  return parsed.data.data;
+}
+
+export async function deleteTask(taskId: string): Promise<TaskDto> {
+  return taskCommand("delete", taskId);
+}
+
+export async function restoreTask(taskId: string): Promise<TaskDto> {
+  return taskCommand("restore", taskId);
+}
+
+export async function moveTask(taskId: string, spaceId: string | null): Promise<TaskDto> {
+  const response = await post(
+    `/api/tasks/${taskId}/move`,
+    moveTaskRequestFactory({ commandId: newId(), spaceId }),
+  );
   const parsed = taskResponseSchema.safeParse(await response.json());
 
   expect(response.status).toBe(200);

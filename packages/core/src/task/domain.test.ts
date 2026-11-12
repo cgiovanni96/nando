@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 import {
   dueAtViolation,
   normalizeTaskTitle,
+  restorableUntil,
+  restoreViolation,
   spaceViolation,
+  TASK_DELETION_GRACE_DAYS,
   TASK_STATUS_TARGETS,
   TASK_STATUSES,
   TASK_TITLE_MAX_LENGTH,
@@ -102,4 +105,43 @@ describe("task space", () => {
     });
     expect(spaceViolation({ id: "s1", archivedAt: null, deletedAt: null })).toBeNull();
   });
+});
+
+describe("task deletion grace window", () => {
+  const deletedAt = new Date("2026-11-12T10:00:00.000Z");
+  const deadline = new Date("2026-11-19T10:00:00.000Z");
+
+  it("keeps the window at seven days", () => {
+    expect(TASK_DELETION_GRACE_DAYS).toBe(7);
+    expect(restorableUntil(deletedAt)).toEqual(deadline);
+  });
+
+  it("does not touch an active task", () => {
+    expect(restoreViolation(null, deadline)).toBeNull();
+  });
+
+  it("allows a restore inside the window, including the boundary", () => {
+    expect(restoreViolation(deletedAt, deletedAt)).toBeNull();
+    expect(restoreViolation(deletedAt, new Date("2026-11-19T09:59:59.999Z"))).toBeNull();
+    expect(restoreViolation(deletedAt, deadline)).toBeNull();
+  });
+
+  it("refuses a restore after the window and reports the deadline", () => {
+    const violation = restoreViolation(deletedAt, new Date("2026-11-19T10:00:00.001Z"));
+
+    expect(violation).toMatchObject({
+      code: "domain_rule_violation",
+      details: { restorableUntil: "2026-11-19T10:00:00.000Z" },
+    });
+  });
+
+  test.prop([fc.date({ min: new Date("2026-01-01"), max: new Date("2027-01-01") })])(
+    "the window is exactly seven days wide",
+    (candidate) => {
+      const inside = new Date(candidate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      expect(restoreViolation(candidate, inside)).toBeNull();
+      expect(restoreViolation(candidate, new Date(inside.getTime() + 1))).not.toBeNull();
+    },
+  );
 });

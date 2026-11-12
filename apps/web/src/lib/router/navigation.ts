@@ -45,7 +45,19 @@ export const primaryNav: NavEntry[] = [
   { labelKey: "nav.items.habits", icon: IconRepeat, milestone: "M5" },
 ];
 
+/** Inbox vive nella sezione workspace, ma è una destinazione anche su mobile. */
+const inbox: NavigableNavEntry = { labelKey: "nav.items.inbox", icon: IconInbox, to: "/inbox" };
+
 export const workspaceNav: NavEntry[] = [
-  { labelKey: "nav.items.inbox", icon: IconInbox, milestone: "M1" },
+  inbox,
   { labelKey: "nav.items.allSpaces", icon: IconFolders, milestone: "M1" },
 ];
+
+/**
+ * Barra mobile: le sezioni primarie più le destinazioni del workspace che
+ * devono restare raggiungibili quando la sidebar è collassata.
+ */
+export const bottomNav: NavEntry[] = [...primaryNav, inbox];
+
+/** Tutte le destinazioni navigabili, nell'ordine in cui compaiono. */
+export const allNav: NavEntry[] = [...primaryNav, ...workspaceNav];

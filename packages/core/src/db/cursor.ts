@@ -25,10 +25,15 @@ export function decodeCursor(value: string): Record<string, unknown> | null {
   }
 }
 
+/** `true` quando la stringa ha la forma di un UUID (con o senza versione). */
+export function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
 /** Cursore delle liste ordinate per id UUIDv7 crescente o decrescente. */
 export function decodeIdCursor(value: string): string | null {
   const parsed = decodeCursor(value);
   const id = parsed?.id;
 
-  return typeof id === "string" && UUID_PATTERN.test(id) ? id : null;
+  return typeof id === "string" && isUuid(id) ? id : null;
 }

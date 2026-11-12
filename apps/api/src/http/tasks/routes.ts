@@ -6,8 +6,11 @@ import type { ApiDeps, ApiEnv } from "@api/http/types";
 import { createCancelTaskRoute } from "./operations/cancel-task/route";
 import { createCompleteTaskRoute } from "./operations/complete-task/route";
 import { createCreateTaskRoute } from "./operations/create-task/route";
+import { createDeleteTaskRoute } from "./operations/delete-task/route";
 import { createGetTaskRoute } from "./operations/get-task/route";
 import { createListTasksRoute } from "./operations/list-tasks/route";
+import { createMoveTaskRoute } from "./operations/move-task/route";
+import { createRestoreTaskRoute } from "./operations/restore-task/route";
 import { createSkipTaskRoute } from "./operations/skip-task/route";
 import { createUpdateTaskRoute } from "./operations/update-task/route";
 
@@ -27,7 +30,10 @@ export function createTaskRoutes(deps: ApiDeps, tasks: TaskModule) {
     .route("/", createGetTaskRoute(tasks))
     .route("/", createCreateTaskRoute(deps, tasks))
     .route("/", createUpdateTaskRoute(deps, tasks))
+    .route("/", createMoveTaskRoute(deps, tasks))
     .route("/", createCompleteTaskRoute(deps, tasks))
     .route("/", createSkipTaskRoute(deps, tasks))
-    .route("/", createCancelTaskRoute(deps, tasks));
+    .route("/", createCancelTaskRoute(deps, tasks))
+    .route("/", createDeleteTaskRoute(deps, tasks))
+    .route("/", createRestoreTaskRoute(deps, tasks));
 }

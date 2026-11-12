@@ -5,6 +5,7 @@ import { err, ok } from "@nando/kernel";
 import {
   dueAtViolation,
   normalizeTaskTitle,
+  restoreViolation,
   spaceViolation,
   TASK_STATUS_TARGETS,
   titleViolation,
@@ -12,7 +13,7 @@ import {
   type Task,
   type TaskStatus,
 } from "./domain";
-import { findTask } from "./mapper";
+import { findTask, findTaskIncludingDeleted } from "./mapper";
 import type { TaskCommandDb, TaskDatabase, TaskSpacePort } from "./ports";
 import { task, taskOccurrence } from "./schema";
 
@@ -39,6 +40,11 @@ export type UpdateTaskInput = {
 
 export type TaskIdInput = {
   taskId: string;
+};
+
+export type MoveTaskInput = {
+  taskId: string;
+  spaceId: string | null;
 };
 
 function notFound(): DomainError {
@@ -205,6 +211,40 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
       });
     },
 
+    async move(input: MoveTaskInput, tx?: TaskCommandDb): Promise<Result<Task>> {
+      const invalidSpace = await spaceError(spacePort, input.spaceId);
+      if (invalidSpace) return err(invalidSpace);
+
+      const now = clock.now();
+
+      return runInTransaction(db, tx, async (conn) => {
+        const current = await findTask(conn, input.taskId);
+
+        if (!current) return err(notFound());
+        if (current.spaceId === input.spaceId) return ok(current);
+
+        const [updated] = await conn
+          .update(task)
+          .set({ spaceId: input.spaceId, version: current.version + 1, updatedAt: now })
+          .where(
+            and(
+              eq(task.id, input.taskId),
+              eq(task.version, current.version),
+              isNull(task.deletedAt),
+            ),
+          )
+          .returning({ id: task.id });
+
+        if (!updated) {
+          const latest = await findTask(conn, input.taskId);
+          return err(versionConflict(latest?.version ?? current.version));
+        }
+
+        const view = await findTask(conn, input.taskId);
+        return view ? ok(view) : err(notFound());
+      });
+    },
+
     async complete(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
       return transition(input.taskId, TASK_STATUS_TARGETS.complete, tx);
     },
@@ -215,6 +255,72 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
 
     async cancel(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
       return transition(input.taskId, TASK_STATUS_TARGETS.cancel, tx);
+    },
+
+    /**
+     * Deletion con grazia: scrive `deletedAt` e nasconde il task dalle viste.
+     * Non elimina righe e non tocca l'occorrenza; il purge arriva con la
+     * retention (ADR-0011).
+     */
+    async delete(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
+      const now = clock.now();
+
+      return runInTransaction(db, tx, async (conn) => {
+        const current = await findTaskIncludingDeleted(conn, input.taskId);
+
+        if (!current) return err(notFound());
+        if (current.deletedAt) return ok(current);
+
+        const [updated] = await conn
+          .update(task)
+          .set({ deletedAt: now, version: current.version + 1, updatedAt: now })
+          .where(and(eq(task.id, input.taskId), eq(task.version, current.version)))
+          .returning({ id: task.id });
+
+        if (!updated) {
+          const latest = await findTaskIncludingDeleted(conn, input.taskId);
+          return err(versionConflict(latest?.version ?? current.version));
+        }
+
+        const view = await findTaskIncludingDeleted(conn, input.taskId);
+        return view ? ok(view) : err(notFound());
+      });
+    },
+
+    /**
+     * Ripristino entro la finestra di grazia. Un task attivo è un no-op; uno
+     * Space archiviato o cancellato impedisce il rientro, perché il task
+     * tornerebbe in una vista che non accetta scritture.
+     */
+    async restore(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
+      const now = clock.now();
+
+      return runInTransaction(db, tx, async (conn) => {
+        const current = await findTaskIncludingDeleted(conn, input.taskId);
+
+        if (!current) return err(notFound());
+        if (!current.deletedAt) return ok(current);
+
+        const violation = restoreViolation(current.deletedAt, now);
+        if (violation) return err(violation);
+
+        const invalidSpace = await spaceError(spacePort, current.spaceId);
+        if (invalidSpace) return err(invalidSpace);
+
+        const [updated] = await conn
+          .update(task)
+          .set({ deletedAt: null, version: current.version + 1, updatedAt: now })
+          .where(and(eq(task.id, input.taskId), eq(task.version, current.version)))
+          .returning({ id: task.id });
+
+        if (!updated) {
+          const latest = await findTaskIncludingDeleted(conn, input.taskId);
+          return err(versionConflict(latest?.version ?? current.version));
+        }
+
+        const view = await findTask(conn, input.taskId);
+        return view ? ok(view) : err(notFound());
+      });
     },
   };
 }
