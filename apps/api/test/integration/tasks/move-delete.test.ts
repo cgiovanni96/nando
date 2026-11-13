@@ -69,6 +69,19 @@ describe("task move", () => {
     expect(await inboxIds()).toEqual([created.id]);
   });
 
+  it("keeps exactly one owner when a task moves between Spaces", async () => {
+    const origin = await createSpace("Casa");
+    const destination = await createSpace("Lavoro");
+    const created = await createTask({ title: "Spostare la poltrona", spaceId: origin.id });
+
+    const moved = await moveTask(created.id, destination.id);
+
+    expect(moved.spaceId).toBe(destination.id);
+    expect(await taskIds(`/api/tasks?spaceId=${origin.id}`)).toEqual([]);
+    expect(await taskIds(`/api/tasks?spaceId=${destination.id}`)).toEqual([created.id]);
+    expect(await inboxIds()).toEqual([]);
+  });
+
   it("treats a move to the current Space as an idempotent no-op", async () => {
     const space = await createSpace("Salute");
     const created = await createTask({ title: "Prenotare la visita", spaceId: space.id });

@@ -1,6 +1,6 @@
-# Staging M0 — Dokploy e tailnet
+# Demo M0 — Dokploy e tailnet
 
-Questa procedura porta lo staging di M0 su Dokploy, raggiungibile solo dal tailnet. Non apre route pubbliche e non tocca la produzione.
+Questa procedura porta lo staging di M0 su Dokploy, raggiungibile solo dal tailnet. Non apre route pubbliche e non tocca la produzione. La demo M1 è in [demo-m1.md](demo-m1.md).
 
 ## Valori da produrre
 
