@@ -16,6 +16,7 @@ import { useQuickCaptureModal } from "@web/components/shared/capture/quick-captu
 import type { AppPath } from "@web/lib/router/paths";
 import { useHistoryNavigation } from "@web/lib/router/history";
 import { allNav, isNavigable } from "@web/lib/router/navigation";
+import classes from "./command-center.module.css";
 import { usePageActions } from "./page-actions-context";
 
 /**
@@ -116,6 +117,7 @@ export function CommandCenter() {
   return (
     <Spotlight
       actions={actions}
+      classNames={{ header: classes.header, title: classes.title }}
       title={t("commands.title")}
       nothingFound={t("commands.nothingFound")}
       highlightQuery

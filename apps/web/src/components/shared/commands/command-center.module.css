@@ -1,0 +1,13 @@
+.header {
+  min-height: 0;
+  height: auto;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xl);
+  align-items: center;
+}
+
+.title {
+  padding: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  line-height: 1.2;
+}
