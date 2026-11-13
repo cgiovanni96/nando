@@ -16,9 +16,9 @@
     "build": "pnpm -r build",
     "db:generate": "pnpm --filter @nando/platform db:generate",
     "db:migrate": "pnpm --filter @nando/platform db:migrate",
-    "db:seed": "pnpm --filter @nando/platform db:seed",
+    "db:seed": "pnpm --filter @nando/api db:seed",
     "db:check": "pnpm --filter @nando/platform db:check",
-    "start:migrate": "pnpm --filter @nando/platform start:migrate",
+    "start:migrate": "pnpm --filter @nando/platform db:migrate && pnpm --filter @nando/api db:seed",
     "docs:check": "pnpm --filter @nando/api docs:check",
     "deploy:check": "node scripts/check-compose-commands.mjs",
     "verify": "pnpm typecheck && pnpm lint && pnpm db:check && pnpm deploy:check && pnpm docs:check && pnpm test && pnpm test:integration && pnpm build"

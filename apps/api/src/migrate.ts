@@ -7,6 +7,8 @@ import {
   seedOwner,
 } from "@nando/platform";
 
+import { seedInitialSpace } from "./seed";
+
 const bootstrapLogger = createLogger({
   level: "info",
   service: "migrate",
@@ -29,11 +31,12 @@ async function main() {
 
   try {
     await seedOwner(db, config.OWNER_USER_ID);
+    await seedInitialSpace(db);
   } finally {
     await close();
   }
 
-  logger.info({}, "migrations applied and owner seeded");
+  logger.info({}, "migrations applied, owner and initial Space seeded");
 }
 
 main().catch((error: unknown) => {
