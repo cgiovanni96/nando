@@ -100,6 +100,11 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
       if (!current) return err(notFound());
       if (current.status === target) return ok(current);
 
+      // ADR-0002: l'archivio rende read-only l'entità. Il controllo è qui,
+      // dopo il no-op idempotente: un comando che non scrive non viola nulla.
+      const invalidSpace = await spaceError(spacePort, current.spaceId);
+      if (invalidSpace) return err(invalidSpace);
+
       const violation = transitionViolation(current.status, target);
       if (violation) return err(violation);
 
@@ -277,6 +282,11 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
 
         if (!current) return err(notFound());
         if (current.deletedAt) return ok(current);
+
+        // La cancellazione è reversibile, ma resta una scrittura: ADR-0002
+        // non prevede eccezioni per uno Space archiviato.
+        const invalidSpace = await spaceError(spacePort, current.spaceId);
+        if (invalidSpace) return err(invalidSpace);
 
         const [updated] = await conn
           .update(task)
