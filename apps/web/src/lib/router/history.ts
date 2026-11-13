@@ -11,6 +11,12 @@ function historyIndex(location: { state: unknown }): number {
   return typeof value === "number" ? value : 0;
 }
 
+/** Struttura di `@tanstack/history`; esplicita perché in alcuni install se ne perde il tipo. */
+type HistorySubscriberArgs = {
+  location: { state: unknown };
+  action: { type: string };
+};
+
 /**
  * Stato delle frecce indietro/avanti.
  *
@@ -25,10 +31,10 @@ export function useHistoryNavigation() {
 
   useEffect(
     () =>
-      router.history.subscribe(({ location, action }) => {
-        const next = historyIndex(location);
+      router.history.subscribe((args: HistorySubscriberArgs) => {
+        const next = historyIndex(args.location);
 
-        if (action.type === "GO") {
+        if (args.action.type === "GO") {
           setMaxIndex((current) => Math.max(current, next));
           return;
         }
