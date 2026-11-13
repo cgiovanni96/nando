@@ -35,7 +35,7 @@ export function AppNav({ pathname }: Readonly<{ pathname: string }>) {
   );
 }
 
-function NavItem({ entry, active }: Readonly<{ entry: NavEntry; active: boolean }>) {
+export function NavItem({ entry, active }: Readonly<{ entry: NavEntry; active: boolean }>) {
   const { t } = useTranslation();
   const labelText = t(entry.labelKey);
   const leftSection = <entry.icon size={18} stroke={1.6} />;

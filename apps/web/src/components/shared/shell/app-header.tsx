@@ -7,22 +7,62 @@ import {
   Kbd,
   Text,
 } from "@mantine/core";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { useHotkeys } from "@mantine/hooks";
+import { IconArrowLeft, IconArrowRight, IconPlus, IconSearch } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { allNav, isNavigable } from "@web/lib/router/navigation";
+import { useHistoryNavigation } from "@web/lib/router/history";
+import { sectionLabelKey } from "@web/lib/router/navigation";
 import { QuickCapturePopover } from "@web/components/shared/capture/quick-capture-popover";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
   const { t } = useTranslation();
-  const currentEntry = allNav.find((entry) => isNavigable(entry) && entry.to === pathname);
-  const currentLabel = t(currentEntry?.labelKey ?? "nav.items.dashboard");
+  const history = useHistoryNavigation();
+  const currentLabel = t(sectionLabelKey(pathname) ?? "nav.items.dashboard");
   const searchUnavailable = { label: t("shell.search"), milestone: "M4b" };
+
+  useHotkeys([
+    [
+      "mod+[",
+      () => {
+        if (history.canGoBack) history.back();
+      },
+    ],
+    [
+      "mod+]",
+      () => {
+        if (history.canGoForward) history.forward();
+      },
+    ],
+  ]);
 
   return (
     <MantineAppShell.Header>
       <Group h="100%" gap="md" px={{ base: 16, sm: 32 }} wrap="nowrap">
+        <Group gap={2} wrap="nowrap">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            disabled={!history.canGoBack}
+            onClick={history.back}
+            aria-label={t("shell.history.back")}
+            title={t("shell.history.back")}
+          >
+            <IconArrowLeft size={18} stroke={1.6} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            disabled={!history.canGoForward}
+            onClick={history.forward}
+            aria-label={t("shell.history.forward")}
+            title={t("shell.history.forward")}
+          >
+            <IconArrowRight size={18} stroke={1.6} />
+          </ActionIcon>
+        </Group>
+
         <Breadcrumbs flex={1} fz="xs" separator="/">
           <Text c="dimmed">{t("app.name")}</Text>
           <Text>{currentLabel}</Text>

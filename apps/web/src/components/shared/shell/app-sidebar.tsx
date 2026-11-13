@@ -1,9 +1,8 @@
-import { AppShell as MantineAppShell, Box, Button, Group, Stack, Text } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { AppShell as MantineAppShell, Box, Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { QuickCapturePopover } from "@web/components/shared/capture/quick-capture-popover";
-import { AppNav } from "./app-nav";
+import { isNavigable, utilityNav } from "@web/lib/router/navigation";
+import { AppNav, NavItem } from "./app-nav";
 import classes from "./app-shell.module.css";
 
 export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
@@ -27,24 +26,19 @@ export function AppSidebar({ pathname }: Readonly<{ pathname: string }>) {
           </Text>
         </Group>
 
-        <QuickCapturePopover position="right-start">
-          <Button
-            variant="default"
-            fullWidth
-            justify="flex-start"
-            leftSection={<IconPlus size={16} stroke={1.6} />}
-            aria-label={t("capture.title")}
-            title={t("capture.title")}
-          >
-            <Box component="span" visibleFrom="md">
-              {t("shell.capture")}
-            </Box>
-          </Button>
-        </QuickCapturePopover>
-
         <Box flex={1} c="dimmed">
           <AppNav pathname={pathname} />
         </Box>
+
+        <Stack gap={4} c="dimmed">
+          {utilityNav.map((entry) => (
+            <NavItem
+              key={entry.labelKey}
+              entry={entry}
+              active={isNavigable(entry) && entry.to === pathname}
+            />
+          ))}
+        </Stack>
 
         <Group className={classes.userRow} gap="md" pt="md" wrap="nowrap">
           <Box className={classes.userMonogram} aria-hidden="true">

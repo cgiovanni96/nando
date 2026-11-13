@@ -23,12 +23,20 @@ export const it = {
       habits: "Habits",
       inbox: "Inbox",
       allSpaces: "Tutti gli Space",
+      trash: "Cestino",
+    },
+    sections: {
+      task: "Task",
     },
   },
   shell: {
     capture: "Cattura",
     search: "Cerca",
     create: "Nuovo",
+    history: {
+      back: "Indietro",
+      forward: "Avanti",
+    },
     workspace: {
       name: "Spazio personale",
       role: "Owner",
@@ -39,9 +47,7 @@ export const it = {
     },
   },
   capture: {
-    eyebrow: "Cattura",
     title: "Cattura rapida",
-    description: "Scrivi il task e premi Invio. Lo Space è opzionale.",
     titleLabel: "Titolo del task",
     titlePlaceholder: "Cosa devi fare?",
     spaceLabel: "Space",
@@ -54,27 +60,19 @@ export const it = {
     spacesError: "Non è stato possibile caricare gli Space.",
   },
   dashboard: {
-    eyebrow: "Dashboard",
     title: "Oggi",
-    intro: "Cattura un task qui sotto; l'elenco di Oggi arriverà con il prossimo passo.",
     today: {
       title: "Nessun task per Oggi",
-      description: "La cattura è attiva. L'elenco dei task di oggi arriverà presto.",
     },
   },
   inbox: {
-    eyebrow: "Inbox",
     title: "Da collocare",
-    intro:
-      "I task senza Space. Spostane uno in un progetto o cancellalo: resta nel cestino per 7 giorni.",
     list: {
-      eyebrow: "Task in Inbox",
       loading: "Caricamento dei task in Inbox",
       error: "Non è stato possibile caricare l'Inbox.",
     },
     empty: {
       title: "Inbox vuota",
-      description: "Ogni task ha uno Space. Qui compaiono quelli che non ne hanno ancora uno.",
     },
     actions: {
       move: "Sposta in uno Space",
@@ -94,11 +92,99 @@ export const it = {
     deleteError: "Non è stato possibile cancellare il task.",
     restored: "Task ripristinato.",
     restoreError: "Non è stato possibile ripristinare il task.",
-    trash: {
-      eyebrow: "Cestino",
-      description: "Task cancellati, ripristinabili entro la finestra di grazia.",
-      restorableUntil: "Ripristinabile fino al {{date}}",
+  },
+  trash: {
+    title: "Cestino",
+    tabs: {
+      tasks: "Task",
+    },
+    columns: {
+      title: "Task",
+      deletedAt: "Cancellato",
+      restorableUntil: "Ripristinabile fino al",
+    },
+    empty: "Cestino vuoto",
+    error: "Non è stato possibile caricare il cestino.",
+    restored: "Task ripristinato.",
+    restoreError: "Non è stato possibile ripristinare il task.",
+  },
+  task: {
+    inboxLabel: "Inbox",
+    notFound: {
+      title: "Task non trovato",
+      description: "Il task non esiste o l'identificativo non è valido.",
+    },
+    error: {
+      title: "Task non disponibile",
+      description: "Non è stato possibile caricare il task. Riprova tra poco.",
+    },
+    backToInbox: "Torna all'Inbox",
+    breadcrumb: "Percorso dello Space",
+    status: {
+      open: "Aperto",
+      completed: "Completato",
+      skipped: "Saltato",
+      cancelled: "Annullato",
+      late: "In ritardo",
+    },
+    properties: {
+      status: "Stato",
+      dueAt: "Scadenza",
+      space: "Space",
+    },
+    due: {
+      today: "Oggi",
+      includeTime: "Includi orario",
+      time: "Ora",
+      clear: "Cancella",
+    },
+    readOnly: {
+      title: "Space archiviato",
+      description: "Lo Space di questo task è archiviato: il task è in sola lettura.",
+    },
+    deleted: {
+      title: "Task cancellato",
+      description: "Cancellato il {{deletedAt}}. Ripristinabile fino al {{restorableUntil}}.",
       restore: "Ripristina",
+    },
+    form: {
+      ariaLabel: "Modifica del task",
+      title: "Titolo",
+      titlePlaceholder: "Nuovo task",
+      dueAt: "Scadenza",
+      dueAtPlaceholder: "Nessuna scadenza",
+      space: "Space",
+      inbox: "Inbox",
+      noSpaces: "Nessuno Space",
+      emptyTitle: "Scrivi il titolo del task.",
+      statusLocked: "Salva o annulla le modifiche prima di cambiare stato.",
+      unsaved: "Modifiche non salvate",
+      discard: "Annulla modifiche",
+      saved: "Task salvato.",
+      error: "Non è stato possibile salvare il task.",
+      conflict: {
+        title: "Task modificato nel frattempo",
+        description:
+          "Un'altra modifica ha cambiato il task. Ricarica per vedere la versione corrente.",
+        reload: "Ricarica",
+      },
+    },
+    actions: {
+      menu: "Azioni",
+      save: "Salva",
+      delete: "Sposta nel cestino",
+      completed: "Task completato.",
+      skipped: "Task saltato.",
+      cancelled: "Task annullato.",
+      deleted: "Task cancellato: resta nel cestino per 7 giorni.",
+      restored: "Task ripristinato.",
+      error: "Non è stato possibile aggiornare il task.",
+    },
+    delete: {
+      title: "Cancellare il task?",
+      description: "Il task sparirà dalle liste e resterà ripristinabile per 7 giorni.",
+      cancel: "Annulla",
+      confirm: "Cancella",
     },
   },
 } as const;

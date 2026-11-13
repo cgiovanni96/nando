@@ -33,6 +33,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (theme) => ({
     "--nando-tint": "var(--mantine-color-gray-2)",
     "--nando-on": "var(--mantine-color-white)",
     "--nando-danger": "var(--mantine-color-danger-6)",
+    "--nando-switch-on": "var(--mantine-color-nando-7)",
   },
   dark: {
     "--mantine-color-text": "var(--mantine-color-dark-0)",
@@ -67,5 +68,6 @@ export const cssVariablesResolver: CSSVariablesResolver = (theme) => ({
     "--nando-tint": "var(--mantine-color-dark-5)",
     "--nando-on": "var(--mantine-color-dark-7)",
     "--nando-danger": "var(--mantine-color-danger-3)",
+    "--nando-switch-on": "var(--mantine-color-dark-3)",
   },
 });

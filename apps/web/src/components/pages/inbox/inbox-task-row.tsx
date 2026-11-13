@@ -1,5 +1,6 @@
-import { ActionIcon, Group, Select, Text } from "@mantine/core";
+import { ActionIcon, Group, Select } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { InboxItem } from "@web/lib/queries/inbox";
@@ -27,9 +28,14 @@ export function InboxTaskRow({
 
   return (
     <Group gap="md" wrap="nowrap" className={classes.row} justify="space-between">
-      <Text fw={500} className={classes.rowTitle} title={item.title}>
+      <Link
+        to="/tasks/$taskId"
+        params={{ taskId: item.id }}
+        className={`${classes.rowTitle} ${classes.rowLink}`}
+        title={item.title}
+      >
         {item.title}
-      </Text>
+      </Link>
 
       <Group gap="xs" wrap="nowrap">
         <Select

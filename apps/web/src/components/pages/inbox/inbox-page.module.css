@@ -21,6 +21,16 @@
   white-space: nowrap;
 }
 
+.rowLink {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.rowLink:hover {
+  text-decoration: underline;
+}
+
 .meta {
   white-space: nowrap;
 }

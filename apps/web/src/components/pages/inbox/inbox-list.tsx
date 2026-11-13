@@ -25,6 +25,7 @@ export function InboxList() {
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: ["inbox"] });
         void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        void queryClient.invalidateQueries({ queryKey: ["trash"] });
         notifications.show({
           message: messages.success,
           color: "gray",
@@ -56,6 +57,7 @@ export function InboxList() {
       setPendingDelete(null);
       void queryClient.invalidateQueries({ queryKey: ["inbox"] });
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      void queryClient.invalidateQueries({ queryKey: ["trash"] });
       notifications.show({
         message: t("inbox.deleted"),
         color: "gray",
@@ -81,10 +83,6 @@ export function InboxList() {
   return (
     <Card>
       <Stack gap="xs">
-        <Text fz="xs" c="dimmed">
-          {t("inbox.list.eyebrow")}
-        </Text>
-
         {inbox.isPending ? (
           <Center py="lg">
             <Loader size="sm" aria-label={t("inbox.list.loading")} />
@@ -98,11 +96,7 @@ export function InboxList() {
         ) : null}
 
         {inbox.isSuccess && items.length === 0 ? (
-          <EmptyState
-            icon={<IconInbox size={24} stroke={1.5} />}
-            title={t("inbox.empty.title")}
-            description={t("inbox.empty.description")}
-          />
+          <EmptyState icon={<IconInbox size={24} stroke={1.5} />} title={t("inbox.empty.title")} />
         ) : null}
 
         {items.map((item) => (
