@@ -44,6 +44,6 @@ before changing the schema. Migrations are forward-only.
 pnpm db:generate    generate a migration from the schema
 pnpm db:migrate     apply migrations
 pnpm db:check       fail on drift between schema and migrations
-pnpm db:seed        seed the owner from OWNER_USER_ID
+pnpm db:seed        seed the owner and the initial Space
 pnpm test:integration
 ```
