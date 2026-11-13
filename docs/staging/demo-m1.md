@@ -76,15 +76,32 @@ Apri lo staging dal telefono o dal laptop nel tailnet. Tieni un cronometro per i
 | 6 | Apri il Cestino | Il task è elencato con cancellato e scadenza della grazia |
 | 7 | «Ripristina» | Toast «Task ripristinato»; il task torna in `Vita` e `restorableUntil` sparisce |
 
-La rifiuto del ripristino dopo sette giorni è provato dall'integration test `refuses a restore after the grace window`; la demo verifica che la finestra sia visibile e che il ripristino dentro la finestra funzioni.
+Il rifiuto del ripristino dopo sette giorni è provato dall'integration test `refuses a restore after the grace window`; la demo verifica che la finestra sia visibile e che il ripristino dentro la finestra funzioni.
+
+## 3b. Comandi e scorciatoie
+
+| # | Azione | Atteso |
+| --- | --- | --- |
+| 1 | `n n` da qualsiasi pagina | Si apre la cattura: modale su desktop, drawer dal basso su telefono |
+| 2 | `⌘K` | Si apre «Comandi» con i gruppi Vai a, Azioni, Aspetto |
+| 3 | Scrivi `Inbox` e premi Invio | Atterri in Inbox |
+| 4 | `n d`, `n i`, `n t` | Dashboard, Inbox, Cestino |
+| 5 | `?` | Si apre lo stesso spotlight con le scorciatoie a destra |
+| 6 | Su un task, `⌘S` | Salva le modifiche; menu Azioni e spotlight mostrano le stesse voci |
+| 7 | Da telefono, icona Cerca in topbar → Cestino | Il Cestino è raggiungibile senza il link temporaneo in Inbox |
+| 8 | Apri la cattura, poi `⌘K` | Lo spotlight si apre sopra la modale; chiudilo con `⌘K` o cliccando fuori |
+
+Il leader `n` e `?` non scattano mentre scrivi in un campo o dentro una modale; `⌘K` funziona sempre.
 
 ## 4. Settimana d'uso
 
-La settimana parte solo dopo che NAS-151 è in staging: senza quel fix un task dentro uno Space archiviato resta modificabile.
+NAS-151 è in staging: un task dentro uno Space archiviato non è più modificabile.
 
-- [ ] Deploy del fix NAS-151 verde su staging.
+- [x] Deploy del fix NAS-151 verde su staging.
+- [ ] Deploy di NAS-152 verde su staging.
+- [ ] Le scorciatoie della sezione 3b funzionano su desktop e telefono.
 - [ ] Data di avvio: `____-__-__`.
-- [ ] Ogni giorno: cattura almeno un task dalla dashboard e collocalo in `Vita` o in Inbox.
+- [ ] Ogni giorno: cattura almeno un task dalla dashboard o con `n n` e collocalo in `Vita` o in Inbox.
 - [ ] Ogni giorno: apri un task dalla pagina entità e verifica che il reload non perda nulla.
 - [ ] Almeno una volta: sposta un task tra Space, cancellalo e ripristinalo.
 - [ ] Annota attrito, bug e ogni volta che hai aggirato Nando con un altro strumento.
