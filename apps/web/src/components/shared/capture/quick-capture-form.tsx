@@ -1,5 +1,6 @@
 import { Box, Button, Grid, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuickCapture } from "./use-quick-capture";
@@ -16,12 +17,22 @@ export function QuickCaptureForm({
   onCreated,
 }: QuickCaptureFormProps) {
   const { t } = useTranslation();
+  const titleRef = useRef<HTMLInputElement>(null);
   const { form, spaces, createTask, submit } = useQuickCapture({ onCreated });
+
+  useEffect(() => {
+    if (!autoFocus) return;
+
+    // Il focus trap della modale parte prima di questo effetto: il frame
+    // successivo riporta il cursore sul titolo del task.
+    const frame = requestAnimationFrame(() => titleRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [autoFocus]);
 
   const titleInput = (
     <TextInput
       {...form.getInputProps("title")}
-      autoFocus={autoFocus}
+      ref={titleRef}
       placeholder={t("capture.titlePlaceholder")}
       aria-label={t("capture.titleLabel")}
       leftSection={<IconPlus size={16} stroke={1.6} />}
