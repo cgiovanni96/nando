@@ -284,6 +284,21 @@ them, and unscoped class names leak across the app. Global class names are not a
 "it is used in two places": extract the component, or add the class to both modules. A module lives
 next to the component that consumes it, never under `routes/`: that folder holds no UI.
 
+## UI copy
+
+Text in the interface exists to add information the user cannot already see: state, consequence,
+constraint, or next action.
+
+- Do not restate a heading, a button, a field label, or an obvious behavior. A sentence above a
+  visible capture form that says "write the task and press Enter" adds nothing.
+- A description is allowed when it explains a consequence or a constraint the UI does not show: a
+  seven-day grace window, a read-only Space, a version conflict, a disabled control.
+- Empty states use a title. A second line is allowed only when it says what goes there or what to
+  do next.
+- Error and toast messages state what failed and what to do; they never narrate the design.
+- The rule applies to `aria-label`, `title`, and placeholders too: they describe the control, not
+  the page around it.
+
 ## What this is not
 
 - No `packages/ui`, no Storybook, no design-system package (ADR-0023).
