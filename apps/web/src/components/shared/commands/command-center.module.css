@@ -1,7 +1,7 @@
 .header {
   min-height: 0;
   height: auto;
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xl);
+  padding: var(--mantine-spacing-sm);
   align-items: center;
 }
 

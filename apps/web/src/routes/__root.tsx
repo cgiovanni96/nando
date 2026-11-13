@@ -10,10 +10,10 @@ import { AppShell } from "@web/components/shared/shell/app-shell";
 import { defaultLocale, i18n } from "@web/lib/i18n";
 import { cssVariablesResolver, theme } from "@web/lib/theme";
 import "dayjs/locale/it";
-import "@mantine/core/styles.css";
-import "@mantine/dates/styles.css";
-import "@mantine/notifications/styles.css";
-import "@mantine/spotlight/styles.css";
+import "@mantine/core/styles.layer.css";
+import "@mantine/dates/styles.layer.css";
+import "@mantine/notifications/styles.layer.css";
+import "@mantine/spotlight/styles.layer.css";
 import "@web/styles/global.css";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
