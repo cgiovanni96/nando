@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { errorEnvelopeSchema } from "@api/http/envelope";
 import { taskCommandRequestFactory, taskResponseSchema } from "@api/http/tasks/contract";
-import { createTask, handle, post } from "./helpers";
+import { archiveSpace, createSpace, createTask, handle, post, readTask } from "./helpers";
 
 afterAll(async () => {
   await handle.close();
@@ -77,6 +77,29 @@ describe("task status transitions", () => {
 
     const completeCancelled = await runStatus(task.id, "complete");
     expect(completeCancelled.response.status).toBe(422);
+  });
+
+  it("refuses every status command inside an archived Space", async () => {
+    const space = await createSpace("Archivio");
+    const task = await createTask({ title: "Task archiviato", spaceId: space.id });
+    await archiveSpace(space.id);
+
+    for (const action of ["complete", "skip", "cancel"] as const) {
+      const response = await post(
+        `/api/tasks/${task.id}/${action}`,
+        taskCommandRequestFactory({ commandId: newId() }),
+      );
+      const parsed = errorEnvelopeSchema.safeParse(await response.json());
+
+      expect(response.status).toBe(422);
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.error.code).toBe("domain_rule_violation");
+        expect(parsed.data.error.message).toBe("Uno Space archiviato è in sola lettura.");
+      }
+    }
+
+    expect(await readTask(task.id)).toMatchObject({ status: "open", version: task.version });
   });
 
   it("returns not_found for a status command on an unknown task", async () => {

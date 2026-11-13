@@ -217,6 +217,31 @@ describe("task deletion with grace", () => {
     expect(await taskIds("/api/tasks?state=deleted")).toEqual([created.id]);
   });
 
+  it("refuses to delete a task inside an archived Space", async () => {
+    const space = await createSpace("Archivio");
+    const created = await createTask({ title: "Task archiviato", spaceId: space.id });
+    await archiveSpace(space.id);
+
+    const response = await post(
+      `/api/tasks/${created.id}/delete`,
+      taskCommandRequestFactory({ commandId: newId() }),
+    );
+    const parsed = errorEnvelopeSchema.safeParse(await response.json());
+
+    expect(response.status).toBe(422);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.error.code).toBe("domain_rule_violation");
+      expect(parsed.data.error.message).toBe("Uno Space archiviato è in sola lettura.");
+    }
+
+    expect(await readTask(created.id)).toMatchObject({
+      deletedAt: null,
+      version: created.version,
+    });
+    expect(await taskIds("/api/tasks?state=deleted")).toEqual([]);
+  });
+
   it("returns 404 for an unknown task", async () => {
     const missing = newId();
 
