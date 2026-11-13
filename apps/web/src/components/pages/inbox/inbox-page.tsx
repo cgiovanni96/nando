@@ -1,26 +1,23 @@
-import { Stack, Text, Title } from "@mantine/core";
+import { Anchor, Group, Stack, Title } from "@mantine/core";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { InboxList } from "./inbox-list";
-import { InboxTrash } from "./inbox-trash";
 
 export function InboxPage() {
   const { t } = useTranslation();
 
   return (
     <Stack gap="xl">
-      <Stack gap={8}>
-        <Text fz="xs" c="dimmed">
-          {t("inbox.eyebrow")}
-        </Text>
+      <Group justify="space-between" align="flex-end" gap="md">
         <Title order={1}>{t("inbox.title")}</Title>
-        <Text c="dimmed" maw={560}>
-          {t("inbox.intro")}
-        </Text>
-      </Stack>
+        {/* Finché lo spotlight non esiste, il Cestino resta raggiungibile su mobile. */}
+        <Anchor component={Link} to="/trash" size="sm" hiddenFrom="md">
+          {t("nav.items.trash")}
+        </Anchor>
+      </Group>
 
       <InboxList />
-      <InboxTrash />
     </Stack>
   );
 }

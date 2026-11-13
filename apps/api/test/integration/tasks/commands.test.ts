@@ -2,6 +2,7 @@ import { newId } from "@nando/kernel";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { errorEnvelopeSchema } from "@api/http/envelope";
+import { inboxResponseSchema } from "@api/http/inbox/contract";
 import {
   createTaskRequestFactory,
   taskListResponseSchema,
@@ -131,7 +132,63 @@ describe("task commands", () => {
     if (parsed.success) {
       expect(parsed.data.data.title).toBe("Titolo nuovo");
       expect(parsed.data.data.dueAt).toBe(dueAt);
+      expect(parsed.data.data.dueAtHasTime).toBe(true);
       expect(parsed.data.data.version).toBe(2);
+    }
+  });
+
+  it("keeps a date-only due date without a time", async () => {
+    const task = await createTask({ title: "Scadenza di giorno" });
+
+    const response = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version,
+        title: task.title,
+        spaceId: null,
+        dueAt: "2026-11-20T22:59:59.999Z",
+        dueAtHasTime: false,
+      }),
+    );
+    const parsed = taskResponseSchema.safeParse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.data.dueAt).toBe("2026-11-20T22:59:59.999Z");
+      expect(parsed.data.data.dueAtHasTime).toBe(false);
+    }
+  });
+
+  it("changes Space through update and reflects it in Inbox", async () => {
+    const space = await createSpace("Lavoro");
+    const task = await createTask({ title: "Da collocare", spaceId: space.id });
+
+    const response = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version,
+        title: task.title,
+        spaceId: null,
+        dueAt: null,
+      }),
+    );
+    const parsed = taskResponseSchema.safeParse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.data).toMatchObject({ spaceId: null, version: 2 });
+    }
+
+    const inbox = await get("/api/inbox");
+    const inboxParsed = inboxResponseSchema.safeParse(await inbox.json());
+
+    expect(inboxParsed.success).toBe(true);
+    if (inboxParsed.success) {
+      expect(inboxParsed.data.data.items.map((item) => item.id)).toContain(task.id);
     }
   });
 

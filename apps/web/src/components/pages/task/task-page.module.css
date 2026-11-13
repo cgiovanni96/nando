@@ -1,0 +1,105 @@
+.entity {
+  max-width: 880px;
+}
+
+.titleInput {
+  height: auto;
+  padding: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: -0.03em;
+}
+
+.titleInput[data-completed] {
+  color: var(--mantine-color-dimmed);
+  text-decoration: line-through;
+}
+
+.entityTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.titleDone {
+  color: var(--mantine-color-dimmed);
+  text-decoration: line-through;
+}
+
+.properties {
+  max-width: 720px;
+}
+
+.propertyRow {
+  min-height: 40px;
+}
+
+.propertyLabel {
+  flex: none;
+  width: 176px;
+  padding: 4px 8px;
+}
+
+.propertyValue {
+  flex: 1;
+  min-width: 0;
+}
+
+.propertyInput {
+  height: 32px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+}
+
+.propertyInput:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.propertyInput:focus {
+  border-color: var(--mantine-color-default-border);
+  background: var(--mantine-color-default-hover);
+}
+
+.statusInput {
+  max-width: 100%;
+  border-color: transparent;
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+
+.statusInput:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.statusTooltip {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.titleField {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 48em) {
+  .propertyRow {
+    min-height: 44px;
+  }
+
+  .propertyLabel {
+    width: 116px;
+  }
+}

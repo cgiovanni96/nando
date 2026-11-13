@@ -6,6 +6,7 @@ import {
   IconInbox,
   IconLayoutDashboard,
   IconRepeat,
+  IconTrash,
 } from "@tabler/icons-react";
 import type { ParseKeysWithoutVariables } from "i18next";
 import type { ComponentType } from "react";
@@ -50,7 +51,12 @@ const inbox: NavigableNavEntry = { labelKey: "nav.items.inbox", icon: IconInbox,
 
 export const workspaceNav: NavEntry[] = [
   inbox,
-  { labelKey: "nav.items.allSpaces", icon: IconFolders, milestone: "M1" },
+  { labelKey: "nav.items.allSpaces", icon: IconFolders, milestone: "M2" },
+];
+
+/** Azioni di servizio, ancorate in fondo alla sidebar sopra la riga utente. */
+export const utilityNav: NavEntry[] = [
+  { labelKey: "nav.items.trash", icon: IconTrash, to: "/trash" },
 ];
 
 /**
@@ -60,4 +66,21 @@ export const workspaceNav: NavEntry[] = [
 export const bottomNav: NavEntry[] = [...primaryNav, inbox];
 
 /** Tutte le destinazioni navigabili, nell'ordine in cui compaiono. */
-export const allNav: NavEntry[] = [...primaryNav, ...workspaceNav];
+export const allNav: NavEntry[] = [...primaryNav, ...workspaceNav, ...utilityNav];
+
+/**
+ * Sezioni con sottopagine: la topbar mostra il nome della sezione quando il
+ * path non è una voce di navigazione esatta (es. `/tasks/:id`).
+ */
+const DETAIL_SECTIONS: ReadonlyArray<{ prefix: string; labelKey: NavLabelKey }> = [
+  { prefix: "/tasks/", labelKey: "nav.sections.task" },
+];
+
+/** Etichetta della sezione corrente per il breadcrumb della topbar. */
+export function sectionLabelKey(pathname: string): NavLabelKey | null {
+  const exact = allNav.find((entry) => isNavigable(entry) && entry.to === pathname);
+  if (exact) return exact.labelKey;
+
+  const detail = DETAIL_SECTIONS.find((section) => pathname.startsWith(section.prefix));
+  return detail?.labelKey ?? null;
+}

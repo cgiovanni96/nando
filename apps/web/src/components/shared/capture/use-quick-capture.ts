@@ -1,6 +1,6 @@
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent } from "react";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ type UseQuickCaptureOptions = {
 
 export function useQuickCapture({ onCreated }: UseQuickCaptureOptions) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const commandId = useRef<string | null>(null);
   const isBrowser = typeof window !== "undefined";
 
@@ -43,6 +44,8 @@ export function useQuickCapture({ onCreated }: UseQuickCaptureOptions) {
     onSuccess: () => {
       commandId.current = null;
       form.setFieldValue("title", "");
+      void queryClient.invalidateQueries({ queryKey: ["inbox"] });
+      void queryClient.invalidateQueries({ queryKey: ["tasks"] });
       notifications.show({
         message: t("capture.success"),
         color: "gray",
@@ -71,6 +74,7 @@ export function useQuickCapture({ onCreated }: UseQuickCaptureOptions) {
         title: form.values.title.trim(),
         spaceId: form.values.spaceId,
         dueAt: null,
+        dueAtHasTime: false,
       });
     },
     [createTask, form],

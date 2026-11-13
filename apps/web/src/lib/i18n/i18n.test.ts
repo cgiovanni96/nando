@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { primaryNav, workspaceNav } from "@web/lib/router/navigation";
+import { primaryNav, utilityNav, workspaceNav } from "@web/lib/router/navigation";
 import { defaultLocale } from "./config";
 import { i18n } from "./i18n";
 import { it as itCatalog } from "./resources/it";
@@ -29,7 +29,7 @@ describe("i18n", () => {
   });
 
   it("resolves every navigation label", () => {
-    for (const entry of [...primaryNav, ...workspaceNav]) {
+    for (const entry of [...primaryNav, ...workspaceNav, ...utilityNav]) {
       expect(i18n.t(entry.labelKey), entry.labelKey).not.toBe(entry.labelKey);
     }
   });

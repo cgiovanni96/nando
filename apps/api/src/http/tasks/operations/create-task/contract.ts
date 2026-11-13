@@ -8,6 +8,7 @@ export const createTaskRequestSchema = z.object({
   title: taskTitleSchema,
   spaceId: z.uuid().nullable(),
   dueAt: z.iso.datetime().nullable(),
+  dueAtHasTime: z.boolean(),
 });
 
 export type CreateTaskRequest = z.infer<typeof createTaskRequestSchema>;
@@ -20,6 +21,7 @@ export function createTaskRequestFactory(
     title: "Comprare il pane",
     spaceId: null,
     dueAt: null,
+    dueAtHasTime: false,
     ...overrides,
   });
 }

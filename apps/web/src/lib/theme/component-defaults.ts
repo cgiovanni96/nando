@@ -104,6 +104,12 @@ export const componentDefaults = {
     defaultProps: {
       size: "sm",
     },
+    vars: () => ({
+      root: {
+        // Il primary in dark è quasi bianco: il thumb bianco sparirebbe.
+        "--switch-color": "var(--nando-switch-on)",
+      },
+    }),
   }),
   Table: Table.extend({
     defaultProps: {

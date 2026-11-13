@@ -1,0 +1,59 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  text-align: left;
+}
+
+.trigger:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.trigger:focus-visible {
+  border-color: var(--mantine-color-default-border);
+  background: var(--mantine-color-default-hover);
+}
+
+.trigger:disabled {
+  color: var(--mantine-color-dimmed);
+  cursor: default;
+}
+
+.summary {
+  background: var(--mantine-color-default);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-sm);
+  text-align: left;
+}
+
+.row:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.clear {
+  color: var(--mantine-color-dimmed);
+}
+
+.timeInput {
+  width: 140px;
+}
+
+@media (max-width: 48em) {
+  .trigger {
+    min-height: 44px;
+  }
+}

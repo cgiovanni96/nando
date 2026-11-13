@@ -34,9 +34,19 @@ Read `docs/agents/api-contract.md` before changing anything under `apps/api` or 
 - Changing a route updates the web client in the same PR; `pnpm typecheck` is the gate.
 - Scalar descriptions are part of the contract: if behavior changes, the description changes in the same PR.
 
+### UI copy
+
+- A label or sentence must add information the user cannot already see: state, consequence, constraint, or next action.
+- Do not restate a heading, a control, or an obvious behavior. Empty states use a title; a second line is allowed only when it explains what goes there or what to do next.
+- The full rule and the examples live in `docs/agents/architecture.md`.
+
 ### VPS
 
 Hosting and operations documentation lives in `docs/vps/`. Read `docs/vps/README.md` before touching the VPS; for maintenance work, read `docs/vps/AGENT.md` first.
+
+### Mantine
+
+Use the project skills `mantine-custom-components` and `mantine-form` for Mantine components and forms. Verify exact APIs with the `mantine` MCP server: skills and docs may be ahead of the installed version, so the local types win.
 
 ### TanStack Start
 

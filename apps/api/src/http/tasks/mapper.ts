@@ -11,6 +11,7 @@ export function toTaskDto(task: Task): TaskDto {
     title: task.title,
     status: task.status,
     dueAt: task.dueAt?.toISOString() ?? null,
+    dueAtHasTime: task.dueAtHasTime,
     spaceId: task.spaceId,
     version: task.version,
     createdAt: task.createdAt.toISOString(),

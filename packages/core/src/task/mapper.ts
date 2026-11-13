@@ -10,6 +10,7 @@ export const taskViewColumns = {
   title: task.title,
   status: taskOccurrence.status,
   dueAt: taskOccurrence.dueAt,
+  dueAtHasTime: taskOccurrence.dueHasTime,
   spaceId: task.spaceId,
   version: task.version,
   createdAt: task.createdAt,
