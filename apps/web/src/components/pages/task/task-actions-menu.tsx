@@ -2,6 +2,7 @@ import { Button, Group, Menu, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
+  IconCircleCheck,
   IconDeviceFloppy,
   IconDots,
   IconEditCircleOff,
@@ -9,8 +10,13 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 
+import {
+  useRegisterPageActions,
+  type PageAction,
+} from "@web/components/shared/commands/page-actions-context";
 import { ApiError } from "@web/lib/api-error";
 import { newCommandId } from "@web/lib/ids";
 import { deleteTaskMutationOptions, restoreTaskMutationOptions } from "@web/lib/mutations/tasks";
@@ -21,22 +27,28 @@ type TaskActionsMenuProps = {
   readOnly?: boolean;
   isDirty?: boolean;
   isSaving?: boolean;
+  isCompleting?: boolean;
+  statusPending?: boolean;
   onSave?: () => void;
   onDiscard?: () => void;
+  onComplete?: () => void;
 };
 
 /**
- * Tutte le azioni del task in un unico menu: salvataggio, scarto delle
- * modifiche, cancellazione e ripristino. Il form decide quando `onSave` è
- * disponibile, lo stato dirty e il salvataggio in corso.
+ * Tutte le azioni del task in un unico elenco: il menu le mostra, lo spotlight
+ * le legge dallo stesso registro. Il form decide disponibilità e salvataggio;
+ * il menu possiede solo cancellazione, ripristino e la conferma.
  */
 export function TaskActionsMenu({
   task,
   readOnly = false,
   isDirty = false,
   isSaving = false,
+  isCompleting = false,
+  statusPending = false,
   onSave,
   onDiscard,
+  onComplete,
 }: TaskActionsMenuProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -91,6 +103,67 @@ export function TaskActionsMenu({
 
   const deleted = task.deletedAt !== null;
 
+  const saveAction: PageAction | null = onSave
+    ? {
+        id: "save",
+        label: t("task.actions.save"),
+        icon: <IconDeviceFloppy size={16} stroke={1.6} />,
+        disabled: readOnly || !isDirty || isSaving,
+        shortcut: t("commands.shortcuts.save"),
+        onTrigger: onSave,
+      }
+    : null;
+
+  const discardAction: PageAction | null = onDiscard
+    ? {
+        id: "discard",
+        label: t("task.form.discard"),
+        icon: <IconEditCircleOff size={16} stroke={1.6} />,
+        disabled: !isDirty || isSaving,
+        onTrigger: onDiscard,
+      }
+    : null;
+
+  const completeAction: PageAction | null = onComplete
+    ? {
+        id: "complete",
+        label: t("task.actions.complete"),
+        icon: <IconCircleCheck size={16} stroke={1.6} />,
+        disabled: readOnly || task.status !== "open" || isDirty || isCompleting || statusPending,
+        onTrigger: onComplete,
+      }
+    : null;
+
+  const actions: PageAction[] = deleted
+    ? [
+        {
+          id: "restore",
+          label: t("task.deleted.restore"),
+          icon: <IconRestore size={16} stroke={1.6} />,
+          disabled: restore.isPending,
+          onTrigger: () =>
+            restore.mutate({
+              taskId: task.id,
+              input: { commandId: newCommandId() },
+            }),
+        },
+      ]
+    : [
+        ...(saveAction ? [saveAction] : []),
+        ...(discardAction ? [discardAction] : []),
+        ...(completeAction ? [completeAction] : []),
+        {
+          id: "delete",
+          label: t("task.actions.delete"),
+          icon: <IconTrash size={16} stroke={1.6} />,
+          color: "red",
+          disabled: readOnly,
+          onTrigger: open,
+        },
+      ];
+
+  useRegisterPageActions(actions);
+
   return (
     <>
       <Menu position="bottom-end" width={220} withinPortal>
@@ -106,50 +179,19 @@ export function TaskActionsMenu({
         </Menu.Target>
 
         <Menu.Dropdown>
-          {deleted ? (
-            <Menu.Item
-              leftSection={<IconRestore size={16} stroke={1.6} />}
-              disabled={restore.isPending}
-              onClick={() =>
-                restore.mutate({
-                  taskId: task.id,
-                  input: { commandId: newCommandId() },
-                })
-              }
-            >
-              {t("task.deleted.restore")}
-            </Menu.Item>
-          ) : (
-            <>
-              {onSave ? (
-                <Menu.Item
-                  leftSection={<IconDeviceFloppy size={16} stroke={1.6} />}
-                  disabled={readOnly || !isDirty || isSaving}
-                  onClick={onSave}
-                >
-                  {t("task.actions.save")}
-                </Menu.Item>
-              ) : null}
-              {onDiscard ? (
-                <Menu.Item
-                  disabled={!isDirty || isSaving}
-                  onClick={onDiscard}
-                  leftSection={<IconEditCircleOff size={16} stroke={1.6} />}
-                >
-                  {t("task.form.discard")}
-                </Menu.Item>
-              ) : null}
-              <Menu.Divider />
+          {actions.map((action) => (
+            <Fragment key={action.id}>
+              {action.id === "delete" ? <Menu.Divider /> : null}
               <Menu.Item
-                color="red"
-                leftSection={<IconTrash size={16} stroke={1.6} />}
-                disabled={readOnly}
-                onClick={open}
+                {...(action.color ? { color: action.color } : {})}
+                leftSection={action.icon}
+                disabled={action.disabled}
+                onClick={action.onTrigger}
               >
-                {t("task.actions.delete")}
+                {action.label}
               </Menu.Item>
-            </>
-          )}
+            </Fragment>
+          ))}
         </Menu.Dropdown>
       </Menu>
 

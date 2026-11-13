@@ -12,7 +12,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useHotkeys } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconCalendarEvent, IconCircleDot, IconFolder } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -149,11 +148,15 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
     disabled: value === "open" || task.status !== "open",
   }));
 
+  function completeTask() {
+    complete.mutate({ taskId: task.id, input: { commandId: newCommandId() } });
+  }
+
   function changeStatus(value: string | null) {
     if (!value || value === task.status) return;
 
     const input = { commandId: newCommandId() };
-    if (value === "completed") complete.mutate({ taskId: task.id, input });
+    if (value === "completed") completeTask();
     if (value === "skipped") skip.mutate({ taskId: task.id, input });
     if (value === "cancelled") cancel.mutate({ taskId: task.id, input });
   }
@@ -191,19 +194,6 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
     event.preventDefault();
     save();
   }
-
-  useHotkeys(
-    [
-      [
-        "mod+S",
-        (event) => {
-          event.preventDefault();
-          save();
-        },
-      ],
-    ],
-    [],
-  );
 
   const disabled = readOnly || update.isPending;
 
@@ -243,8 +233,11 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
               readOnly={readOnly}
               isDirty={form.isDirty()}
               isSaving={update.isPending}
+              isCompleting={complete.isPending}
+              statusPending={statusPending}
               onSave={save}
               onDiscard={() => form.reset()}
+              onComplete={completeTask}
             />
           </Group>
 

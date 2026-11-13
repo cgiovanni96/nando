@@ -7,35 +7,20 @@ import {
   Kbd,
   Text,
 } from "@mantine/core";
-import { useHotkeys } from "@mantine/hooks";
+import { spotlight } from "@mantine/spotlight";
 import { IconArrowLeft, IconArrowRight, IconPlus, IconSearch } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { useQuickCaptureModal } from "@web/components/shared/capture/quick-capture-provider";
 import { useHistoryNavigation } from "@web/lib/router/history";
 import { sectionLabelKey } from "@web/lib/router/navigation";
-import { QuickCapturePopover } from "@web/components/shared/capture/quick-capture-popover";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
   const { t } = useTranslation();
   const history = useHistoryNavigation();
+  const capture = useQuickCaptureModal();
   const currentLabel = t(sectionLabelKey(pathname) ?? "nav.items.dashboard");
-  const searchUnavailable = { label: t("shell.search"), milestone: "M4b" };
-
-  useHotkeys([
-    [
-      "mod+[",
-      () => {
-        if (history.canGoBack) history.back();
-      },
-    ],
-    [
-      "mod+]",
-      () => {
-        if (history.canGoForward) history.forward();
-      },
-    ],
-  ]);
 
   return (
     <MantineAppShell.Header>
@@ -69,41 +54,49 @@ export function AppHeader({ pathname }: Readonly<{ pathname: string }>) {
         </Breadcrumbs>
 
         <Button
+          visibleFrom="sm"
           variant="subtle"
           size="xs"
           leftSection={<IconSearch size={16} stroke={1.6} />}
-          rightSection={<Kbd size="xs">⌘K</Kbd>}
-          disabled
-          title={t("comingSoon.title", searchUnavailable)}
-          aria-label={t("comingSoon.ariaLabel", searchUnavailable)}
+          rightSection={<Kbd size="xs">{t("commands.shortcuts.spotlight")}</Kbd>}
+          onClick={() => spotlight.open()}
+          aria-label={t("shell.search")}
+          title={t("shell.search")}
         >
           {t("shell.search")}
         </Button>
 
+        <ActionIcon
+          hiddenFrom="sm"
+          onClick={() => spotlight.open()}
+          aria-label={t("shell.search")}
+          title={t("shell.search")}
+        >
+          <IconSearch size={18} stroke={1.6} />
+        </ActionIcon>
+
         <ThemeToggle />
 
-        <QuickCapturePopover>
-          <Button
-            variant="filled"
-            visibleFrom="sm"
-            leftSection={<IconPlus size={16} stroke={1.6} />}
-            aria-label={t("capture.title")}
-            title={t("capture.title")}
-          >
-            {t("shell.create")}
-          </Button>
-        </QuickCapturePopover>
+        <Button
+          visibleFrom="sm"
+          variant="filled"
+          leftSection={<IconPlus size={16} stroke={1.6} />}
+          onClick={capture.open}
+          aria-label={t("capture.title")}
+          title={t("capture.title")}
+        >
+          {t("shell.create")}
+        </Button>
 
-        <QuickCapturePopover>
-          <ActionIcon
-            hiddenFrom="sm"
-            variant="filled"
-            aria-label={t("capture.title")}
-            title={t("capture.title")}
-          >
-            <IconPlus size={18} stroke={1.6} />
-          </ActionIcon>
-        </QuickCapturePopover>
+        <ActionIcon
+          hiddenFrom="sm"
+          variant="filled"
+          onClick={capture.open}
+          aria-label={t("capture.title")}
+          title={t("capture.title")}
+        >
+          <IconPlus size={18} stroke={1.6} />
+        </ActionIcon>
       </Group>
     </MantineAppShell.Header>
   );
