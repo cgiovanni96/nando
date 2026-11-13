@@ -51,6 +51,7 @@ export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
           title: payload.title,
           spaceId: payload.spaceId,
           dueAt: payload.dueAt,
+          dueAtHasTime: payload.dueAtHasTime,
         },
         responseSchema: taskResponseSchema,
         execute: async (tx) => {
@@ -59,6 +60,7 @@ export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
               title: payload.title,
               spaceId: payload.spaceId,
               dueAt: payload.dueAt ? new Date(payload.dueAt) : null,
+              dueAtHasTime: payload.dueAtHasTime,
             },
             tx,
           );

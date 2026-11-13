@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { space } from "../space/schema";
 import type { TaskStatus } from "./domain";
@@ -33,6 +42,7 @@ export const taskOccurrence = pgTable(
       .references(() => task.id, { onDelete: "restrict" }),
     status: text("status").$type<TaskStatus>().notNull().default("open"),
     dueAt: timestamp("due_at", { withTimezone: true }),
+    dueHasTime: boolean("due_has_time").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

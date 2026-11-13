@@ -28,6 +28,7 @@ export type CreateTaskInput = {
   title: string;
   spaceId: string | null;
   dueAt: Date | null;
+  dueAtHasTime: boolean;
 };
 
 export type UpdateTaskInput = {
@@ -36,6 +37,7 @@ export type UpdateTaskInput = {
   title: string;
   spaceId: string | null;
   dueAt: Date | null;
+  dueAtHasTime: boolean;
 };
 
 export type TaskIdInput = {
@@ -152,6 +154,7 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
           taskId,
           status: "open",
           dueAt: input.dueAt,
+          dueHasTime: input.dueAt !== null && input.dueAtHasTime,
           createdAt: now,
           updatedAt: now,
         });
@@ -203,7 +206,11 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
 
         await conn
           .update(taskOccurrence)
-          .set({ dueAt: input.dueAt, updatedAt: now })
+          .set({
+            dueAt: input.dueAt,
+            dueHasTime: input.dueAt !== null && input.dueAtHasTime,
+            updatedAt: now,
+          })
           .where(eq(taskOccurrence.taskId, input.taskId));
 
         const view = await findTask(conn, input.taskId);

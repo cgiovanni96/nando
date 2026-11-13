@@ -33,6 +33,7 @@ export const taskListResponseExample = taskListResponseSchema.parse({
         id: "0199a4c2-7a10-7000-8000-000000000302",
         title: "Prenotare la visita",
         dueAt: EXAMPLE_DUE_AT,
+        dueAtHasTime: true,
         spaceId: EXAMPLE_TASK_SPACE_ID,
         updatedAt: "2026-11-12T10:00:00.000Z",
       }),

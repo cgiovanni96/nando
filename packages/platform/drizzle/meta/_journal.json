@@ -29,6 +29,13 @@
       "when": 1794476148290,
       "tag": "0003_lethal_johnny_blaze",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794561608309,
+      "tag": "0004_sudden_the_stranger",
+      "breakpoints": true
     }
   ]
 }

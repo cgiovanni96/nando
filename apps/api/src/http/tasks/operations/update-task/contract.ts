@@ -15,6 +15,7 @@ export const updateTaskRequestSchema = z.object({
   title: taskTitleSchema,
   spaceId: z.uuid().nullable(),
   dueAt: z.iso.datetime().nullable(),
+  dueAtHasTime: z.boolean(),
 });
 
 export type UpdateTaskRequest = z.infer<typeof updateTaskRequestSchema>;
@@ -28,6 +29,7 @@ export function updateTaskRequestFactory(
     title: "Comprare il pane e il latte",
     spaceId: null,
     dueAt: EXAMPLE_DUE_AT,
+    dueAtHasTime: true,
     ...overrides,
   });
 }
@@ -39,6 +41,7 @@ export const updatedTaskResponseExample = taskResponseSchema.parse({
   data: taskDtoFactory({
     title: "Comprare il pane e il latte",
     dueAt: EXAMPLE_DUE_AT,
+    dueAtHasTime: true,
     version: 2,
     updatedAt: "2026-11-12T10:00:00.000Z",
   }),

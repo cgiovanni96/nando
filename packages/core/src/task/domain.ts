@@ -28,6 +28,7 @@ export type Task = {
   title: string;
   status: TaskStatus;
   dueAt: Date | null;
+  dueAtHasTime: boolean;
   spaceId: string | null;
   version: number;
   createdAt: Date;
