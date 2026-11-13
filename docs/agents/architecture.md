@@ -253,6 +253,10 @@ Rules:
 One file per component. A subcomponent stays in the same file only when it is tiny and presentational,
 such as the item of a list; if it holds state, effects, or its own data, it gets its own file.
 
+Mantine styles are imported in `__root.tsx` with the `styles.layer.css` variants. CSS modules and
+`global.css` stay unlayered, so they override Mantine regardless of Vite's stylesheet order. Never mix
+`styles.css` and `styles.layer.css`.
+
 The order of preference, from first to last:
 
 1. A Mantine component that already has the role: `AppShell`, `NavLink`, `Breadcrumbs`, `Kbd`,
