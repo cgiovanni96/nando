@@ -1,11 +1,25 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
+    "mantine-custom-components": {
+      "source": "mantinedev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mantine-custom-components/SKILL.md",
+      "computedHash": "fe74cc822dd8ba3f889305c58cc35384a592c441febe5d98a1151f1444610c4c",
+      "installMode": "copy"
+    },
+    "mantine-form": {
+      "source": "mantinedev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mantine-form/SKILL.md",
+      "computedHash": "c55ed7204c3fea77ea57165d0ec992bf9c970773008c1db9cb32c18005dd1745",
+      "installMode": "copy"
+    },
     "vitest": {
       "source": "antfu/skills",
       "sourceType": "github",
       "skillPath": "skills/vitest/SKILL.md",
-      "computedHash": "b26b7f8d10e860e944e0334c003207771707c4906514cb96c971faae13fba875",
+      "computedHash": "bd95e41d66d76da9008893c9bc48c30f0a68f352cd2b00017767f5e4c129501d",
       "installMode": "copy"
     }
   }
