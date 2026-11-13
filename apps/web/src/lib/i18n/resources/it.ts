@@ -59,6 +59,30 @@ export const it = {
     emptyTitle: "Scrivi il titolo del task.",
     spacesError: "Non è stato possibile caricare gli Space.",
   },
+  commands: {
+    title: "Comandi",
+    placeholder: "Cerca o esegui un comando",
+    nothingFound: "Nessun comando trovato",
+    groups: {
+      goTo: "Vai a",
+      page: "Pagina",
+      actions: "Azioni",
+      appearance: "Aspetto",
+    },
+    actions: {
+      newTask: "Nuovo task",
+    },
+    shortcuts: {
+      spotlight: "⌘K",
+      save: "⌘S",
+      back: "⌘[",
+      forward: "⌘]",
+      capture: "n n",
+      dashboard: "n d",
+      inbox: "n i",
+      trash: "n t",
+    },
+  },
   dashboard: {
     title: "Oggi",
     today: {
@@ -172,6 +196,7 @@ export const it = {
     actions: {
       menu: "Azioni",
       save: "Salva",
+      complete: "Completa",
       delete: "Sposta nel cestino",
       completed: "Task completato.",
       skipped: "Task saltato.",

@@ -13,6 +13,7 @@ import "dayjs/locale/it";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
+import "@mantine/spotlight/styles.css";
 import "@web/styles/global.css";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
