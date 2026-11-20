@@ -2,7 +2,7 @@
 
 Personal OS single-user: Space che compongono capability sopra un core sempre presente.
 
-Il repository è nella fase **M1 — Cattura e collocazione**: Space, Inbox, Task e pagina entità minima. La demo e la settimana d'uso su staging sono in [`docs/staging/demo-m1.md`](docs/staging/demo-m1.md).
+Il repository è nella fase **M1 — Cattura e collocazione**: Space, Inbox, Task e pagina entità minima. La verifica da database vuoto e la demo su staging sono in [`docs/staging/demo-m1.md`](docs/staging/demo-m1.md).
 
 ## Requisiti
 

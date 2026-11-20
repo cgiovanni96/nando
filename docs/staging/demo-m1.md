@@ -1,6 +1,6 @@
 # Demo M1 — cattura e collocazione
 
-Questa checklist chiude M1: verifica i test, ricrea lo staging da un database vuoto, esegue la demo del flusso 1 e avvia la settimana d'uso. La procedura infrastrutturale di base resta in [demo-m0.md](demo-m0.md).
+Questa checklist chiude M1: verifica i test, ricrea lo staging da un database vuoto ed esegue la demo del flusso 1. La procedura infrastrutturale di base resta in [demo-m0.md](demo-m0.md).
 
 ## 1. Gate locale e CI
 
@@ -93,23 +93,20 @@ Il rifiuto del ripristino dopo sette giorni è provato dall'integration test `re
 
 Il leader `n` e `?` non scattano mentre scrivi in un campo o dentro una modale; `⌘K` funziona sempre.
 
-## 4. Settimana d'uso
+## 4. Chiusura
 
 NAS-151 è in staging: un task dentro uno Space archiviato non è più modificabile.
 
 - [x] Deploy del fix NAS-151 verde su staging.
 - [ ] Deploy di NAS-152 verde su staging.
-- [ ] Le scorciatoie della sezione 3b funzionano su desktop e telefono.
-- [ ] Data di avvio: `____-__-__`.
-- [ ] Ogni giorno: cattura almeno un task dalla dashboard o con `n n` e collocalo in `Vita` o in Inbox.
-- [ ] Ogni giorno: apri un task dalla pagina entità e verifica che il reload non perda nulla.
-- [ ] Almeno una volta: sposta un task tra Space, cancellalo e ripristinalo.
-- [ ] Annota attrito, bug e ogni volta che hai aggirato Nando con un altro strumento.
+- [ ] Sezione 2 completata: staging ricreato da un database vuoto.
+- [ ] Sezioni 3 e 3b completate su desktop e telefono.
 
-La capability è fatta quando la settimana è completa senza aggirare Nando (ADR-0013). Solo allora la roadmap porta M1 a **Done**.
+Con queste voci spuntate la roadmap porta M1 a **Done** e M2 può partire. Non c'è una settimana d'uso per milestone: ce n'è una sola, in M7, per la v1 (ADR-0027). L'attrito trovato usando lo staging diventa un ticket.
 
 ## Riferimenti
 
 - [demo-m0.md](demo-m0.md) — Dokploy, tailnet, deploy e rollback.
 - [ADR-0013](../adr/0013-scope-v1-e-criteri-di-fatto.md) — criteri di fatto della v1.
+- [ADR-0027](../adr/0027-settimana-uso-solo-a-fine-v1.md) — settimana d'uso solo a fine v1.
 - [ADR-0021](../adr/0021-strategia-test-ci-ambienti.md) — test, CI e ambienti.

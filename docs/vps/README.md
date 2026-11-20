@@ -59,7 +59,7 @@ Nessun servizio applicativo ascolta su interfacce pubbliche. Le porte pubblicate
 | [03-stack.md](03-stack.md) | Postgres, app, pg-boss, R2, Resend, AI provider, Dokploy, `.env` |
 | [04-delivery.md](04-delivery.md) | GitHub Actions, immagini, staging/prod, migrazioni, rollback |
 | [demo M0](../staging/demo-m0.md) | Staging M0 su Dokploy e tailnet, deploy e rollback |
-| [demo M1](../staging/demo-m1.md) | Verifica da database vuoto, demo del flusso 1 e settimana d'uso |
+| [demo M1](../staging/demo-m1.md) | Verifica da database vuoto e demo del flusso 1 |
 | [05-operations.md](05-operations.md) | Backup, restore, monitoraggio, manutenzione periodica, runbook |
 | [06-llm-access.md](06-llm-access.md) | Accesso SSH per un agente LLM, chiavi, regole, revoca |
 | [AGENT.md](AGENT.md) | Contratto operativo per l'agente di manutenzione (leggere per primo) |
