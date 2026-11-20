@@ -37,6 +37,7 @@ export function QuickCaptureForm({
       aria-label={t("capture.titleLabel")}
       leftSection={<IconPlus size={16} stroke={1.6} />}
       disabled={createTask.isPending}
+      autoFocus={autoFocus}
     />
   );
 
@@ -71,9 +72,9 @@ export function QuickCaptureForm({
             <Grid.Col span={{ base: 4, sm: 2 }}>{submitButton}</Grid.Col>
           </Grid>
         ) : (
-          <Stack gap="xs">
+          <Stack gap="sm">
             {titleInput}
-            <Group gap="xs" align="flex-end" wrap="nowrap">
+            <Group gap="sm" align="flex-end" wrap="nowrap">
               <Box flex={1}>{spaceSelect}</Box>
               {submitButton}
             </Group>
