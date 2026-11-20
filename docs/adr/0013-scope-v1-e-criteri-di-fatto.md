@@ -4,6 +4,7 @@
 - **Data:** 2026-10-28
 - **Ticket:** NAS-45 — Scope v1 e criteri di successo
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
+- **Emendato da:** ADR-0027 (la settimana d'uso vale una volta sola, per la v1 in M7)
 
 ## Contesto
 
