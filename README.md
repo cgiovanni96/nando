@@ -2,7 +2,7 @@
 
 Personal OS single-user: Space che compongono capability sopra un core sempre presente.
 
-Il repository è nella fase **M1 — Cattura e collocazione**: Space, Inbox, Task e pagina entità minima. La verifica da database vuoto e la demo su staging sono in [`docs/staging/demo-m1.md`](docs/staging/demo-m1.md).
+Il repository è nella fase **M2 — Giornata**. M1 (cattura e collocazione) è chiusa: la checklist è in [`docs/staging/demo-m1.md`](docs/staging/demo-m1.md).
 
 ## Requisiti
 
@@ -42,21 +42,21 @@ Apri `http://localhost:3001`.
 
 ## Comandi
 
-| Comando | Cosa fa |
-| --- | --- |
-| `pnpm dev` | web, api e worker in watch |
-| `pnpm typecheck` | TypeScript su tutti i workspace |
-| `pnpm lint` | oxlint + Prettier |
-| `pnpm test` | Unit test, senza Docker |
-| `pnpm test:integration` | Integration test con Postgres 17 + pgvector |
-| `pnpm build` | Build di web, api e worker |
-| `pnpm db:generate` | Genera una migrazione Drizzle |
-| `pnpm db:migrate` | Applica le migrazioni |
-| `pnpm db:seed` | Semina l'owner da `OWNER_USER_ID` e lo Space iniziale |
-| `pnpm db:check` | Drift fra schema Drizzle e migrazioni |
-| `pnpm start:migrate` | Migrate + seed, come nel container `migrate` |
-| `pnpm docs:check` | Allineamento route/OpenAPI (NAS-131) |
-| `pnpm verify` | Catena dei gate disponibili |
+| Comando                 | Cosa fa                                               |
+| ----------------------- | ----------------------------------------------------- |
+| `pnpm dev`              | web, api e worker in watch                            |
+| `pnpm typecheck`        | TypeScript su tutti i workspace                       |
+| `pnpm lint`             | oxlint + Prettier                                     |
+| `pnpm test`             | Unit test, senza Docker                               |
+| `pnpm test:integration` | Integration test con Postgres 17 + pgvector           |
+| `pnpm build`            | Build di web, api e worker                            |
+| `pnpm db:generate`      | Genera una migrazione Drizzle                         |
+| `pnpm db:migrate`       | Applica le migrazioni                                 |
+| `pnpm db:seed`          | Semina l'owner da `OWNER_USER_ID` e lo Space iniziale |
+| `pnpm db:check`         | Drift fra schema Drizzle e migrazioni                 |
+| `pnpm start:migrate`    | Migrate + seed, come nel container `migrate`          |
+| `pnpm docs:check`       | Allineamento route/OpenAPI (NAS-131)                  |
+| `pnpm verify`           | Catena dei gate disponibili                           |
 
 `pnpm verify` = `typecheck` + `lint` + `db:check` + `deploy:check` + `docs:check` + `test` + `test:integration` + `build`.
 

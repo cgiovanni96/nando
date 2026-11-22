@@ -101,7 +101,7 @@ NAS-151 è in staging: un task dentro uno Space archiviato non è più modificab
 - [x] Deploy del fix NAS-151 verde su staging.
 - [x] Deploy di NAS-152 verde su staging.
 - [x] Sezione 2 completata: staging ricreato da un database vuoto il 2026-11-22 (run `45044243821`). Il primo tentativo ha fatto emergere la race del healthcheck di Postgres al primo init, corretta con `pg_isready -h 127.0.0.1`.
-- [ ] Sezioni 3 e 3b completate su desktop e telefono.
+- [x] Sezioni 3 e 3b completate su desktop e telefono il 2026-11-22.
 
 Con queste voci spuntate la roadmap porta M1 a **Done** e M2 può partire. Non c'è una settimana d'uso per milestone: ce n'è una sola, in M7, per la v1 (ADR-0027). L'attrito trovato usando lo staging diventa un ticket.
 
