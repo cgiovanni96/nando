@@ -29,7 +29,9 @@ export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
         "una sola occorrenza. `spaceId` null significa Inbox; uno Space archiviato è in sola " +
         "lettura. `schedule` è opzionale: con `allDay` true `from` e `to` sono date " +
         "`YYYY-MM-DD`, altrimenti istanti ISO 8601; `to` è la scadenza e `from` apre un " +
-        "intervallo. La timezone del task è quella dell'owner (`OWNER_TIME_ZONE`).",
+        "intervallo. La timezone del task è quella dell'owner (`OWNER_TIME_ZONE`). Uno " +
+        "Schedule incoerente (`from` dopo `to`, tipi mescolati, data inesistente) " +
+        "restituisce 400 `validation_error`.",
       requestBody: jsonRequestBody(createTaskRequestSchema, createTaskRequestExample),
       responses: {
         200: jsonResponse(

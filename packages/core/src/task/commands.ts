@@ -199,8 +199,9 @@ export function createTaskCommands({
           return err(versionConflict(current.version));
         }
 
-        // Lo Schedule si valuta nella timezone del Task, non in quella corrente.
-        const content = validateContent(input, current.timeZone);
+        // Lo Schedule si valuta nella timezone del Task, letta qui; il titolo
+        // è già stato validato prima della transazione.
+        const content = input.schedule ? buildSchedule(input.schedule, current.timeZone) : ok(null);
         if (!content.ok) return content;
 
         const [updated] = await conn

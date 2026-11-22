@@ -122,6 +122,18 @@ describe("temporalState", () => {
     expect(temporalState(block, "open", new Date("2026-10-28T15:10:00Z"))).toBe("current");
   });
 
+  it("nei giorni del cambio d'ora un all-day scade alla mezzanotte locale giusta", () => {
+    // 25/10/2026: la giornata dura 25 ore; mezzanotte del 26 a Roma = 23:00 UTC del 25.
+    const autumn = allDay("2026-10-25");
+    expect(temporalState(autumn, "open", new Date("2026-10-25T22:59:00Z"))).toBe("upcoming");
+    expect(temporalState(autumn, "open", new Date("2026-10-25T23:00:00Z"))).toBe("overdue");
+
+    // 29/03/2026: la giornata dura 23 ore; mezzanotte del 30 a Roma = 22:00 UTC del 29.
+    const spring = allDay("2026-03-29");
+    expect(temporalState(spring, "open", new Date("2026-03-29T21:59:00Z"))).toBe("upcoming");
+    expect(temporalState(spring, "open", new Date("2026-03-29T22:00:00Z"))).toBe("overdue");
+  });
+
   it("vale anche per un'occorrenza in corso (ADR-0028)", () => {
     expect(
       temporalState(allDay("2026-10-20"), "in_progress", new Date("2026-10-28T09:00:00Z")),
