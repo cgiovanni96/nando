@@ -8,6 +8,19 @@ Aprire `index.html` nel browser. Non serve installare dipendenze.
 - `habit-model.js`: habit, configurazioni, pause, fonti, evidenze e derivazioni (score, forza, streak).
 - `habit-analytics.js`: dettaglio Habit, storico per periodo, fonti, calendario delle evidenze e dialoghi.
 - `design.html`: pagina di token, componenti, stati e note per schermata.
+- `calendar-m2.js`, `calendar-m2.css`: **prototype NAS-155**, da buttare. Sostituiscono Dashboard e Calendario con il modello di M2 (vedi sotto).
+
+## Prototype M2 — Giornata (NAS-155)
+
+Ora dimostrativa: 28/10/2026 09:30. `calendar-m2.js` aggiunge task demo con id 9001–9013: range all-day e timed, scadenze a un'ora, task in ritardo e task senza data.
+
+- **Dashboard:** Oggi è diviso in In ritardo, In corso e Scade oggi, con al massimo 7 righe e «Mostra tutte (N)». Prossimi 7 giorni va da oggi a +6; un range compare anche nel giorno di inizio come «inizia». La checkbox completa e mostra un toast con «Annulla» (rettifica); ⤼ salta.
+- **Calendario:** viste Mese, Settimana, Giorno e Agenda. Il click su una voce apre un popover con Completa, Salta, Riapri e Apri.
+- **Drag** (solo desktop, con finestra di almeno 900 px e mouse): si trascinano solo le occorrenze aperte. La durata resta uguale; un all-day resta all-day e un timed mantiene l'ora se cade su un giorno. La maniglia in basso di un blocco timed ne cambia la fine.
+- **Pannello «senza data»** nella vista Settimana, con filtro per Space. Sul giorno o sulla riga all-day il task riceve una scadenza all-day; su uno slot orario, una scadenza a quell'ora.
+- Il riquadro «Prototype NAS-155» in fondo alla pagina mostra l'ultima azione, lo Schedule e lo storico del task modificato, e ripristina i dati demo.
+
+Limiti: date naive nell'ora locale del browser, nessuna verifica di `@mantine/schedule`, storico non mostrato nella pagina task, range timed di più giorni non resi nella griglia oraria.
 
 ## Percorsi
 

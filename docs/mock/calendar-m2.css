@@ -1,0 +1,53 @@
+/* PROTOTYPE NAS-155 — stili di calendar-m2.js. Da buttare. Usa solo i token di styles.css. */
+
+.m2-group{display:flex;gap:6px;align-items:baseline;margin:14px 0 6px;font-size:13px;font-weight:600}
+.m2-day{margin-bottom:6px}
+.m2-row.is-closed .task-name{color:var(--muted)}
+.m2-row .m2-menu{width:28px;height:28px;font-size:15px}
+.m2-pill-late{color:var(--danger);border-color:currentColor}
+.m2-more{margin:8px 0 4px}
+
+/* calendario */
+.m2-cal{display:grid;grid-template-columns:1fr;gap:16px;margin-top:12px}
+.m2-cal.with-panel{grid-template-columns:minmax(0,1fr) 240px}
+.m2-cal-main{min-width:0}
+.m2-drop.is-over{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--tint)}
+
+.m2-chip{display:flex;gap:4px;align-items:center;width:100%;min-height:22px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--fg);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.m2-chip.is-allday{background:var(--tint)}
+.m2-chip.seg-start{border-top-right-radius:0;border-bottom-right-radius:0}
+.m2-chip.seg-mid{border-radius:0;border-left-style:dashed;border-right-style:dashed}
+.m2-chip.seg-end{border-top-left-radius:0;border-bottom-left-radius:0}
+.m2-chip.st-completed,.m2-event.st-completed{opacity:.55;text-decoration:line-through}
+.m2-chip.st-skipped,.m2-event.st-skipped{opacity:.45;font-style:italic}
+.m2-chip.is-late,.m2-event.is-late{border-color:var(--danger)}
+.m2-chip[draggable=true],.m2-event[draggable=true]{cursor:grab}
+.m2-time{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+
+.m2-timegrid{display:grid;grid-template-columns:56px repeat(var(--m2-days),minmax(0,1fr));border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.m2-corner,.m2-gutter{border-bottom:1px solid var(--line);padding:4px}
+.m2-dayhead{border:0;border-left:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--side);color:var(--fg);font:inherit;font-size:13px;padding:6px;cursor:pointer}
+.m2-dayhead.is-today{font-weight:700}
+.m2-allday-cell{display:flex;flex-direction:column;gap:2px;min-height:34px;padding:3px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.m2-hours div{height:calc(24px * 2);padding:0 4px;border-top:1px solid var(--line);box-sizing:border-box}
+.m2-col{position:relative;border-left:1px solid var(--line)}
+.m2-slot{height:24px;box-sizing:border-box;border-top:1px solid var(--line)}
+.m2-slot:nth-child(even){border-top-style:dotted}
+.m2-event{position:absolute;left:3px;right:3px;display:flex;flex-direction:column;gap:1px;padding:2px 6px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit;font-size:12px;text-align:left;overflow:hidden;cursor:pointer;box-sizing:border-box}
+.m2-event.is-point{flex-direction:row;align-items:center;border-left-style:dotted}
+.m2-resize{position:absolute;left:0;right:0;bottom:0;height:7px;cursor:ns-resize;background:linear-gradient(var(--line),var(--line)) center/24px 2px no-repeat}
+.m2-now{position:absolute;left:0;right:0;height:0;border-top:2px solid var(--danger);pointer-events:none}
+
+.m2-panel{border:1px solid var(--line);border-radius:var(--radius);padding:12px;background:var(--side);align-self:start;position:sticky;top:12px}
+.m2-panel select{width:100%;margin-top:4px}
+.m2-panel-list{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.m2-panel-item{display:flex;flex-direction:column;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:grab}
+
+.m2-popover{position:fixed;z-index:40;width:260px;display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);box-shadow:0 8px 24px rgb(0 0 0 / .14)}
+#m2-toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);z-index:50;display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:var(--radius);background:var(--accent);color:var(--on)}
+#m2-toast .text-btn{color:var(--on);text-decoration:underline}
+
+.m2-debug{margin-top:24px;padding:8px 12px;border:1px dashed var(--line);border-radius:var(--radius);font-size:12px}
+.m2-debug pre{max-height:240px;overflow:auto;white-space:pre-wrap}
+
+@media (max-width:900px){.m2-cal.with-panel{grid-template-columns:1fr}}
