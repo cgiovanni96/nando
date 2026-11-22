@@ -6,6 +6,7 @@
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
 - **Dipende da:** ADR-0013, ADR-0017, ADR-0018, ADR-0019, ADR-0024
 - **Chiarisce:** ADR-0014 (la griglia giornaliera mostra evidenze, non score), ADR-0019 (la forza resta per periodo)
+- **Emendato da:** ADR-0028 (Oggi e Prossimi 7 giorni diventano un solo widget a tab; voce Task con board per stato)
 
 ## Contesto
 
