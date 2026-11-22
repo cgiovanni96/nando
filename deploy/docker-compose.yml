@@ -55,8 +55,10 @@ services:
       -c shared_preload_libraries=pg_stat_statements
     volumes:
       - nando_pgdata:/var/lib/postgresql/data
+    # -h: al primo init il server temporaneo ascolta solo sul socket; via TCP
+    # il check aspetta il server vero, quello che migrate raggiunge su db:5432.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
