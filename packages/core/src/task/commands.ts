@@ -3,7 +3,6 @@ import type { Clock, DomainError, Result } from "@nando/kernel";
 import { err, ok } from "@nando/kernel";
 
 import {
-  dueAtViolation,
   normalizeTaskTitle,
   restoreViolation,
   spaceViolation,
@@ -13,8 +12,9 @@ import {
   type Task,
   type TaskStatus,
 } from "./domain";
-import { findTask, findTaskIncludingDeleted } from "./mapper";
+import { findTask, findTaskIncludingDeleted, scheduleColumns } from "./mapper";
 import type { TaskCommandDb, TaskDatabase, TaskSpacePort } from "./ports";
+import { buildSchedule, type Schedule, type ScheduleInput } from "./schedule";
 import { task, taskOccurrence } from "./schema";
 
 export type TaskCommandDeps = {
@@ -22,13 +22,14 @@ export type TaskCommandDeps = {
   clock: Clock;
   ids: () => string;
   spacePort: TaskSpacePort;
+  /** Timezone IANA dei nuovi task: `OWNER_TIME_ZONE` (ADR-0004). */
+  defaultTimeZone: string;
 };
 
 export type CreateTaskInput = {
   title: string;
   spaceId: string | null;
-  dueAt: Date | null;
-  dueAtHasTime: boolean;
+  schedule: ScheduleInput | null;
 };
 
 export type UpdateTaskInput = {
@@ -36,8 +37,7 @@ export type UpdateTaskInput = {
   expectedVersion: number;
   title: string;
   spaceId: string | null;
-  dueAt: Date | null;
-  dueAtHasTime: boolean;
+  schedule: ScheduleInput | null;
 };
 
 export type TaskIdInput = {
@@ -65,8 +65,14 @@ function versionConflict(currentVersion: number): DomainError {
   };
 }
 
-function contentViolation(input: { title: string; dueAt: Date | null }): DomainError | null {
-  return titleViolation(input.title) ?? dueAtViolation(input.dueAt);
+/** Titolo e Schedule validi, nella timezone del Task. */
+function validateContent(
+  input: { title: string; schedule: ScheduleInput | null },
+  timeZone: string,
+): Result<Schedule | null> {
+  const invalidTitle = titleViolation(input.title);
+  if (invalidTitle) return err(invalidTitle);
+  return input.schedule ? buildSchedule(input.schedule, timeZone) : ok(null);
 }
 
 async function spaceError(
@@ -86,7 +92,13 @@ async function runInTransaction<T>(
   return db.transaction((inner) => fn(inner));
 }
 
-export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDeps) {
+export function createTaskCommands({
+  db,
+  clock,
+  ids,
+  spacePort,
+  defaultTimeZone,
+}: TaskCommandDeps) {
   async function transition(
     taskId: string,
     target: TaskStatus,
@@ -128,8 +140,8 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
 
   return {
     async create(input: CreateTaskInput, tx?: TaskCommandDb): Promise<Result<Task>> {
-      const invalid = contentViolation(input);
-      if (invalid) return err(invalid);
+      const content = validateContent(input, defaultTimeZone);
+      if (!content.ok) return content;
 
       const invalidSpace = await spaceError(spacePort, input.spaceId);
       if (invalidSpace) return err(invalidSpace);
@@ -145,6 +157,7 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
             id: taskId,
             title,
             spaceId: input.spaceId,
+            timeZone: defaultTimeZone,
             version: 1,
             createdAt: now,
             updatedAt: now,
@@ -158,8 +171,7 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
           id: ids(),
           taskId,
           status: "open",
-          dueAt: input.dueAt,
-          dueHasTime: input.dueAt !== null && input.dueAtHasTime,
+          ...scheduleColumns(content.value),
           createdAt: now,
           updatedAt: now,
         });
@@ -170,8 +182,8 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
     },
 
     async update(input: UpdateTaskInput, tx?: TaskCommandDb): Promise<Result<Task>> {
-      const invalid = contentViolation(input);
-      if (invalid) return err(invalid);
+      const invalidTitle = titleViolation(input.title);
+      if (invalidTitle) return err(invalidTitle);
 
       const invalidSpace = await spaceError(spacePort, input.spaceId);
       if (invalidSpace) return err(invalidSpace);
@@ -186,6 +198,10 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
         if (current.version !== input.expectedVersion) {
           return err(versionConflict(current.version));
         }
+
+        // Lo Schedule si valuta nella timezone del Task, non in quella corrente.
+        const content = validateContent(input, current.timeZone);
+        if (!content.ok) return content;
 
         const [updated] = await conn
           .update(task)
@@ -211,11 +227,7 @@ export function createTaskCommands({ db, clock, ids, spacePort }: TaskCommandDep
 
         await conn
           .update(taskOccurrence)
-          .set({
-            dueAt: input.dueAt,
-            dueHasTime: input.dueAt !== null && input.dueAtHasTime,
-            updatedAt: now,
-          })
+          .set({ ...scheduleColumns(content.value), updatedAt: now })
           .where(eq(taskOccurrence.taskId, input.taskId));
 
         const view = await findTask(conn, input.taskId);

@@ -84,6 +84,7 @@ services:
       PORT: "3000"
       DATABASE_URL: "postgres://${POSTGRES_USER:-nando}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@db:5432/${POSTGRES_DB:-nando_staging}"
       OWNER_USER_ID: "${OWNER_USER_ID:?OWNER_USER_ID required}"
+      OWNER_TIME_ZONE: "${OWNER_TIME_ZONE:-Europe/Rome}"
       INTERNAL_TOKEN: "${INTERNAL_TOKEN:?INTERNAL_TOKEN required}"
       DOCS_ENABLED: "true"
       LOG_LEVEL: "info"

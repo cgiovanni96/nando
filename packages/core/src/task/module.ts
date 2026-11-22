@@ -9,11 +9,12 @@ export type TaskModuleDeps = {
   clock: Clock;
   ids: () => string;
   spacePort: TaskSpacePort;
+  defaultTimeZone: string;
 };
 
-export function createTaskModule({ db, clock, ids, spacePort }: TaskModuleDeps) {
+export function createTaskModule({ db, clock, ids, spacePort, defaultTimeZone }: TaskModuleDeps) {
   return {
-    commands: createTaskCommands({ db, clock, ids, spacePort }),
+    commands: createTaskCommands({ db, clock, ids, spacePort, defaultTimeZone }),
     queries: createTaskQueries({ db }),
   };
 }

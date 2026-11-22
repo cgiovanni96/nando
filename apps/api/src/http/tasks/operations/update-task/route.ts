@@ -31,7 +31,10 @@ export function createUpdateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
       tags: ["tasks"],
       summary: "Aggiorna un task",
       description:
-        "Comando idempotente: aggiorna titolo, Space e scadenza con controllo di `version`. " +
+        "Comando idempotente: aggiorna titolo, Space e Schedule con controllo di `version`. " +
+        "`schedule` null toglie la data; lo Schedule si valuta nella timezone del task, " +
+        "che non cambia. Uno Schedule incoerente (`from` dopo `to`, tipi mescolati) " +
+        "restituisce 400 `validation_error`. " +
         "Un `expectedVersion` superato restituisce 409 `version_conflict` con la versione " +
         "corrente in `details`; nessuna scrittura viene applicata. Lo stesso status 409 vale " +
         "per un `commandId` riusato con un payload diverso.",
@@ -62,8 +65,7 @@ export function createUpdateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
           expectedVersion: payload.expectedVersion,
           title: payload.title,
           spaceId: payload.spaceId,
-          dueAt: payload.dueAt,
-          dueAtHasTime: payload.dueAtHasTime,
+          schedule: payload.schedule,
         },
         responseSchema: taskResponseSchema,
         execute: async (tx) => {
@@ -73,8 +75,7 @@ export function createUpdateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
               expectedVersion: payload.expectedVersion,
               title: payload.title,
               spaceId: payload.spaceId,
-              dueAt: payload.dueAt ? new Date(payload.dueAt) : null,
-              dueAtHasTime: payload.dueAtHasTime,
+              schedule: payload.schedule,
             },
             tx,
           );

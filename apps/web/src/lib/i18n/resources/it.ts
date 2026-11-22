@@ -159,7 +159,11 @@ export const it = {
     due: {
       today: "Oggi",
       includeTime: "Includi orario",
+      range: "Intervallo",
       time: "Ora",
+      start: "Inizio",
+      end: "Fine",
+      endBeforeStart: "La fine non può essere prima dell'inizio.",
       clear: "Cancella",
     },
     readOnly: {

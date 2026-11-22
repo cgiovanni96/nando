@@ -29,8 +29,13 @@ import {
 } from "@web/lib/mutations/tasks";
 import type { SpaceOption } from "@web/lib/queries/spaces";
 import type { TaskDetail } from "@web/lib/queries/tasks";
-import { DueDateField } from "./due-date-field";
-import type { DueValue } from "./due-date";
+import {
+  draftFromSchedule,
+  draftViolation,
+  scheduleFromDraft,
+  type ScheduleDraft,
+} from "./schedule-draft";
+import { ScheduleField } from "./schedule-field";
 import { TaskActionsMenu } from "./task-actions-menu";
 import classes from "./task-page.module.css";
 
@@ -39,7 +44,7 @@ const STATUS_ORDER = ["open", "completed", "skipped", "cancelled"] as const;
 type TaskFormValues = {
   title: string;
   spaceId: string | null;
-  due: DueValue;
+  schedule: ScheduleDraft;
 };
 
 type TaskFormProps = {
@@ -60,13 +65,12 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
     initialValues: {
       title: task.title,
       spaceId: task.spaceId,
-      due: {
-        at: task.dueAt ? new Date(task.dueAt) : null,
-        hasTime: task.dueAtHasTime,
-      },
+      schedule: draftFromSchedule(task.schedule, task.timeZone),
     },
     validate: {
       title: (value) => (value.trim() ? null : t("task.form.emptyTitle")),
+      schedule: (value) =>
+        draftViolation(value) === "endBeforeStart" ? t("task.due.endBeforeStart") : null,
     },
     onValuesChange: () => {
       commandId.current = null;
@@ -176,8 +180,7 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
         expectedVersion: task.version,
         title: values.title.trim(),
         spaceId: values.spaceId,
-        dueAt: values.due.at ? values.due.at.toISOString() : null,
-        dueAtHasTime: values.due.at !== null && values.due.hasTime,
+        schedule: scheduleFromDraft(values.schedule, task.timeZone),
       },
     });
   }
@@ -275,9 +278,10 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
             icon={<IconCalendarEvent size={16} stroke={1.6} />}
             label={t("task.properties.dueAt")}
           >
-            <DueDateField
-              key={form.key("due")}
-              {...form.getInputProps("due")}
+            <ScheduleField
+              key={form.key("schedule")}
+              timeZone={task.timeZone}
+              {...form.getInputProps("schedule")}
               disabled={disabled}
             />
           </PropertyRow>

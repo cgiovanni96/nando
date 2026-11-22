@@ -16,8 +16,12 @@ afterAll(async () => {
 describe("task queries", () => {
   it("reads a task with its flattened occurrence fields", async () => {
     const space = await createSpace();
-    const dueAt = "2026-11-14T09:00:00.000Z";
-    const created = await createTask({ title: "Leggere", spaceId: space.id, dueAt });
+    const to = "2026-11-14T09:00:00.000Z";
+    const created = await createTask({
+      title: "Leggere",
+      spaceId: space.id,
+      schedule: { allDay: false, from: null, to },
+    });
 
     const task = await readTask(created.id);
 
@@ -25,7 +29,8 @@ describe("task queries", () => {
       id: created.id,
       title: "Leggere",
       status: "open",
-      dueAt,
+      schedule: { allDay: false, from: null, to, timeZone: "Europe/Rome" },
+      timeZone: "Europe/Rome",
       spaceId: space.id,
       version: 1,
     });

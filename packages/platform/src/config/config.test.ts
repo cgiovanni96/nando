@@ -26,6 +26,7 @@ describe("parseApiConfig", () => {
       NODE_ENV: "test",
       DATABASE_URL: validEnv.DATABASE_URL,
       OWNER_USER_ID: validEnv.OWNER_USER_ID,
+      OWNER_TIME_ZONE: "Europe/Rome",
       INTERNAL_TOKEN: validEnv.INTERNAL_TOKEN,
       DOCS_ENABLED: true,
       PORT: 3000,
@@ -42,8 +43,15 @@ describe("parseApiConfig", () => {
 
     expect(config.DOCS_ENABLED).toBe(false);
     expect(config.PORT).toBe(3000);
+    expect(config.OWNER_TIME_ZONE).toBe("Europe/Rome");
     expect(config.NODE_ENV).toBe("development");
     expect(config.LOG_LEVEL).toBe("info");
+  });
+
+  it("rejects an owner time zone that is not IANA", () => {
+    expect(() => parseApiConfig({ ...validEnv, OWNER_TIME_ZONE: "Europa/Roma" })).toThrow(
+      /OWNER_TIME_ZONE/,
+    );
   });
 
   it("rejects an unknown log level", () => {

@@ -1,5 +1,5 @@
 import {
-  EXAMPLE_DUE_AT,
+  exampleSchedule,
   EXAMPLE_TASK_SPACE_ID,
   taskDtoFactory,
   taskResponseSchema,
@@ -8,8 +8,7 @@ import {
 export const getTaskResponseExample = taskResponseSchema.parse({
   ok: true,
   data: taskDtoFactory({
-    dueAt: EXAMPLE_DUE_AT,
-    dueAtHasTime: true,
+    schedule: exampleSchedule,
     spaceId: EXAMPLE_TASK_SPACE_ID,
   }),
 });

@@ -12,6 +12,7 @@ const config: ApiConfig = {
   NODE_ENV: "test",
   DATABASE_URL: "postgres://nando:nando@127.0.0.1:5432/nando_test",
   OWNER_USER_ID: "0199a4c2-7a10-7000-8000-000000000001",
+  OWNER_TIME_ZONE: "Europe/Rome",
   INTERNAL_TOKEN: "0123456789abcdef0123456789abcdef",
   DOCS_ENABLED: true,
   PORT: 3000,

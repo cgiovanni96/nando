@@ -15,6 +15,7 @@ import {
   taskCommandRequestFactory,
   taskResponseSchema,
   type TaskDto,
+  type ScheduleInputDto,
 } from "@api/http/tasks/contract";
 
 export const INTERNAL_TOKEN = "0123456789abcdef0123456789abcdef";
@@ -82,7 +83,7 @@ export async function archiveSpace(spaceId: string): Promise<void> {
 export async function createTask(input: {
   title: string;
   spaceId?: string | null;
-  dueAt?: string | null;
+  schedule?: ScheduleInputDto | null;
 }): Promise<TaskDto> {
   const response = await post(
     "/api/tasks",
@@ -90,7 +91,7 @@ export async function createTask(input: {
       commandId: newId(),
       title: input.title,
       spaceId: input.spaceId ?? null,
-      dueAt: input.dueAt ?? null,
+      schedule: input.schedule ?? null,
     }),
   );
   const parsed = taskResponseSchema.safeParse(await response.json());

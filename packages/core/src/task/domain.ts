@@ -1,5 +1,7 @@
 import type { DomainError } from "@nando/kernel";
 
+import type { Schedule } from "./schedule";
+
 export const TASK_STATUSES = ["open", "completed", "skipped", "cancelled"] as const;
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
@@ -20,15 +22,15 @@ export const TASK_STATUS_TARGETS = {
 export type TaskStatusCommand = keyof typeof TASK_STATUS_TARGETS;
 
 /**
- * Vista piatta del task: titolo e Space vengono dalla definizione, stato e
- * scadenza dall'occorrenza. L'API espone un solo oggetto.
+ * Vista piatta del task: titolo, Space e timezone vengono dalla definizione,
+ * stato e Schedule dall'occorrenza. L'API espone un solo oggetto.
  */
 export type Task = {
   id: string;
   title: string;
   status: TaskStatus;
-  dueAt: Date | null;
-  dueAtHasTime: boolean;
+  schedule: Schedule | null;
+  timeZone: string;
   spaceId: string | null;
   version: number;
   createdAt: Date;
@@ -66,14 +68,6 @@ export function titleViolation(title: string): DomainError | null {
       code: "validation_error",
       message: `Il titolo del task non può superare ${TASK_TITLE_MAX_LENGTH} caratteri.`,
     };
-  }
-
-  return null;
-}
-
-export function dueAtViolation(dueAt: Date | null): DomainError | null {
-  if (dueAt && Number.isNaN(dueAt.getTime())) {
-    return { code: "validation_error", message: "La scadenza del task non è valida." };
   }
 
   return null;

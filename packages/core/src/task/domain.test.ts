@@ -3,7 +3,6 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
-  dueAtViolation,
   normalizeTaskTitle,
   restorableUntil,
   restoreViolation,
@@ -70,12 +69,6 @@ describe("task fields", () => {
     expect(titleViolation("Comprare il pane")).toBeNull();
     expect(titleViolation("   ")).toMatchObject({ code: "validation_error" });
     expect(titleViolation("x".repeat(501))).toMatchObject({ code: "validation_error" });
-  });
-
-  it("rejects an invalid due date", () => {
-    expect(dueAtViolation(null)).toBeNull();
-    expect(dueAtViolation(new Date("2026-11-12T10:00:00.000Z"))).toBeNull();
-    expect(dueAtViolation(new Date("not-a-date"))).toMatchObject({ code: "validation_error" });
   });
 });
 

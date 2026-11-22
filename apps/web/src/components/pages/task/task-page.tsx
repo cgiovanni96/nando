@@ -25,6 +25,7 @@ import {
 import { taskQueryOptions, type TaskDetail } from "@web/lib/queries/tasks";
 import classes from "./task-page.module.css";
 import { TaskActionsMenu } from "./task-actions-menu";
+import { isLate } from "./schedule-draft";
 import { TaskForm } from "./task-form";
 
 export function TaskPage() {
@@ -82,10 +83,7 @@ export function TaskPage() {
       : spaceOptions;
 
   const crumbs = hasSpace ? (spacePath.data ?? []) : [t("task.inboxLabel")];
-  const late =
-    detail.status === "open" &&
-    detail.dueAt !== null &&
-    new Date(detail.dueAt).getTime() < task.dataUpdatedAt;
+  const late = isLate(detail.schedule, detail.status, new Date(task.dataUpdatedAt));
 
   return (
     <Stack gap="lg" className={classes.entity}>

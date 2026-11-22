@@ -73,8 +73,7 @@ export function useQuickCapture({ onCreated }: UseQuickCaptureOptions) {
         commandId: id,
         title: form.values.title.trim(),
         spaceId: form.values.spaceId,
-        dueAt: null,
-        dueAtHasTime: false,
+        schedule: null,
       });
     },
     [createTask, form],

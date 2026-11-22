@@ -8,16 +8,56 @@ export const EXAMPLE_TASK_ID = "0199a4c2-7a10-7000-8000-000000000301";
 export const EXAMPLE_TASK_SPACE_ID = "0199a4c2-7a10-7000-8000-000000000401";
 export const EXAMPLE_TIMESTAMP = "2026-11-12T09:00:00.000Z";
 export const EXAMPLE_DUE_AT = "2026-11-12T18:00:00.000Z";
+export const EXAMPLE_TIME_ZONE = "Europe/Rome";
 
 export const taskStatusSchema = z.enum(TASK_STATUSES);
 export const taskTitleSchema = z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH);
+
+/**
+ * Schedule in ingresso (ADR-0004): `allDay` decide il tipo di `from` e `to`,
+ * date `YYYY-MM-DD` oppure istanti ISO 8601. La timezone è quella del Task.
+ */
+export const scheduleInputSchema = z.discriminatedUnion("allDay", [
+  z.object({ allDay: z.literal(true), from: z.iso.date().nullable(), to: z.iso.date() }),
+  z.object({
+    allDay: z.literal(false),
+    from: z.iso.datetime().nullable(),
+    to: z.iso.datetime(),
+  }),
+]);
+
+/** Schedule in uscita: come l'ingresso, più la timezone IANA in cui si valuta. */
+export const scheduleDtoSchema = z.discriminatedUnion("allDay", [
+  z.object({
+    allDay: z.literal(true),
+    from: z.iso.date().nullable(),
+    to: z.iso.date(),
+    timeZone: z.string().min(1),
+  }),
+  z.object({
+    allDay: z.literal(false),
+    from: z.iso.datetime().nullable(),
+    to: z.iso.datetime(),
+    timeZone: z.string().min(1),
+  }),
+]);
+
+export type ScheduleInputDto = z.infer<typeof scheduleInputSchema>;
+export type ScheduleDto = z.infer<typeof scheduleDtoSchema>;
+
+export const exampleSchedule: ScheduleDto = scheduleDtoSchema.parse({
+  allDay: false,
+  from: null,
+  to: EXAMPLE_DUE_AT,
+  timeZone: EXAMPLE_TIME_ZONE,
+});
 
 export const taskDtoSchema = z.object({
   id: z.uuid(),
   title: z.string().min(1),
   status: taskStatusSchema,
-  dueAt: z.iso.datetime().nullable(),
-  dueAtHasTime: z.boolean(),
+  schedule: scheduleDtoSchema.nullable(),
+  timeZone: z.string().min(1),
   spaceId: z.uuid().nullable(),
   version: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -44,8 +84,8 @@ export function taskDtoFactory(overrides: Partial<TaskDto> = {}): TaskDto {
     id: EXAMPLE_TASK_ID,
     title: "Comprare il pane",
     status: "open",
-    dueAt: null,
-    dueAtHasTime: false,
+    schedule: null,
+    timeZone: EXAMPLE_TIME_ZONE,
     spaceId: null,
     version: 1,
     createdAt: EXAMPLE_TIMESTAMP,

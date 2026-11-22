@@ -4,6 +4,8 @@ import { uuidV7Schema } from "@api/http/envelope";
 import {
   EXAMPLE_COMMAND_ID,
   EXAMPLE_DUE_AT,
+  exampleSchedule,
+  scheduleInputSchema,
   taskDtoFactory,
   taskResponseSchema,
   taskTitleSchema,
@@ -14,8 +16,7 @@ export const updateTaskRequestSchema = z.object({
   expectedVersion: z.number().int().positive(),
   title: taskTitleSchema,
   spaceId: z.uuid().nullable(),
-  dueAt: z.iso.datetime().nullable(),
-  dueAtHasTime: z.boolean(),
+  schedule: scheduleInputSchema.nullable(),
 });
 
 export type UpdateTaskRequest = z.infer<typeof updateTaskRequestSchema>;
@@ -28,8 +29,7 @@ export function updateTaskRequestFactory(
     expectedVersion: 1,
     title: "Comprare il pane e il latte",
     spaceId: null,
-    dueAt: EXAMPLE_DUE_AT,
-    dueAtHasTime: true,
+    schedule: { allDay: false, from: null, to: EXAMPLE_DUE_AT },
     ...overrides,
   });
 }
@@ -40,8 +40,7 @@ export const updatedTaskResponseExample = taskResponseSchema.parse({
   ok: true,
   data: taskDtoFactory({
     title: "Comprare il pane e il latte",
-    dueAt: EXAMPLE_DUE_AT,
-    dueAtHasTime: true,
+    schedule: exampleSchedule,
     version: 2,
     updatedAt: "2026-11-12T10:00:00.000Z",
   }),
