@@ -74,8 +74,16 @@ _Avoid_: cancel, delete
 Chiusura di un Task o di una Occurrence senza completamento; non produce Evidence. Cancellare una serie chiude le occorrenze future.
 _Avoid_: delete, archive
 
+**In progress**:
+Stato di una TaskOccurrence su cui si sta lavorando; nella UI «In corso». Non è terminale, non produce Completion né Evidence e si può riportare a `open` senza rettifica.
+_Avoid_: in svolgimento, started, doing
+
+**Current**:
+Stato temporale derivato di una TaskOccurrence aperta il cui intervallo comprende adesso (`from ≤ now ≤ to`); nella UI «In svolgimento». Non è memorizzato.
+_Avoid_: in corso, in progress, attivo
+
 **Overdue**:
-Stato derivato di una TaskOccurrence `open` la cui scadenza `to` è passata; non è uno stato memorizzato e non produce una transizione.
+Stato derivato di una TaskOccurrence `open` o `in_progress` la cui scadenza `to` è passata; non è uno stato memorizzato e non produce una transizione.
 _Avoid_: scaduto (come stato), late
 
 ### Habits
