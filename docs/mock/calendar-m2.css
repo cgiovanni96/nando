@@ -71,3 +71,17 @@
 .m2-switcher button{border:0;background:rgb(255 255 255 / .18);color:#fff;border-radius:999px;width:28px;height:28px;cursor:pointer;font:inherit}
 .m2-switcher small{opacity:.75}
 @media (max-width:720px){.m2-switcher{bottom:76px}}
+
+/* board Task */
+.m2-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.m2-column{border:1px solid var(--line);border-radius:var(--radius);background:var(--side);padding:10px;min-height:240px}
+.m2-column .section-head{margin-bottom:8px}
+.m2-column-body{display:flex;flex-direction:column;gap:8px}
+.m2-col-drop.is-over{outline:2px dashed var(--accent);outline-offset:-2px}
+.m2-card{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);cursor:grab}
+.m2-card .task-name{text-align:left;padding:0}
+.m2-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.m2-card-actions{display:flex;gap:10px;font-size:12px}
+.m2-card.st-completed{opacity:.7}
+.m2-pill-progress{border-color:var(--accent);font-weight:600}
+@media (max-width:900px){.m2-board{grid-template-columns:1fr}}

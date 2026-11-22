@@ -67,12 +67,13 @@
     t.sched = s;
     t.date = s ? dayOf(s.to) : '';
   }
-  const status = (t) => (t.done ? 'completed' : t.status === 'skipped' ? 'skipped' : 'open');
+  const status = (t) => (t.done ? 'completed' : t.status === 'skipped' ? 'skipped' : t.status === 'in_progress' ? 'in_progress' : 'open');
+  const isActive = (t) => ['open', 'in_progress'].includes(status(t)); // open o in corso: conta per Oggi, ritardi e drag
   const startDay = (s) => dayOf(s.from || s.to);
   const endDay = (s) => dayOf(s.to);
   function temporal(t) {
     const s = sched(t);
-    if (!s || status(t) !== 'open') return null;
+    if (!s || !isActive(t)) return null;
     const overdue = s.allDay ? s.to < today : s.to < NOW;
     if (overdue) return 'overdue';
     if (s.from && startDay(s) <= today && endDay(s) > today) return 'current';
@@ -89,7 +90,18 @@
   // ── comandi ───────────────────────────────────────────────────────────
   function complete(t) { t.done = true; t.status = 'completed'; log(t, 'completato'); persist(); }
   function skip(t) { t.done = false; t.status = 'skipped'; log(t, 'saltato'); persist(); }
-  function reopen(t) { t.done = false; t.status = 'open'; log(t, 'riaperto', 'rettifica'); persist(); }
+  function reopen(t, to = 'open') { t.done = false; t.status = to; log(t, 'riaperto', 'rettifica'); persist(); }
+  function start(t) { t.status = 'in_progress'; log(t, 'iniziato'); persist(); }
+  function toTodo(t) { t.status = 'open'; log(t, 'rimesso da fare'); persist(); }
+  /** Board: porta la card nella colonna. Fatto passa da Completion, l'uscita da Fatto da una rettifica. */
+  function setColumn(t, col) {
+    const st = status(t);
+    if (st === col) return;
+    if (col === 'completed') complete(t);
+    else if (st === 'completed') reopen(t, col);
+    else if (col === 'in_progress') start(t);
+    else toTodo(t);
+  }
 
   function moveTo(t, day, time = null) {
     const s = sched(t);
@@ -129,25 +141,26 @@
     if (s.from) return `${dayName(s.from)} ${timeOf(s.from)}–${dayOf(s.from) === dayOf(s.to) ? timeOf(s.to) : `${dayName(s.to)} ${timeOf(s.to)}`}`;
     return `${dayName(s.to)} · entro le ${timeOf(s.to)}`;
   }
-  const TEMPORAL_PILL = { overdue: '<span class="pill m2-pill-late">In ritardo</span>', current: '<span class="pill blue">In corso</span>' };
+  const TEMPORAL_PILL = { overdue: '<span class="pill m2-pill-late">In ritardo</span>', current: '<span class="pill blue">In svolgimento</span>' };
+  const STATUS_LABEL = { open: 'Da fare', in_progress: 'In corso', completed: 'Fatto', skipped: 'Saltato' };
 
   function row(t, { note = '' } = {}) {
     const s = sched(t), st = status(t), tmp = temporal(t);
-    return `<div class="task-row m2-row ${st !== 'open' ? 'is-closed' : ''}">
+    return `<div class="task-row m2-row ${!isActive(t) ? 'is-closed' : ''}">
       <input type="checkbox" data-m2-check="${t.id}" ${st === 'completed' ? 'checked' : ''} ${st === 'skipped' ? 'disabled' : ''} aria-label="Completa ${esc(t.title)}">
       <button class="task-name ${st === 'completed' ? 'done' : ''}" data-nav="task" data-arg="${t.id}">${esc(t.title)}</button>
       <span class="task-space">${esc(t.space)}</span>
-      ${note ? `<span class="pill">${note}</span>` : ''}${TEMPORAL_PILL[tmp] || ''}${st === 'skipped' ? '<span class="pill">Saltato</span>' : ''}
+      ${note ? `<span class="pill">${note}</span>` : ''}${TEMPORAL_PILL[tmp] || ''}${st === 'in_progress' ? '<span class="pill m2-pill-progress">In corso</span>' : ''}${st === 'skipped' ? '<span class="pill">Saltato</span>' : ''}
       <span class="task-date">${esc(s.allDay ? (s.from ? label(s) : 'Tutto il giorno') : s.from ? `${timeOf(s.from)}–${timeOf(s.to)}` : `entro le ${timeOf(s.to)}`)}</span>
-      <button class="icon-btn m2-menu" data-m2-skip="${t.id}" ${st !== 'open' ? 'disabled' : ''} title="Salta" aria-label="Salta ${esc(t.title)}">⤼</button>
+      <button class="icon-btn m2-menu" data-m2-skip="${t.id}" ${!isActive(t) ? 'disabled' : ''} title="Salta" aria-label="Salta ${esc(t.title)}">⤼</button>
     </div>`;
   }
 
   // ── varianti di «Prossimi» (?variant=A|B|C) ─────────────────────────────
   // A: striscia della settimana dentro Oggi + Agenda del calendario con orizzonte 7/15/30.
-  // B: pagina «Task» nella sidebar con orizzonte 7/15/30; in dashboard solo Oggi + riepilogo.
-  // C: tab Oggi / Prossimi 7 giorni dentro il widget della dashboard.
-  const VARIANTS = { A: 'Striscia + Agenda', B: 'Pagina Task', C: 'Tab in dashboard' };
+  // B: scelta dopo il primo giro: tab in dashboard (come C) + pagina «Task» a board per stato.
+  // C: tab Oggi / Prossimi 7 giorni dentro il widget della dashboard, senza pagina Task.
+  const VARIANTS = { A: 'Striscia + Agenda', B: 'Tab + Board Task', C: 'Tab in dashboard' };
   let variant = new URLSearchParams(location.search).get('variant')?.toUpperCase();
   if (!VARIANTS[variant]) variant = 'A';
   let stripDay = today; // A
@@ -156,7 +169,7 @@
   let tasksSpace = ''; // B
 
   // ── dashboard ─────────────────────────────────────────────────────────
-  const openScheduled = () => state.tasks.filter((t) => sched(t) && status(t) === 'open');
+  const openScheduled = () => state.tasks.filter((t) => sched(t) && isActive(t));
   const byTime = (a, b) => sched(a).to.localeCompare(sched(b).to);
   const dayEntries = (d, pool = openScheduled()) => pool.flatMap((t) => {
     const s = sched(t);
@@ -171,7 +184,7 @@
     const open = openScheduled();
     return [
       ['In ritardo', open.filter((t) => temporal(t) === 'overdue').sort(byTime)],
-      ['In corso', open.filter((t) => temporal(t) === 'current').sort(byTime)],
+      ['In svolgimento', open.filter((t) => temporal(t) === 'current').sort(byTime)],
       ['Scade oggi', open.filter((t) => temporal(t) === 'today').sort(byTime)],
     ];
   }
@@ -197,11 +210,6 @@
     return `<div class="section-head"><h2>${isToday ? 'Oggi' : longDay(stripDay)}</h2><span class="number">${isToday ? body.total : dayEntries(stripDay).length}</span><button class="text-btn" style="margin-left:auto" data-m2-to-agenda>Agenda →</button></div>
       ${strip}${isToday ? body.html : dayList(dayEntries(stripDay))}${isToday ? quickTaskRow() : ''}`;
   }
-  function widgetB() {
-    const body = todayBody(), tomorrow = dayEntries(addDays(today, 1)).length, week = nextDays(6).reduce((n, d) => n + dayEntries(d).length, 0);
-    return `<div class="section-head"><h2>Oggi</h2><span class="number">${body.total}</span></div>${body.html}${quickTaskRow()}
-      <button class="m2-summary" data-nav="tasks"><span>Domani <strong>${tomorrow}</strong></span><span>Prossimi 7 giorni <strong>${week}</strong></span><span class="muted">Task →</span></button>`;
-  }
   function widgetC() {
     const body = todayBody(), week = nextDays(6);
     const weekCount = week.reduce((n, d) => n + dayEntries(d).length, 0);
@@ -211,7 +219,7 @@
   }
 
   dashboard = function dashboardM2() {
-    const widget = { A: widgetA, B: widgetB, C: widgetC }[variant]();
+    const widget = { A: widgetA, B: widgetC, C: widgetC }[variant]();
     return `<div data-screen="dashboard">${heading('Un po’ di ordine, ogni giorno.', 'Mercoledì 28 ottobre 2026 · ore 09:30', `<button class="btn primary" data-action="capture">${icon('plus')} Cattura rapida</button>`)}
       <div class="dash-grid"><div>
         <section class="today-area">${widget}</section>
@@ -220,22 +228,34 @@
       ${debugBar()}</div>`;
   };
 
-  // ── B: pagina «Task» ──────────────────────────────────────────────────
+  // ── B: pagina «Task», board per stato ─────────────────────────────────
   const horizonPicker = (attr) => `<div class="od-row m2-horizon">${[7, 15, 30].map((n) => `<button class="btn ${horizon === n ? 'primary' : ''}" data-${attr}="${n}">${n} giorni</button>`).join('')}</div>`;
+  let boardHorizon = 0; // 0 = tutte
+  const COLUMNS = [['open', 'Da fare'], ['in_progress', 'In corso'], ['completed', 'Fatto']];
+  const completedAt = (t) => [...(t.history || [])].reverse().find((h) => h.kind === 'completato')?.at || (t.date ? `${t.date}T00:00` : NOW);
+  function card(t) {
+    const s = sched(t), st = status(t), tmp = temporal(t);
+    return `<article class="m2-card st-${st}" draggable="true" data-m2-card="${t.id}">
+      <button class="task-name ${st === 'completed' ? 'done' : ''}" data-nav="task" data-arg="${t.id}">${esc(t.title)}</button>
+      <div class="m2-card-meta"><span class="task-space">${esc(t.space)}</span>${TEMPORAL_PILL[tmp] || ''}<span class="m2-time">${esc(s ? label(s) : 'Senza data')}</span></div>
+      <div class="m2-card-actions">${COLUMNS.filter(([k]) => k !== st).map(([k, l]) => `<button class="text-btn" data-m2-col="${k}" data-m2-col-task="${t.id}">→ ${l}</button>`).join('')}</div>
+    </article>`;
+  }
   function tasksPage() {
-    const all = state.tasks.filter((t) => status(t) === 'open' && (!tasksSpace || t.space === tasksSpace));
     const spaces = [...new Set(state.tasks.map((t) => t.space))].sort();
-    const late = all.filter((t) => temporal(t) === 'overdue').sort(byTime);
-    const current = all.filter((t) => temporal(t) === 'current').sort(byTime);
-    const days = [today, ...nextDays(horizon - 1)];
-    const undated = all.filter((t) => !sched(t));
-    const daysHtml = days.map((d) => { const e = dayEntries(d, all.filter((t) => sched(t) && temporal(t) !== 'overdue')); return e.length ? `<div class="m2-day"><h3 class="m2-group">${longDay(d)}${d === today ? ' <span class="pill blue">Oggi</span>' : ''}</h3>${dayList(e)}</div>` : ''; }).join('');
-    return `<section data-screen="tasks">${heading('Task', `Aperti nei prossimi ${horizon} giorni, più ritardi e task senza data.`)}
-      <div class="calendar-toolbar">${horizonPicker('m2-horizon-b')}<label class="small od-row">Space <select data-m2-tasks-space><option value="">Tutti</option>${spaces.map((s) => `<option ${s === tasksSpace ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label></div>
-      ${late.length ? `<h2 class="m2-section-title">In ritardo <span class="number">${late.length}</span></h2><div class="task-list">${late.map((t) => row(t)).join('')}</div>` : ''}
-      ${current.length ? `<h2 class="m2-section-title">In corso <span class="number">${current.length}</span></h2><div class="task-list">${current.map((t) => row(t)).join('')}</div>` : ''}
-      <h2 class="m2-section-title">Per giorno</h2>${daysHtml || '<p class="muted">Niente in scadenza.</p>'}
-      <h2 class="m2-section-title">Senza data <span class="number">${undated.length}</span></h2>${undated.length ? `<div class="task-list">${undated.map((t) => `<div class="task-row m2-row"><input type="checkbox" data-m2-check="${t.id}" aria-label="Completa ${esc(t.title)}"><button class="task-name" data-nav="task" data-arg="${t.id}">${esc(t.title)}</button><span class="task-space">${esc(t.space)}</span><span class="task-date">Senza data</span></div>`).join('')}</div>` : '<p class="muted small">Tutto pianificato.</p>'}
+    const limit = boardHorizon ? addDays(today, boardHorizon - 1) : null;
+    const inScope = (t) => (!tasksSpace || t.space === tasksSpace) && (!limit || (sched(t) && endDay(sched(t)) <= limit));
+    const weekAgo = `${addDays(today, -7)}T00:00`;
+    const byDue = (a, b) => (sched(a) ? sched(a).to : '9999').localeCompare(sched(b) ? sched(b).to : '9999');
+    const cols = COLUMNS.map(([k, l]) => {
+      const items = state.tasks.filter((t) => status(t) === k && inScope(t) && (k !== 'completed' || completedAt(t) >= weekAgo)).sort(k === 'completed' ? (a, b) => completedAt(b).localeCompare(completedAt(a)) : byDue);
+      return `<section class="m2-column m2-col-drop" data-m2-col-drop="${k}" aria-label="${l}"><header class="section-head"><h2>${l}</h2><span class="number">${items.length}</span>${k === 'completed' ? '<small class="muted">ultimi 7 giorni</small>' : ''}</header><div class="m2-column-body">${items.map(card).join('') || '<p class="muted small">Vuota.</p>'}</div></section>`;
+    }).join('');
+    return `<section data-screen="tasks">${heading('Task', '')}
+      <div class="calendar-toolbar"><div class="od-row m2-horizon">${[[0, 'Tutte'], [7, '7 giorni'], [15, '15 giorni'], [30, '30 giorni']].map(([n, l]) => `<button class="btn ${boardHorizon === n ? 'primary' : ''}" data-m2-board-horizon="${n}">${l}</button>`).join('')}</div>
+        <label class="small od-row">Space <select data-m2-tasks-space><option value="">Tutti</option>${spaces.map((s) => `<option ${s === tasksSpace ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label></div>
+      <div class="m2-board">${cols}</div>
+      ${boardHorizon ? '<p class="small muted">Con un orizzonte attivo i task senza data e quelli che scadono più avanti sono nascosti.</p>' : ''}
       ${debugBar()}</section>`;
   }
   const basePage = page;
@@ -245,7 +265,7 @@
 
   // ── calendario ────────────────────────────────────────────────────────
   const canDrag = () => matchMedia('(min-width: 900px) and (pointer: fine)').matches;
-  const draggable = (t) => (canDrag() && status(t) === 'open' ? `draggable="true" data-m2-drag="${t.id}"` : '');
+  const draggable = (t) => (canDrag() && isActive(t) ? `draggable="true" data-m2-drag="${t.id}"` : '');
   const scheduled = () => state.tasks.filter((t) => sched(t));
   const coversDay = (s, d) => startDay(s) <= d && endDay(s) >= d;
   const weekStart = (d) => addDays(d, -((parse(d).getDay() + 6) % 7));
@@ -277,7 +297,7 @@
         const height = s.from ? Math.max(SLOT_PX, (diffMin(s.from, s.to) / 30) * SLOT_PX) : SLOT_PX;
         return `<button class="m2-event ${s.from ? 'is-block' : 'is-point'} st-${st} ${temporal(t) === 'overdue' ? 'is-late' : ''}" style="top:${top}px;height:${height}px" data-m2-open="${t.id}" ${draggable(t)}>
           <span class="m2-time">${s.from ? `${timeOf(s.from)}–${timeOf(s.to)}` : `entro ${timeOf(s.to)}`}</span><span class="od-clamp-2">${esc(t.title)}</span>
-          ${s.from && canDrag() && st === 'open' ? `<span class="m2-resize" data-m2-resize="${t.id}" title="Trascina per cambiare la fine"></span>` : ''}</button>`;
+          ${s.from && canDrag() && isActive(t) ? `<span class="m2-resize" data-m2-resize="${t.id}" title="Trascina per cambiare la fine"></span>` : ''}</button>`;
       }).join('');
       const nowLine = d === today ? `<div class="m2-now" style="top:${((minutesOfDay(NOW) - HOURS.start * 60) / 30) * SLOT_PX}px"></div>` : '';
       return `<div class="m2-col" data-m2-col="${d}">${slots}${events}${nowLine}</div>`;
@@ -292,13 +312,13 @@
     const span = variant === 'A' ? horizon : 14;
     const days = Array.from({ length: span }, (_, i) => addDays(calendarDay, i));
     return (variant === 'A' ? horizonPicker('m2-horizon-a') : '') + days.map((d) => {
-      const items = scheduled().filter((t) => coversDay(sched(t), d) && (status(t) === 'open' || endDay(sched(t)) === d));
+      const items = scheduled().filter((t) => coversDay(sched(t), d) && (isActive(t) || endDay(sched(t)) === d));
       return items.length ? `<div class="m2-day"><h3 class="m2-group">${esc(dayName(d, { weekday: 'long', day: 'numeric', month: 'long' }))}${d === today ? ' <span class="pill blue">Oggi</span>' : ''}</h3><div class="task-list">${items.map((t) => row(t, { note: sched(t).from && startDay(sched(t)) === d && endDay(sched(t)) !== d ? 'inizia' : '' })).join('')}</div></div>` : '';
     }).join('') || `<p class="muted">Niente nei prossimi ${span} giorni.</p>`;
   }
 
   function unscheduledPanel() {
-    const all = state.tasks.filter((t) => !sched(t) && status(t) === 'open');
+    const all = state.tasks.filter((t) => !sched(t) && isActive(t));
     const spaces = [...new Set(all.map((t) => t.space))].sort();
     const items = all.filter((t) => !panelSpace || t.space === panelSpace).sort((a, b) => a.id - b.id);
     return `<aside class="m2-panel" aria-label="Task senza data"><div class="section-head"><h2>Senza data</h2><span class="number">${items.length}</span></div>
@@ -331,8 +351,8 @@
     const st = status(t);
     return `<div class="m2-popover" style="left:${popover.x}px;top:${popover.y}px" role="dialog" aria-label="${esc(t.title)}">
       <strong>${esc(t.title)}</strong><small class="muted">${esc(t.space)} · ${esc(label(sched(t)))}</small>
-      <small>${{ open: 'Aperto', completed: 'Completato', skipped: 'Saltato' }[st]}${TEMPORAL_PILL[temporal(t)] ? ' · ' + (temporal(t) === 'overdue' ? 'in ritardo' : 'in corso') : ''}</small>
-      <div class="od-row">${st === 'open' ? `<button class="btn primary" data-m2-complete="${t.id}">Completa</button><button class="btn" data-m2-skip="${t.id}">Salta</button>` : `<button class="btn" data-m2-reopen="${t.id}">Riapri</button>`}<button class="btn" data-nav="task" data-arg="${t.id}">Apri</button></div></div>`;
+      <small>${STATUS_LABEL[st]}${TEMPORAL_PILL[temporal(t)] ? ' · ' + (temporal(t) === 'overdue' ? 'in ritardo' : 'in svolgimento') : ''}</small>
+      <div class="od-row">${isActive(t) ? `<button class="btn primary" data-m2-complete="${t.id}">Completa</button>${st === 'open' ? `<button class="btn" data-m2-col="in_progress" data-m2-col-task="${t.id}">Inizia</button>` : ''}<button class="btn" data-m2-skip="${t.id}">Salta</button>` : `<button class="btn" data-m2-reopen="${t.id}">Riapri</button>`}<button class="btn" data-nav="task" data-arg="${t.id}">Apri</button></div></div>`;
   }
   function undoToast(t) {
     let el = document.getElementById('m2-toast');
@@ -401,7 +421,9 @@
     if (d.m2Strip) { stripDay = d.m2Strip; render(); return; }
     if (d.m2Tab) { dashTab = d.m2Tab; render(); return; }
     if (d.m2ToAgenda !== undefined) { calView = 'agenda'; calendarDay = today; nav('calendar'); return; }
-    if (d.m2HorizonA || d.m2HorizonB) { horizon = Number(d.m2HorizonA || d.m2HorizonB); render(); return; }
+    if (d.m2HorizonA) { horizon = Number(d.m2HorizonA); render(); return; }
+    if (d.m2BoardHorizon !== undefined) { boardHorizon = Number(d.m2BoardHorizon); render(); return; }
+    if (d.m2Col) { const t = byId(d.m2ColTask); setColumn(t, d.m2Col); popover = null; render(); if (d.m2Col === 'completed') undoToast(t); return; }
     if (d.m2View) { calView = d.m2View; popover = null; render(); return; }
     if (d.m2Goto) { calendarDay = d.m2Goto; calView = 'day'; render(); return; }
     if (d.m2Today !== undefined) { calendarDay = today; render(); return; }
@@ -431,15 +453,26 @@
   // drag: occorrenze open (sposta) e task del pannello (pianifica)
   document.addEventListener('dragstart', (e) => {
     if (resizing) { e.preventDefault(); return; }
-    const el = e.target.closest('[data-m2-drag],[data-m2-new]');
+    const el = e.target.closest('[data-m2-drag],[data-m2-new],[data-m2-card]');
     if (!el) return;
-    e.dataTransfer.setData('text/plain', el.dataset.m2Drag ? `move:${el.dataset.m2Drag}` : `new:${el.dataset.m2New}`);
+    e.dataTransfer.setData('text/plain', el.dataset.m2Card ? `card:${el.dataset.m2Card}` : el.dataset.m2Drag ? `move:${el.dataset.m2Drag}` : `new:${el.dataset.m2New}`);
     e.dataTransfer.effectAllowed = 'move';
     popover = null;
   });
-  document.addEventListener('dragover', (e) => { const z = e.target.closest('.m2-drop'); if (z) { e.preventDefault(); z.classList.add('is-over'); } });
-  document.addEventListener('dragleave', (e) => e.target.closest?.('.m2-drop')?.classList.remove('is-over'));
+  document.addEventListener('dragover', (e) => { const z = e.target.closest('.m2-drop,.m2-col-drop'); if (z) { e.preventDefault(); z.classList.add('is-over'); } });
+  document.addEventListener('dragleave', (e) => e.target.closest?.('.m2-drop,.m2-col-drop')?.classList.remove('is-over'));
   document.addEventListener('drop', (e) => {
+    const col = e.target.closest('.m2-col-drop');
+    if (col) {
+      e.preventDefault();
+      const [kind, id] = e.dataTransfer.getData('text/plain').split(':');
+      const t = byId(id);
+      if (kind !== 'card' || !t) return;
+      setColumn(t, col.dataset.m2ColDrop);
+      render();
+      if (col.dataset.m2ColDrop === 'completed') undoToast(t);
+      return;
+    }
     const z = e.target.closest('.m2-drop');
     if (!z) return;
     e.preventDefault();
