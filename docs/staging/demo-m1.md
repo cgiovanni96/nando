@@ -59,7 +59,8 @@ Questa parte è distruttiva: cancella i dati dello staging, che in M1 sono solo 
 6. Smoke:
 
    - `https://<vps>.<tailnet>.ts.net/healthz` → `{"status":"ok"}`
-   - `/api/health` → healthy
+   - `/api/system/info` → 200 (`/api/health` resta interno: dal tailnet il proxy di `web` risponde 404)
+   - `/api/spaces` → un solo Space, `Vita`
    - `/api/reference` → Scalar (lo staging ha `DOCS_ENABLED=true`)
 
 ## 3. Demo del flusso 1
@@ -98,8 +99,8 @@ Il leader `n` e `?` non scattano mentre scrivi in un campo o dentro una modale; 
 NAS-151 è in staging: un task dentro uno Space archiviato non è più modificabile.
 
 - [x] Deploy del fix NAS-151 verde su staging.
-- [ ] Deploy di NAS-152 verde su staging.
-- [ ] Sezione 2 completata: staging ricreato da un database vuoto.
+- [x] Deploy di NAS-152 verde su staging.
+- [x] Sezione 2 completata: staging ricreato da un database vuoto il 2026-11-22 (run `45044243821`). Il primo tentativo ha fatto emergere la race del healthcheck di Postgres al primo init, corretta con `pg_isready -h 127.0.0.1`.
 - [ ] Sezioni 3 e 3b completate su desktop e telefono.
 
 Con queste voci spuntate la roadmap porta M1 a **Done** e M2 può partire. Non c'è una settimana d'uso per milestone: ce n'è una sola, in M7, per la v1 (ADR-0027). L'attrito trovato usando lo staging diventa un ticket.

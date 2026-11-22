@@ -19,8 +19,10 @@ services:
       postgres
       -c shared_preload_libraries=pg_stat_statements
       -c log_min_duration_statement=500
+    # -h: al primo init il server temporaneo ascolta solo sul socket; via TCP
+    # il check aspetta il server vero, quello che migrate raggiunge su db:5432.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nando -d nando_dev"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U nando -d nando_dev"]
       interval: 5s
       timeout: 5s
       retries: 10
