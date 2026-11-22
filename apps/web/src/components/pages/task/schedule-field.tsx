@@ -12,7 +12,7 @@ import { DatePicker, TimeInput } from "@mantine/dates";
 import { useDisclosure, useUncontrolled } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import type { ChangeEvent, FocusEventHandler, ReactNode } from "react";
+import { useState, type ChangeEvent, type FocusEventHandler, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -72,6 +72,20 @@ export function ScheduleField({
     ...(onChange ? { onChange } : {}),
     finalValue: EMPTY_DRAFT,
   });
+
+  // Il DatePicker a intervallo segnala prima `[inizio, null]` e poi
+  // `[inizio, fine]`: il primo click resta in sospeso finché non arriva il
+  // secondo, altrimenti ogni click ricomincerebbe la selezione.
+  const [pendingRange, setPendingRange] = useState<[string | null, string | null] | null>(null);
+
+  function handleRange([first, second]: [string | null, string | null]) {
+    if (first && !second) {
+      setPendingRange([first, null]);
+      return;
+    }
+    setPendingRange(null);
+    setDraft(setDraftDates(draft, [first, second]));
+  }
 
   const formatted = formatDraft(draft);
   const placeholder = t("task.form.dueAtPlaceholder");
@@ -147,8 +161,8 @@ export function ScheduleField({
                 <DatePicker
                   type="range"
                   allowSingleDateInRange
-                  value={[draft.start?.date ?? null, draft.end?.date ?? null]}
-                  onChange={([first, second]) => setDraft(setDraftDates(draft, [first, second]))}
+                  value={pendingRange ?? [draft.start?.date ?? null, draft.end?.date ?? null]}
+                  onChange={handleRange}
                   {...PICKER_PROPS}
                 />
               ) : (
