@@ -51,3 +51,23 @@
 .m2-debug pre{max-height:240px;overflow:auto;white-space:pre-wrap}
 
 @media (max-width:900px){.m2-cal.with-panel{grid-template-columns:1fr}}
+
+/* varianti di «Prossimi» */
+.m2-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:8px 0 12px}
+.m2-strip-day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}
+.m2-strip-day small{color:var(--muted);text-transform:capitalize}
+.m2-strip-day.is-active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.m2-strip-count{font-size:12px;font-variant-numeric:tabular-nums}
+.m2-strip-count.is-zero{color:var(--muted)}
+.m2-summary{display:flex;gap:16px;align-items:center;width:100%;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}
+.m2-summary span:last-child{margin-left:auto}
+.m2-tabs{display:flex;gap:4px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+.m2-tab{display:flex;gap:6px;align-items:center;padding:8px 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--muted);font:inherit;font-weight:600;cursor:pointer}
+.m2-tab.is-active{color:var(--fg);border-bottom-color:var(--accent)}
+.m2-horizon{margin:0 0 12px}
+.m2-section-title{display:flex;gap:8px;align-items:center;margin:20px 0 6px;font-size:16px}
+.m2-placeholder{border:1px dashed var(--line);border-radius:var(--radius);padding:16px}
+.m2-switcher{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;display:flex;gap:10px;align-items:center;padding:6px 10px;border-radius:999px;background:#7c3aed;color:#fff;font-size:13px;box-shadow:0 6px 20px rgb(0 0 0 / .25)}
+.m2-switcher button{border:0;background:rgb(255 255 255 / .18);color:#fff;border-radius:999px;width:28px;height:28px;cursor:pointer;font:inherit}
+.m2-switcher small{opacity:.75}
+@media (max-width:720px){.m2-switcher{bottom:76px}}

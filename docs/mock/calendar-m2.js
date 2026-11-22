@@ -143,45 +143,105 @@
     </div>`;
   }
 
+  // ── varianti di «Prossimi» (?variant=A|B|C) ─────────────────────────────
+  // A: striscia della settimana dentro Oggi + Agenda del calendario con orizzonte 7/15/30.
+  // B: pagina «Task» nella sidebar con orizzonte 7/15/30; in dashboard solo Oggi + riepilogo.
+  // C: tab Oggi / Prossimi 7 giorni dentro il widget della dashboard.
+  const VARIANTS = { A: 'Striscia + Agenda', B: 'Pagina Task', C: 'Tab in dashboard' };
+  let variant = new URLSearchParams(location.search).get('variant')?.toUpperCase();
+  if (!VARIANTS[variant]) variant = 'A';
+  let stripDay = today; // A
+  let dashTab = 'today'; // C
+  let horizon = 7; // A (Agenda) e B (pagina Task)
+  let tasksSpace = ''; // B
+
   // ── dashboard ─────────────────────────────────────────────────────────
-  dashboard = function dashboardM2() {
-    const open = state.tasks.filter((t) => sched(t) && status(t) === 'open');
-    const byTime = (a, b) => sched(a).to.localeCompare(sched(b).to);
-    const groups = [
+  const openScheduled = () => state.tasks.filter((t) => sched(t) && status(t) === 'open');
+  const byTime = (a, b) => sched(a).to.localeCompare(sched(b).to);
+  const dayEntries = (d, pool = openScheduled()) => pool.flatMap((t) => {
+    const s = sched(t);
+    if (endDay(s) === d) return [[t, '']];
+    if (s.from && startDay(s) === d) return [[t, 'inizia']];
+    return [];
+  }).sort(([a], [b]) => byTime(a, b));
+  const dayList = (entries, empty = 'Niente in scadenza.') => (entries.length ? `<div class="task-list">${entries.map(([t, n]) => row(t, { note: n })).join('')}</div>` : `<p class="muted small">${empty}</p>`);
+  const longDay = (d) => esc(dayName(d, { weekday: 'long', day: 'numeric', month: 'long' }));
+
+  function todayGroups() {
+    const open = openScheduled();
+    return [
       ['In ritardo', open.filter((t) => temporal(t) === 'overdue').sort(byTime)],
       ['In corso', open.filter((t) => temporal(t) === 'current').sort(byTime)],
       ['Scade oggi', open.filter((t) => temporal(t) === 'today').sort(byTime)],
     ];
-    const total = groups.reduce((n, [, g]) => n + g.length, 0);
+  }
+  function todayBody() {
+    const groups = todayGroups(), total = groups.reduce((n, [, g]) => n + g.length, 0);
     let budget = todayExpanded ? Infinity : 7;
-    const todayHtml = groups.map(([name, g]) => {
+    const html = groups.map(([name, g]) => {
       const shown = g.slice(0, Math.max(0, budget));
       budget -= shown.length;
       return shown.length ? `<h3 class="m2-group">${name} <span class="muted">${g.length}</span></h3><div class="task-list">${shown.map((t) => row(t)).join('')}</div>` : '';
     }).join('');
+    return { total, html: `${total ? html : '<div class="empty"><h3>Niente per oggi</h3></div>'}${total > 7 ? `<button class="text-btn m2-more" data-m2-expand>${todayExpanded ? 'Mostra meno' : `Mostra tutte (${total})`}</button>` : ''}` };
+  }
+  const nextDays = (n) => Array.from({ length: n }, (_, i) => addDays(today, i + 1)); // esclude oggi
 
-    const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-    const nextHtml = days.map((d) => {
-      const items = open.flatMap((t) => {
-        const s = sched(t);
-        if (endDay(s) === d) return [[t, '']];
-        if (s.from && startDay(s) === d) return [[t, 'inizia']];
-        return [];
-      });
-      return `<div class="m2-day"><h3 class="m2-group">${esc(dayName(d, { weekday: 'long', day: 'numeric', month: 'long' }))}${d === today ? ' <span class="pill blue">Oggi</span>' : ''}</h3>${items.length ? `<div class="task-list">${items.map(([t, n]) => row(t, { note: n })).join('')}</div>` : '<p class="muted small">Niente in scadenza.</p>'}</div>`;
-    }).join('');
+  function widgetA() {
+    const days = [today, ...nextDays(6)];
+    const strip = `<div class="m2-strip" role="tablist" aria-label="Settimana">${days.map((d) => {
+      const n = d === today ? todayBody().total : dayEntries(d).length;
+      return `<button role="tab" class="m2-strip-day ${d === stripDay ? 'is-active' : ''}" aria-selected="${d === stripDay}" data-m2-strip="${d}"><small>${d === today ? 'Oggi' : esc(dayName(d, { weekday: 'short' }))}</small><strong>${parse(d).getDate()}</strong><span class="m2-strip-count ${n ? '' : 'is-zero'}">${n || '·'}</span></button>`;
+    }).join('')}</div>`;
+    const isToday = stripDay === today, body = todayBody();
+    return `<div class="section-head"><h2>${isToday ? 'Oggi' : longDay(stripDay)}</h2><span class="number">${isToday ? body.total : dayEntries(stripDay).length}</span><button class="text-btn" style="margin-left:auto" data-m2-to-agenda>Agenda →</button></div>
+      ${strip}${isToday ? body.html : dayList(dayEntries(stripDay))}${isToday ? quickTaskRow() : ''}`;
+  }
+  function widgetB() {
+    const body = todayBody(), tomorrow = dayEntries(addDays(today, 1)).length, week = nextDays(6).reduce((n, d) => n + dayEntries(d).length, 0);
+    return `<div class="section-head"><h2>Oggi</h2><span class="number">${body.total}</span></div>${body.html}${quickTaskRow()}
+      <button class="m2-summary" data-nav="tasks"><span>Domani <strong>${tomorrow}</strong></span><span>Prossimi 7 giorni <strong>${week}</strong></span><span class="muted">Task →</span></button>`;
+  }
+  function widgetC() {
+    const body = todayBody(), week = nextDays(6);
+    const weekCount = week.reduce((n, d) => n + dayEntries(d).length, 0);
+    const tabs = `<div class="m2-tabs" role="tablist">${[['today', 'Oggi', body.total], ['next', 'Prossimi 7 giorni', weekCount]].map(([k, l, n]) => `<button role="tab" aria-selected="${dashTab === k}" class="m2-tab ${dashTab === k ? 'is-active' : ''}" data-m2-tab="${k}">${l} <span class="number">${n}</span></button>`).join('')}</div>`;
+    const content = dashTab === 'today' ? body.html + quickTaskRow() : week.map((d) => { const e = dayEntries(d); return e.length ? `<div class="m2-day"><h3 class="m2-group">${longDay(d)}</h3>${dayList(e)}</div>` : ''; }).join('') || '<p class="muted">Niente nei prossimi giorni.</p>';
+    return tabs + content;
+  }
 
+  dashboard = function dashboardM2() {
+    const widget = { A: widgetA, B: widgetB, C: widgetC }[variant]();
     return `<div data-screen="dashboard">${heading('Un po’ di ordine, ogni giorno.', 'Mercoledì 28 ottobre 2026 · ore 09:30', `<button class="btn primary" data-action="capture">${icon('plus')} Cattura rapida</button>`)}
       <div class="dash-grid"><div>
-        <section class="today-area"><div class="section-head"><h2>Oggi</h2><span class="number">${total}</span><button class="text-btn" style="margin-left:auto" data-nav="calendar">Calendario →</button></div>
-          ${total ? todayHtml : '<div class="empty"><h3>Niente per oggi</h3></div>'}
-          ${total > 7 ? `<button class="text-btn m2-more" data-m2-expand>${todayExpanded ? 'Mostra meno' : `Mostra tutte (${total})`}</button>` : ''}
-          ${quickTaskRow()}
-        </section>
-        <section class="section"><div class="section-head">${icon('calendar')}<h2>Prossimi 7 giorni</h2></div>${nextHtml}</section>
+        <section class="today-area">${widget}</section>
+        <section class="section m2-placeholder"><p class="muted small">Spazio per i prossimi widget della dashboard (Habit, note, progetti…).</p></section>
       </div><aside><button class="inbox-panel" data-nav="inbox">${icon('inbox')}<span class="od-field"><strong>Inbox</strong><small>Un posto per iniziare, senza organizzare.</small></span><span class="number">${state.tasks.filter((t) => !t.done && t.space === 'Inbox').length}</span>${icon('arrow')}</button></aside></div>
       ${debugBar()}</div>`;
   };
+
+  // ── B: pagina «Task» ──────────────────────────────────────────────────
+  const horizonPicker = (attr) => `<div class="od-row m2-horizon">${[7, 15, 30].map((n) => `<button class="btn ${horizon === n ? 'primary' : ''}" data-${attr}="${n}">${n} giorni</button>`).join('')}</div>`;
+  function tasksPage() {
+    const all = state.tasks.filter((t) => status(t) === 'open' && (!tasksSpace || t.space === tasksSpace));
+    const spaces = [...new Set(state.tasks.map((t) => t.space))].sort();
+    const late = all.filter((t) => temporal(t) === 'overdue').sort(byTime);
+    const current = all.filter((t) => temporal(t) === 'current').sort(byTime);
+    const days = [today, ...nextDays(horizon - 1)];
+    const undated = all.filter((t) => !sched(t));
+    const daysHtml = days.map((d) => { const e = dayEntries(d, all.filter((t) => sched(t) && temporal(t) !== 'overdue')); return e.length ? `<div class="m2-day"><h3 class="m2-group">${longDay(d)}${d === today ? ' <span class="pill blue">Oggi</span>' : ''}</h3>${dayList(e)}</div>` : ''; }).join('');
+    return `<section data-screen="tasks">${heading('Task', `Aperti nei prossimi ${horizon} giorni, più ritardi e task senza data.`)}
+      <div class="calendar-toolbar">${horizonPicker('m2-horizon-b')}<label class="small od-row">Space <select data-m2-tasks-space><option value="">Tutti</option>${spaces.map((s) => `<option ${s === tasksSpace ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label></div>
+      ${late.length ? `<h2 class="m2-section-title">In ritardo <span class="number">${late.length}</span></h2><div class="task-list">${late.map((t) => row(t)).join('')}</div>` : ''}
+      ${current.length ? `<h2 class="m2-section-title">In corso <span class="number">${current.length}</span></h2><div class="task-list">${current.map((t) => row(t)).join('')}</div>` : ''}
+      <h2 class="m2-section-title">Per giorno</h2>${daysHtml || '<p class="muted">Niente in scadenza.</p>'}
+      <h2 class="m2-section-title">Senza data <span class="number">${undated.length}</span></h2>${undated.length ? `<div class="task-list">${undated.map((t) => `<div class="task-row m2-row"><input type="checkbox" data-m2-check="${t.id}" aria-label="Completa ${esc(t.title)}"><button class="task-name" data-nav="task" data-arg="${t.id}">${esc(t.title)}</button><span class="task-space">${esc(t.space)}</span><span class="task-date">Senza data</span></div>`).join('')}</div>` : '<p class="muted small">Tutto pianificato.</p>'}
+      ${debugBar()}</section>`;
+  }
+  const basePage = page;
+  page = function pageM2() { return view === 'tasks' && variant === 'B' ? tasksPage() : basePage(); };
+  const baseCrumb = crumb;
+  crumb = function crumbM2() { return view === 'tasks' ? '<span class="current">Task</span>' : baseCrumb(); };
 
   // ── calendario ────────────────────────────────────────────────────────
   const canDrag = () => matchMedia('(min-width: 900px) and (pointer: fine)').matches;
@@ -229,11 +289,12 @@
   }
 
   function agendaView() {
-    const days = Array.from({ length: 14 }, (_, i) => addDays(calendarDay, i));
-    return days.map((d) => {
+    const span = variant === 'A' ? horizon : 14;
+    const days = Array.from({ length: span }, (_, i) => addDays(calendarDay, i));
+    return (variant === 'A' ? horizonPicker('m2-horizon-a') : '') + days.map((d) => {
       const items = scheduled().filter((t) => coversDay(sched(t), d) && (status(t) === 'open' || endDay(sched(t)) === d));
       return items.length ? `<div class="m2-day"><h3 class="m2-group">${esc(dayName(d, { weekday: 'long', day: 'numeric', month: 'long' }))}${d === today ? ' <span class="pill blue">Oggi</span>' : ''}</h3><div class="task-list">${items.map((t) => row(t, { note: sched(t).from && startDay(sched(t)) === d && endDay(sched(t)) !== d ? 'inizia' : '' })).join('')}</div></div>` : '';
-    }).join('') || '<p class="muted">Niente nei prossimi 14 giorni.</p>';
+    }).join('') || `<p class="muted">Niente nei prossimi ${span} giorni.</p>`;
   }
 
   function unscheduledPanel() {
@@ -289,8 +350,32 @@
   }
 
   const baseRender = render;
+  function switcherHtml() {
+    const keys = Object.keys(VARIANTS);
+    return `<div class="m2-switcher" role="group" aria-label="Variante del prototype"><button data-m2-variant-step="-1" aria-label="Variante precedente">←</button><span>${variant} · ${VARIANTS[variant]}</span><button data-m2-variant-step="1" aria-label="Variante successiva">→</button><small>${keys.indexOf(variant) + 1}/${keys.length}</small></div>`;
+  }
+  function setVariant(step) {
+    const keys = Object.keys(VARIANTS);
+    variant = keys[(keys.indexOf(variant) + step + keys.length) % keys.length];
+    const url = new URL(location.href);
+    url.searchParams.set('variant', variant);
+    history.replaceState(null, '', url);
+    if (view === 'tasks' && variant !== 'B') view = 'dashboard';
+    render();
+  }
+
   render = function renderM2() {
     baseRender();
+    if (variant === 'B') {
+      const item = `<button class="nav-item ${view === 'tasks' ? 'active' : ''}" data-nav="tasks" title="Task">${icon('check')}<span class="hide-rail od-field">Task</span></button>`;
+      document.querySelector('.sidebar [data-nav="calendar"]')?.insertAdjacentHTML('afterend', item);
+      document.querySelector('.bottom-nav [data-nav="calendar"]')?.insertAdjacentHTML('afterend', `<button data-nav="tasks" class="${view === 'tasks' ? 'active' : ''}">${icon('check')}<span>Task</span></button>`);
+    }
+    document.getElementById('m2-switcher-host')?.remove();
+    const sw = document.createElement('div');
+    sw.id = 'm2-switcher-host';
+    sw.innerHTML = switcherHtml();
+    document.body.append(sw);
     document.getElementById('m2-popover-host')?.remove();
     if (popover && view === 'calendar') {
       const host = document.createElement('div');
@@ -312,6 +397,11 @@
     if (d.m2Skip) { const t = byId(d.m2Skip); skip(t); popover = null; render(); toast(`Saltato «${t.title}»`); return; }
     if (d.m2Reopen || d.m2Undo) { const t = byId(d.m2Reopen || d.m2Undo); reopen(t); popover = null; document.getElementById('m2-toast')?.setAttribute('hidden', ''); render(); return; }
     if (d.m2Expand !== undefined) { todayExpanded = !todayExpanded; render(); return; }
+    if (d.m2VariantStep) { setVariant(Number(d.m2VariantStep)); return; }
+    if (d.m2Strip) { stripDay = d.m2Strip; render(); return; }
+    if (d.m2Tab) { dashTab = d.m2Tab; render(); return; }
+    if (d.m2ToAgenda !== undefined) { calView = 'agenda'; calendarDay = today; nav('calendar'); return; }
+    if (d.m2HorizonA || d.m2HorizonB) { horizon = Number(d.m2HorizonA || d.m2HorizonB); render(); return; }
     if (d.m2View) { calView = d.m2View; popover = null; render(); return; }
     if (d.m2Goto) { calendarDay = d.m2Goto; calView = 'day'; render(); return; }
     if (d.m2Today !== undefined) { calendarDay = today; render(); return; }
@@ -329,7 +419,14 @@
       if (el.checked) { complete(t); render(); undoToast(t); } else { reopen(t); render(); }
     }
     if (el.dataset.m2PanelSpace !== undefined) { panelSpace = el.value; render(); }
+    if (el.dataset.m2TasksSpace !== undefined) { tasksSpace = el.value; render(); }
   }, true);
+
+  document.addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(e.key) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if ((e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable="true"]')) || document.querySelector('dialog[open]')) return;
+    setVariant(e.key === 'ArrowLeft' ? -1 : 1);
+  });
 
   // drag: occorrenze open (sposta) e task del pannello (pianifica)
   document.addEventListener('dragstart', (e) => {

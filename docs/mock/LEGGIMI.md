@@ -14,7 +14,11 @@ Aprire `index.html` nel browser. Non serve installare dipendenze.
 
 Ora dimostrativa: 28/10/2026 09:30. `calendar-m2.js` aggiunge task demo con id 9001–9013: range all-day e timed, scadenze a un'ora, task in ritardo e task senza data.
 
-- **Dashboard:** Oggi è diviso in In ritardo, In corso e Scade oggi, con al massimo 7 righe e «Mostra tutte (N)». Prossimi 7 giorni va da oggi a +6; un range compare anche nel giorno di inizio come «inizia». La checkbox completa e mostra un toast con «Annulla» (rettifica); ⤼ salta.
+- **Dashboard:** Oggi è diviso in In ritardo, In corso e Scade oggi, con al massimo 7 righe e «Mostra tutte (N)». La checkbox completa e mostra un toast con «Annulla» (rettifica); ⤼ salta. «Prossimi» non è più una lista sotto Oggi: ci sono tre varianti, che si scelgono con `?variant=` oppure con la barra viola in basso (o con i tasti ← →):
+  - **A · Striscia + Agenda:** dentro Oggi c'è una striscia dei 7 giorni con il numero di task per giorno; cliccando un giorno il widget mostra quel giorno. L'orizzonte lungo è nella vista Agenda del Calendario, con un selettore 7/15/30 giorni.
+  - **B · Pagina Task:** una nuova voce «Task» nella sidebar, con orizzonte 7/15/30 giorni, ritardi, in corso, lista per giorno, task senza data e filtro per Space. In dashboard resta solo Oggi, con una riga di riepilogo «Domani · Prossimi 7 giorni».
+  - **C · Tab in dashboard:** il widget ha due tab, Oggi e Prossimi 7 giorni.
+- Un range compare anche nel giorno di inizio, con l'etichetta «inizia».
 - **Calendario:** viste Mese, Settimana, Giorno e Agenda. Il click su una voce apre un popover con Completa, Salta, Riapri e Apri.
 - **Drag** (solo desktop, con finestra di almeno 900 px e mouse): si trascinano solo le occorrenze aperte. La durata resta uguale; un all-day resta all-day e un timed mantiene l'ora se cade su un giorno. La maniglia in basso di un blocco timed ne cambia la fine.
 - **Pannello «senza data»** nella vista Settimana, con filtro per Space. Sul giorno o sulla riga all-day il task riceve una scadenza all-day; su uno slot orario, una scadenza a quell'ora.
