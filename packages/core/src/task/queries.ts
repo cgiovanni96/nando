@@ -4,10 +4,10 @@ import type { SQL } from "drizzle-orm";
 import { clampLimit, decodeIdCursor, encodeCursor } from "../db/cursor";
 import type { InboxCursor, InboxItem } from "../space/domain";
 import type { InboxSourceQuery } from "../space/ports";
-import type { Task, TaskStatus } from "./domain";
+import type { Task, TaskHistoryEntry, TaskStatus } from "./domain";
 import { findTaskIncludingDeleted, taskViewColumns, toTask } from "./mapper";
 import type { TaskDatabase } from "./ports";
-import { task, taskOccurrence } from "./schema";
+import { task, taskCompletion, taskOccurrence, taskRectification } from "./schema";
 
 export type TaskQueryDeps = {
   db: TaskDatabase;
@@ -36,6 +36,52 @@ export function createTaskQueries({ db }: TaskQueryDeps) {
      */
     async get(taskId: string): Promise<Task | null> {
       return findTaskIncludingDeleted(db, taskId);
+    },
+
+    /**
+     * Storico dell'occorrenza, dal più recente: completamenti, riaperture
+     * (rettifiche) e chiusura per skip o cancel. Niente si cancella: una
+     * riapertura si aggiunge accanto al completamento che annulla.
+     * `null` se il task non esiste.
+     */
+    async history(taskId: string): Promise<TaskHistoryEntry[] | null> {
+      const [occurrence] = await db
+        .select({
+          id: taskOccurrence.id,
+          status: taskOccurrence.status,
+          closedAt: taskOccurrence.closedAt,
+        })
+        .from(taskOccurrence)
+        .where(eq(taskOccurrence.taskId, taskId))
+        .limit(1);
+
+      if (!occurrence) return null;
+
+      const rows = await db
+        .select({
+          completionId: taskCompletion.id,
+          occurredAt: taskCompletion.occurredAt,
+          rectifiedAt: taskRectification.createdAt,
+        })
+        .from(taskCompletion)
+        .leftJoin(taskRectification, eq(taskRectification.completionId, taskCompletion.id))
+        .where(eq(taskCompletion.occurrenceId, occurrence.id));
+
+      const entries: TaskHistoryEntry[] = rows.flatMap((row) => {
+        const completed: TaskHistoryEntry = { kind: "completed", at: row.occurredAt };
+        return row.rectifiedAt
+          ? [completed, { kind: "reopened", at: row.rectifiedAt }]
+          : [completed];
+      });
+
+      if (
+        (occurrence.status === "skipped" || occurrence.status === "cancelled") &&
+        occurrence.closedAt
+      ) {
+        entries.push({ kind: occurrence.status, at: occurrence.closedAt });
+      }
+
+      return entries.sort((a, b) => b.at.getTime() - a.at.getTime());
     },
 
     async list(

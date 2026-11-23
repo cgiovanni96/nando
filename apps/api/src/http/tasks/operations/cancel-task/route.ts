@@ -31,7 +31,8 @@ export function createCancelTaskRoute(deps: ApiDeps, tasks: TaskModule) {
       tags: ["tasks"],
       summary: "Cancella un task",
       description:
-        "Comando di intento idempotente: porta l'occorrenza da `open` a `cancelled`. " +
+        "Comando di intento idempotente: porta l'occorrenza da `open` o `in_progress` a `cancelled`, " +
+        "senza Completion. " +
         "Cancellare un task già cancellato restituisce lo stesso risultato; uno stato " +
         "`completed` o `skipped` è terminale e restituisce 422. Un task completato si " +
         "rettifica, non si cancella (ADR-0004).",

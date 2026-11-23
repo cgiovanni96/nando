@@ -3,6 +3,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
+  isTerminalStatus,
   normalizeTaskTitle,
   restorableUntil,
   restoreViolation,
@@ -22,6 +23,27 @@ describe("task status transitions", () => {
     expect(transitionViolation("open", "completed")).toBeNull();
     expect(transitionViolation("open", "skipped")).toBeNull();
     expect(transitionViolation("open", "cancelled")).toBeNull();
+  });
+
+  it("moves between open and in_progress and closes from both (ADR-0028)", () => {
+    expect(transitionViolation("open", "in_progress")).toBeNull();
+    expect(transitionViolation("in_progress", "open")).toBeNull();
+    expect(transitionViolation("in_progress", "completed")).toBeNull();
+    expect(transitionViolation("in_progress", "skipped")).toBeNull();
+    expect(transitionViolation("in_progress", "cancelled")).toBeNull();
+    expect(isTerminalStatus("in_progress")).toBe(false);
+  });
+
+  it("does not leave a terminal state with a plain transition: reopening is a rectification", () => {
+    expect(transitionViolation("completed", "open")).toMatchObject({
+      code: "domain_rule_violation",
+    });
+    expect(transitionViolation("completed", "in_progress")).toMatchObject({
+      code: "domain_rule_violation",
+    });
+    expect(transitionViolation("skipped", "in_progress")).toMatchObject({
+      code: "domain_rule_violation",
+    });
   });
 
   it("treats the same status as an idempotent no-op", () => {
@@ -44,6 +66,8 @@ describe("task status transitions", () => {
 
   it("maps each command to its target status", () => {
     expect(TASK_STATUS_TARGETS).toEqual({
+      start: "in_progress",
+      markTodo: "open",
       complete: "completed",
       skip: "skipped",
       cancel: "cancelled",
@@ -56,12 +80,15 @@ describe("task status transitions (properties)", () => {
     expect(transitionViolation(status, status)).toBeNull();
   });
 
-  test.prop([taskStatus, taskStatus])("a status changes only from open", (from, to) => {
-    const violation = transitionViolation(from, to);
+  test.prop([taskStatus, taskStatus])(
+    "a status changes only from open or in_progress",
+    (from, to) => {
+      const violation = transitionViolation(from, to);
 
-    if (from === "open" || from === to) expect(violation).toBeNull();
-    else expect(violation).toMatchObject({ code: "domain_rule_violation" });
-  });
+      if (!isTerminalStatus(from) || from === to) expect(violation).toBeNull();
+      else expect(violation).toMatchObject({ code: "domain_rule_violation" });
+    },
+  );
 });
 
 describe("task fields", () => {

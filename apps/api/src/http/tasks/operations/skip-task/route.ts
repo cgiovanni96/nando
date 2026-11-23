@@ -31,7 +31,8 @@ export function createSkipTaskRoute(deps: ApiDeps, tasks: TaskModule) {
       tags: ["tasks"],
       summary: "Salta un task",
       description:
-        "Comando di intento idempotente: porta l'occorrenza da `open` a `skipped`. " +
+        "Comando di intento idempotente: porta l'occorrenza da `open` o `in_progress` a `skipped`, " +
+        "senza Completion. " +
         "Saltare un task già saltato restituisce lo stesso risultato; uno stato " +
         "`completed` o `cancelled` è terminale e restituisce 422.",
       requestBody: jsonRequestBody(taskCommandRequestSchema, taskCommandRequestExample),

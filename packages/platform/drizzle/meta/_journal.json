@@ -50,6 +50,13 @@
       "when": 1795372681936,
       "tag": "0006_overrated_gamma_corps",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795429740158,
+      "tag": "0007_cooing_sunspot",
+      "breakpoints": true
     }
   ]
 }

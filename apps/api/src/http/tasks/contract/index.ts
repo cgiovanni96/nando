@@ -49,6 +49,29 @@ export {
   type UpdateTaskRequest,
 } from "@api/http/tasks/operations/update-task/contract";
 export { completedTaskResponseExample } from "@api/http/tasks/operations/complete-task/contract";
+export {
+  startTaskRequestExample,
+  startTaskRequestSchema,
+  startedTaskResponseExample,
+} from "@api/http/tasks/operations/start-task/contract";
+export {
+  markTodoTaskRequestExample,
+  markTodoTaskRequestSchema,
+  markedTodoTaskResponseExample,
+} from "@api/http/tasks/operations/mark-todo-task/contract";
+export {
+  reopenTaskRequestExample,
+  reopenTaskRequestFactory,
+  reopenTaskRequestSchema,
+  reopenedTaskResponseExample,
+  type ReopenTaskRequest,
+} from "@api/http/tasks/operations/reopen-task/contract";
+export {
+  taskHistoryEntrySchema,
+  taskHistoryResponseExample,
+  taskHistoryResponseSchema,
+  type TaskHistoryEntryDto,
+} from "@api/http/tasks/operations/task-history/contract";
 export { skippedTaskResponseExample } from "@api/http/tasks/operations/skip-task/contract";
 export { cancelledTaskResponseExample } from "@api/http/tasks/operations/cancel-task/contract";
 export {
