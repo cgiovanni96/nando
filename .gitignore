@@ -10,3 +10,5 @@ routeTree.gen.ts
 .env
 .env.*
 !.env.example
+
+.orchestrator/
