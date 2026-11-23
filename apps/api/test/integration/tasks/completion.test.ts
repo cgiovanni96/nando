@@ -97,9 +97,9 @@ describe("completion, rectification and history", () => {
     expect(await history(cancelled.id)).toEqual(["cancelled"]);
 
     const refused = await reopen(skipped.id);
-    const error = errorEnvelopeSchema.safeParse(refused.body);
+    const error = errorEnvelopeSchema.parse(refused.body);
     expect(refused.status).toBe(422);
-    if (error.success) expect(error.data.error.code).toBe("domain_rule_violation");
+    expect(error.error.code).toBe("domain_rule_violation");
   });
 
   it("start and markTodo change only the working state; an in-progress task completes and reopens to in progress", async () => {
@@ -115,9 +115,9 @@ describe("completion, rectification and history", () => {
     expect((await run(task.id, "complete")).task?.status).toBe("completed");
 
     const reopened = await reopen(task.id, "in_progress");
-    const parsed = taskResponseSchema.safeParse(reopened.body);
+    const parsed = taskResponseSchema.parse(reopened.body);
     expect(reopened.status).toBe(200);
-    if (parsed.success) expect(parsed.data.data.status).toBe("in_progress");
+    expect(parsed.data.status).toBe("in_progress");
   });
 
   it("an overdue in-progress task stays overdue in the domain sense: its Schedule is unchanged", async () => {
@@ -138,6 +138,8 @@ describe("completion, rectification and history", () => {
 
   it("returns 404 for the history of an unknown task", async () => {
     const response = await get(`/api/tasks/${newId()}/history`);
+    const error = errorEnvelopeSchema.parse(await response.json());
     expect(response.status).toBe(404);
+    expect(error.error.code).toBe("not_found");
   });
 });

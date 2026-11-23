@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   isTerminalStatus,
   normalizeTaskTitle,
+  reopenViolation,
   restorableUntil,
   restoreViolation,
   spaceViolation,
@@ -44,6 +45,13 @@ describe("task status transitions", () => {
     expect(transitionViolation("skipped", "in_progress")).toMatchObject({
       code: "domain_rule_violation",
     });
+  });
+
+  it("reopens only a completed task", () => {
+    expect(reopenViolation("completed")).toBeNull();
+    expect(reopenViolation("in_progress")).toMatchObject({ code: "domain_rule_violation" });
+    expect(reopenViolation("skipped")).toMatchObject({ code: "domain_rule_violation" });
+    expect(reopenViolation("cancelled")).toMatchObject({ code: "domain_rule_violation" });
   });
 
   it("treats the same status as an idempotent no-op", () => {

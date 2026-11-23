@@ -20,6 +20,7 @@ export { space, spaceKind, type SpaceRow } from "./space/schema";
 export {
   isTerminalStatus,
   normalizeTaskTitle,
+  reopenViolation,
   restorableUntil,
   restoreViolation,
   spaceViolation,

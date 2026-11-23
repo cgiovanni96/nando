@@ -4,6 +4,7 @@ import { err, ok } from "@nando/kernel";
 
 import {
   normalizeTaskTitle,
+  reopenViolation,
   restoreViolation,
   spaceViolation,
   TASK_STATUS_TARGETS,
@@ -120,6 +121,18 @@ export function createTaskCommands({
     const now = clock.now();
 
     return runInTransaction(db, tx, async (conn) => {
+      // Lock della riga: due comandi concorrenti (due tab, commandId diversi)
+      // si serializzano e il secondo vede lo stato scritto dal primo, così un
+      // completamento non si registra due volte.
+      const [occurrence] = await conn
+        .select({ id: taskOccurrence.id, activityId: taskOccurrence.activityId })
+        .from(taskOccurrence)
+        .where(eq(taskOccurrence.taskId, taskId))
+        .limit(1)
+        .for("update");
+
+      if (!occurrence) return err(notFound());
+
       const current = await findTask(conn, taskId);
 
       if (!current) return err(notFound());
@@ -134,14 +147,6 @@ export function createTaskCommands({
         current.status,
       );
       if (violation) return err(violation);
-
-      const [occurrence] = await conn
-        .select({ id: taskOccurrence.id, activityId: taskOccurrence.activityId })
-        .from(taskOccurrence)
-        .where(eq(taskOccurrence.taskId, taskId))
-        .limit(1);
-
-      if (!occurrence) return err(notFound());
 
       const extra = options.effect ? await options.effect(conn, occurrence, now) : ok({});
       if (!extra.ok) return extra;
@@ -353,10 +358,7 @@ export function createTaskCommands({
       const target = input.to ?? "open";
 
       return transition(input.taskId, target, tx, {
-        violation: (from) =>
-          from === "completed"
-            ? null
-            : { code: "domain_rule_violation", message: "Si riapre solo un task completato." },
+        violation: reopenViolation,
         effect: async (conn, occurrence, now) => {
           const [active] = await conn
             .select({ id: taskCompletion.id })

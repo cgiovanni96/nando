@@ -34,8 +34,10 @@ export function TaskHistory({ taskId }: TaskHistoryProps) {
         </Text>
       ) : (
         <Timeline active={-1} bulletSize={10} lineWidth={1}>
-          {(history.data ?? []).map((entry) => (
-            <Timeline.Item key={`${entry.kind}-${entry.at}`}>
+          {(history.data ?? []).map((entry, index) => (
+            // L'elenco è solo in lettura e ordinato dal server: l'indice
+            // disambigua due voci con lo stesso istante.
+            <Timeline.Item key={`${entry.kind}-${entry.at}-${index}`}>
               <Group gap="xs" justify="space-between" wrap="nowrap">
                 <Text size="sm">{t(`task.history.kind.${entry.kind}`)}</Text>
                 <Text size="xs" c="dimmed">

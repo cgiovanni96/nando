@@ -146,7 +146,8 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
   });
   const complete = useMutation({
     ...completeTaskMutationOptions,
-    ...refresh(t("task.actions.completed")),
+    // Il toast di successo è proprio: porta «Annulla». L'errore è quello comune.
+    onError: refresh(t("task.actions.completed")).onError,
     onSuccess: () => {
       invalidateTask();
       // «Annulla» è una rettifica (ADR-0004): riapre allo stato di prima.

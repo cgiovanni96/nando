@@ -106,6 +106,17 @@ export function transitionViolation(from: TaskStatus, to: TaskStatus): DomainErr
 }
 
 /**
+ * Si riapre solo un completamento (ADR-0004): la riapertura è una Rectification
+ * del Completion. Riaprire verso lo stato già corrente è un no-op gestito dal
+ * comando prima di questa regola.
+ */
+export function reopenViolation(from: TaskStatus): DomainError | null {
+  if (from === "completed") return null;
+
+  return { code: "domain_rule_violation", message: "Si riapre solo un task completato." };
+}
+
+/**
  * Uno Space archiviato è in sola lettura; uno cancellato non esiste per le
  * viste attive.
  */

@@ -30,9 +30,11 @@ ALTER TABLE "task_occurrence" ADD CONSTRAINT "task_occurrence_status_check" CHEC
 -- NAS-154: le occorrenze completate in M1 non hanno un Completion. Lo si
 -- ricostruisce dall'ultimo aggiornamento, così storico e riapertura valgono
 -- anche per loro; saltate e cancellate ricevono la data di chiusura.
-UPDATE "task_occurrence" SET "activity_id" = gen_random_uuid() WHERE "status" = 'completed' AND "activity_id" IS NULL;--> statement-breakpoint
+-- Gli id sono UUIDv7 come nel resto del sistema (Postgres 17 non ha uuidv7()):
+-- timestamp in millisecondi nei primi 48 bit, bit di versione a 7.
+UPDATE "task_occurrence" AS o SET "activity_id" = encode(set_bit(set_bit(overlay(uuid_send(gen_random_uuid()) placing substring(int8send(floor(extract(epoch from o."updated_at") * 1000)::bigint) from 3) from 1 for 6), 52, 1), 53, 1), 'hex')::uuid WHERE o."status" = 'completed' AND o."activity_id" IS NULL;--> statement-breakpoint
 INSERT INTO "task_completion" ("id", "occurrence_id", "activity_id", "occurred_at", "provenance", "created_at")
-SELECT gen_random_uuid(), o."id", o."activity_id", o."updated_at", 'manual', o."updated_at"
+SELECT encode(set_bit(set_bit(overlay(uuid_send(gen_random_uuid()) placing substring(int8send(floor(extract(epoch from o."updated_at") * 1000)::bigint) from 3) from 1 for 6), 52, 1), 53, 1), 'hex')::uuid, o."id", o."activity_id", o."updated_at", 'manual', o."updated_at"
 FROM "task_occurrence" AS o
 WHERE o."status" = 'completed';--> statement-breakpoint
 UPDATE "task_occurrence" SET "closed_at" = "updated_at" WHERE "status" IN ('skipped', 'cancelled') AND "closed_at" IS NULL;

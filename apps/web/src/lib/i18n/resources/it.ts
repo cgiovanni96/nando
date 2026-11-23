@@ -217,7 +217,7 @@ export const it = {
     },
     history: {
       title: "Storico",
-      empty: "Nessun completamento",
+      empty: "Ancora nessun completamento, salto o annullamento",
       error: "Non è stato possibile caricare lo storico.",
       kind: {
         completed: "Completato",
