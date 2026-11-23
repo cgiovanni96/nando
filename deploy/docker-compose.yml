@@ -11,7 +11,8 @@
 # L'immagine è una sola: web, api, worker e migrate sono comandi diversi.
 # L'immagine ha un solo CMD (web): ogni servizio deve dichiarare il proprio
 # `command`, altrimenti api e worker eseguono il server web.
-# `api.env` e `worker.env` devono contenere OWNER_USER_ID; `web.env` deve
+# `api.env` e `worker.env` devono contenere OWNER_USER_ID; `api.env` può
+# impostare OWNER_TIME_ZONE (IANA, default Europe/Rome); `web.env` deve
 # contenere API_URL e INTERNAL_TOKEN, con lo stesso INTERNAL_TOKEN di api.env.
 
 name: nando

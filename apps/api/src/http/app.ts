@@ -54,6 +54,7 @@ export function createContractApp(deps: ApiDeps) {
     spacePort: {
       get: (spaceId) => spaces.queries.get(spaceId),
     },
+    defaultTimeZone: deps.config.OWNER_TIME_ZONE,
   });
 
   inboxSources.push({

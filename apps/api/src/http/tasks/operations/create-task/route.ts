@@ -27,7 +27,11 @@ export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
       description:
         "Comando idempotente: crea un task con titolo obbligatorio, stato iniziale `open` e " +
         "una sola occorrenza. `spaceId` null significa Inbox; uno Space archiviato è in sola " +
-        "lettura. `dueAt` è la scadenza opzionale.",
+        "lettura. `schedule` è opzionale: con `allDay` true `from` e `to` sono date " +
+        "`YYYY-MM-DD`, altrimenti istanti ISO 8601; `to` è la scadenza e `from` apre un " +
+        "intervallo. La timezone del task è quella dell'owner (`OWNER_TIME_ZONE`). Uno " +
+        "Schedule incoerente (`from` dopo `to`, tipi mescolati, data inesistente) " +
+        "restituisce 400 `validation_error`.",
       requestBody: jsonRequestBody(createTaskRequestSchema, createTaskRequestExample),
       responses: {
         200: jsonResponse(
@@ -50,8 +54,7 @@ export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
         payload: {
           title: payload.title,
           spaceId: payload.spaceId,
-          dueAt: payload.dueAt,
-          dueAtHasTime: payload.dueAtHasTime,
+          schedule: payload.schedule,
         },
         responseSchema: taskResponseSchema,
         execute: async (tx) => {
@@ -59,8 +62,7 @@ export function createCreateTaskRoute(deps: ApiDeps, tasks: TaskModule) {
             {
               title: payload.title,
               spaceId: payload.spaceId,
-              dueAt: payload.dueAt ? new Date(payload.dueAt) : null,
-              dueAtHasTime: payload.dueAtHasTime,
+              schedule: payload.schedule,
             },
             tx,
           );

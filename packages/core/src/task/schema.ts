@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   pgTable,
@@ -22,6 +23,9 @@ export const task = pgTable(
     id: uuid("id").primaryKey(),
     title: text("title").notNull(),
     spaceId: uuid("space_id").references(() => space.id, { onDelete: "restrict" }),
+    // Timezone IANA del Task (ADR-0004): all-day e confini di giorno si
+    // valutano qui. Alla creazione arriva da OWNER_TIME_ZONE.
+    timeZone: text("time_zone").notNull(),
     version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -41,8 +45,13 @@ export const taskOccurrence = pgTable(
       .notNull()
       .references(() => task.id, { onDelete: "restrict" }),
     status: text("status").$type<TaskStatus>().notNull().default("open"),
-    dueAt: timestamp("due_at", { withTimezone: true }),
-    dueHasTime: boolean("due_has_time").notNull().default(true),
+    // Schedule (ADR-0004): date locali se all-day, istanti altrimenti; mai
+    // misti. Tutte nulle = occorrenza senza Schedule (Inbox/backlog).
+    allDay: boolean("all_day").notNull().default(false),
+    startDate: date("start_date", { mode: "string" }),
+    endDate: date("end_date", { mode: "string" }),
+    startAt: timestamp("start_at", { withTimezone: true }),
+    endAt: timestamp("end_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -52,6 +61,14 @@ export const taskOccurrence = pgTable(
     check(
       "task_occurrence_status_check",
       sql`${table.status} in ('open', 'completed', 'skipped', 'cancelled')`,
+    ),
+    check(
+      "task_occurrence_schedule_check",
+      sql`(${table.endDate} is null and ${table.endAt} is null and ${table.startDate} is null and ${table.startAt} is null)
+        or (${table.allDay} and ${table.endDate} is not null and ${table.endAt} is null and ${table.startAt} is null
+          and (${table.startDate} is null or ${table.startDate} <= ${table.endDate}))
+        or (not ${table.allDay} and ${table.endAt} is not null and ${table.endDate} is null and ${table.startDate} is null
+          and (${table.startAt} is null or ${table.startAt} <= ${table.endAt}))`,
     ),
   ],
 );

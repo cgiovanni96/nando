@@ -5,7 +5,7 @@ import { clampLimit, decodeIdCursor, encodeCursor } from "../db/cursor";
 import type { InboxCursor, InboxItem } from "../space/domain";
 import type { InboxSourceQuery } from "../space/ports";
 import type { Task, TaskStatus } from "./domain";
-import { findTaskIncludingDeleted, taskViewColumns } from "./mapper";
+import { findTaskIncludingDeleted, taskViewColumns, toTask } from "./mapper";
 import type { TaskDatabase } from "./ports";
 import { task, taskOccurrence } from "./schema";
 
@@ -77,7 +77,7 @@ export function createTaskQueries({ db }: TaskQueryDeps) {
       const last = items.at(-1);
 
       return {
-        items,
+        items: items.map(toTask),
         nextCursor: hasMore && last ? encodeCursor({ id: last.id }) : null,
       };
     },

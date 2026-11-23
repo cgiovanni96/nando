@@ -9,6 +9,19 @@ const booleanFromEnv = z
 
 const port = z.coerce.number().int().min(1).max(65535);
 
+/** Timezone IANA dell'owner: default dei nuovi task (ADR-0004). */
+const timeZone = z
+  .string()
+  .default("Europe/Rome")
+  .refine((value) => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: value });
+      return true;
+    } catch {
+      return false;
+    }
+  }, "deve essere una timezone IANA, per esempio Europe/Rome");
+
 const logLevel = z
   .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
   .default("info");
@@ -18,6 +31,7 @@ export const apiConfigSchema = z
     NODE_ENV: nodeEnv,
     DATABASE_URL: z.url(),
     OWNER_USER_ID: z.uuid(),
+    OWNER_TIME_ZONE: timeZone,
     INTERNAL_TOKEN: z.string().min(16),
     DOCS_ENABLED: booleanFromEnv,
     PORT: port.default(3000),
@@ -84,6 +98,7 @@ export function parseApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig 
       NODE_ENV: env.NODE_ENV,
       DATABASE_URL: env.DATABASE_URL,
       OWNER_USER_ID: env.OWNER_USER_ID,
+      OWNER_TIME_ZONE: env.OWNER_TIME_ZONE,
       INTERNAL_TOKEN: env.INTERNAL_TOKEN,
       DOCS_ENABLED: env.DOCS_ENABLED,
       PORT: env.PORT,

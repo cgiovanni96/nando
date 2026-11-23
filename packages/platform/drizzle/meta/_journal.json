@@ -36,6 +36,20 @@
       "when": 1794561608309,
       "tag": "0004_sudden_the_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795372662502,
+      "tag": "0005_harsh_thing",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795372681936,
+      "tag": "0006_overrated_gamma_corps",
+      "breakpoints": true
     }
   ]
 }

@@ -22,7 +22,7 @@ describe("task commands", () => {
     expect(task).toMatchObject({
       title: "Comprare il pane",
       status: "open",
-      dueAt: null,
+      schedule: null,
       spaceId: null,
       version: 1,
     });
@@ -35,7 +35,7 @@ describe("task commands", () => {
         commandId: newId(),
         title: "Cattura dalla dashboard",
         spaceId: null,
-        dueAt: null,
+        schedule: null,
       }),
     );
     const parsed = taskResponseSchema.safeParse(await response.json());
@@ -47,7 +47,7 @@ describe("task commands", () => {
         title: "Cattura dalla dashboard",
         status: "open",
         spaceId: null,
-        dueAt: null,
+        schedule: null,
       });
     }
 
@@ -60,17 +60,46 @@ describe("task commands", () => {
     }
   });
 
-  it("creates a task in a Space with a due date", async () => {
+  it("creates a task in a Space with a timed Schedule in the owner time zone", async () => {
     const space = await createSpace();
-    const dueAt = "2026-11-12T18:00:00.000Z";
+    const to = "2026-11-12T18:00:00.000Z";
     const task = await createTask({
       title: "Prenotare la visita",
       spaceId: space.id,
-      dueAt,
+      schedule: { allDay: false, from: null, to },
     });
 
     expect(task.spaceId).toBe(space.id);
-    expect(task.dueAt).toBe(dueAt);
+    expect(task.timeZone).toBe("Europe/Rome");
+    expect(task.schedule).toEqual({ allDay: false, from: null, to, timeZone: "Europe/Rome" });
+  });
+
+  it("creates an all-day range and rejects a Schedule that ends before it starts", async () => {
+    const task = await createTask({
+      title: "Conferenza",
+      schedule: { allDay: true, from: "2026-10-27", to: "2026-10-29" },
+    });
+
+    expect(task.schedule).toEqual({
+      allDay: true,
+      from: "2026-10-27",
+      to: "2026-10-29",
+      timeZone: "Europe/Rome",
+    });
+
+    const invalid = await post(
+      "/api/tasks",
+      createTaskRequestFactory({
+        commandId: newId(),
+        title: "Al contrario",
+        schedule: { allDay: true, from: "2026-10-29", to: "2026-10-27" },
+      }),
+    );
+    const parsed = errorEnvelopeSchema.safeParse(await invalid.json());
+
+    expect(invalid.status).toBe(400);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.error.code).toBe("validation_error");
   });
 
   it("rejects a missing or archived Space", async () => {
@@ -80,7 +109,7 @@ describe("task commands", () => {
         commandId: newId(),
         title: "Senza Space",
         spaceId: "0199a4c2-7a10-7000-8000-000000000999",
-        dueAt: null,
+        schedule: null,
       }),
     );
     const missingParsed = errorEnvelopeSchema.safeParse(await missing.json());
@@ -100,7 +129,7 @@ describe("task commands", () => {
         commandId: newId(),
         title: "In uno Space archiviato",
         spaceId: space.id,
-        dueAt: null,
+        schedule: null,
       }),
     );
     const archivedParsed = errorEnvelopeSchema.safeParse(await archived.json());
@@ -114,7 +143,8 @@ describe("task commands", () => {
 
   it("updates with expectedVersion and increments version", async () => {
     const task = await createTask({ title: "Titolo vecchio" });
-    const dueAt = "2026-11-13T09:00:00.000Z";
+    const to = "2026-11-13T09:00:00.000Z";
+    const from = "2026-11-13T08:00:00.000Z";
     const response = await post(
       `/api/tasks/${task.id}/update`,
       updateTaskRequestFactory({
@@ -122,7 +152,7 @@ describe("task commands", () => {
         expectedVersion: task.version,
         title: "Titolo nuovo",
         spaceId: null,
-        dueAt,
+        schedule: { allDay: false, from, to },
       }),
     );
     const parsed = taskResponseSchema.safeParse(await response.json());
@@ -131,13 +161,17 @@ describe("task commands", () => {
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data.data.title).toBe("Titolo nuovo");
-      expect(parsed.data.data.dueAt).toBe(dueAt);
-      expect(parsed.data.data.dueAtHasTime).toBe(true);
+      expect(parsed.data.data.schedule).toEqual({
+        allDay: false,
+        from,
+        to,
+        timeZone: "Europe/Rome",
+      });
       expect(parsed.data.data.version).toBe(2);
     }
   });
 
-  it("keeps a date-only due date without a time", async () => {
+  it("keeps an all-day due date as a local date and clears it with null", async () => {
     const task = await createTask({ title: "Scadenza di giorno" });
 
     const response = await post(
@@ -147,8 +181,7 @@ describe("task commands", () => {
         expectedVersion: task.version,
         title: task.title,
         spaceId: null,
-        dueAt: "2026-11-20T22:59:59.999Z",
-        dueAtHasTime: false,
+        schedule: { allDay: true, from: null, to: "2026-11-20" },
       }),
     );
     const parsed = taskResponseSchema.safeParse(await response.json());
@@ -156,9 +189,29 @@ describe("task commands", () => {
     expect(response.status).toBe(200);
     expect(parsed.success).toBe(true);
     if (parsed.success) {
-      expect(parsed.data.data.dueAt).toBe("2026-11-20T22:59:59.999Z");
-      expect(parsed.data.data.dueAtHasTime).toBe(false);
+      expect(parsed.data.data.schedule).toEqual({
+        allDay: true,
+        from: null,
+        to: "2026-11-20",
+        timeZone: "Europe/Rome",
+      });
     }
+
+    const cleared = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version + 1,
+        title: task.title,
+        spaceId: null,
+        schedule: null,
+      }),
+    );
+    const clearedParsed = taskResponseSchema.safeParse(await cleared.json());
+
+    expect(cleared.status).toBe(200);
+    expect(clearedParsed.success).toBe(true);
+    if (clearedParsed.success) expect(clearedParsed.data.data.schedule).toBeNull();
   });
 
   it("changes Space through update and reflects it in Inbox", async () => {
@@ -172,7 +225,7 @@ describe("task commands", () => {
         expectedVersion: task.version,
         title: task.title,
         spaceId: null,
-        dueAt: null,
+        schedule: null,
       }),
     );
     const parsed = taskResponseSchema.safeParse(await response.json());
@@ -202,7 +255,7 @@ describe("task commands", () => {
         expectedVersion: 1,
         title: "Prima modifica",
         spaceId: null,
-        dueAt: null,
+        schedule: null,
       }),
     );
 
@@ -213,7 +266,7 @@ describe("task commands", () => {
         expectedVersion: 1,
         title: "Seconda modifica",
         spaceId: null,
-        dueAt: null,
+        schedule: null,
       }),
     );
     const staleParsed = errorEnvelopeSchema.safeParse(await stale.json());
@@ -234,7 +287,7 @@ describe("task commands", () => {
       commandId,
       title: "Replay",
       spaceId: null,
-      dueAt: null,
+      schedule: null,
     });
 
     const first = await post("/api/tasks", payload);
@@ -263,7 +316,7 @@ describe("task commands", () => {
         commandId,
         title: "Payload diverso",
         spaceId: null,
-        dueAt: null,
+        schedule: null,
       }),
     );
     const conflictParsed = errorEnvelopeSchema.safeParse(await conflict.json());
@@ -280,7 +333,7 @@ describe("task commands", () => {
       commandId: newId(),
       title: "   ",
       spaceId: null,
-      dueAt: null,
+      schedule: null,
     });
     const invalidParsed = errorEnvelopeSchema.safeParse(await invalid.json());
 

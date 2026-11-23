@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { successEnvelopeSchema } from "@api/http/envelope";
 import {
-  EXAMPLE_DUE_AT,
+  exampleSchedule,
   EXAMPLE_TASK_SPACE_ID,
   taskDtoFactory,
   taskDtoSchema,
@@ -32,8 +32,7 @@ export const taskListResponseExample = taskListResponseSchema.parse({
       taskDtoFactory({
         id: "0199a4c2-7a10-7000-8000-000000000302",
         title: "Prenotare la visita",
-        dueAt: EXAMPLE_DUE_AT,
-        dueAtHasTime: true,
+        schedule: exampleSchedule,
         spaceId: EXAMPLE_TASK_SPACE_ID,
         updatedAt: "2026-11-12T10:00:00.000Z",
       }),

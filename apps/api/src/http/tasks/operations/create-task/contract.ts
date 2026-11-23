@@ -1,14 +1,17 @@
 import { z } from "zod";
 
 import { uuidV7Schema } from "@api/http/envelope";
-import { EXAMPLE_COMMAND_ID, taskTitleSchema } from "@api/http/tasks/contract/shared";
+import {
+  EXAMPLE_COMMAND_ID,
+  scheduleInputSchema,
+  taskTitleSchema,
+} from "@api/http/tasks/contract/shared";
 
 export const createTaskRequestSchema = z.object({
   commandId: uuidV7Schema,
   title: taskTitleSchema,
   spaceId: z.uuid().nullable(),
-  dueAt: z.iso.datetime().nullable(),
-  dueAtHasTime: z.boolean(),
+  schedule: scheduleInputSchema.nullable(),
 });
 
 export type CreateTaskRequest = z.infer<typeof createTaskRequestSchema>;
@@ -20,8 +23,7 @@ export function createTaskRequestFactory(
     commandId: EXAMPLE_COMMAND_ID,
     title: "Comprare il pane",
     spaceId: null,
-    dueAt: null,
-    dueAtHasTime: false,
+    schedule: null,
     ...overrides,
   });
 }

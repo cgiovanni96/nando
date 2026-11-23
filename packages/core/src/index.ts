@@ -18,7 +18,6 @@ export { createSpaceModule, type SpaceModule, type SpaceModuleDeps } from "./spa
 export type { InboxSource, InboxSourceQuery, SpaceDatabase } from "./space/ports";
 export { space, spaceKind, type SpaceRow } from "./space/schema";
 export {
-  dueAtViolation,
   isTerminalStatus,
   normalizeTaskTitle,
   restorableUntil,
@@ -35,6 +34,16 @@ export {
   type TaskStatus,
   type TaskStatusCommand,
 } from "./task/domain";
+export {
+  buildSchedule,
+  isValidTimeZone,
+  localDate,
+  temporalState,
+  type LocalDate,
+  type Schedule,
+  type ScheduleInput,
+  type TemporalState,
+} from "./task/schedule";
 export { createTaskModule, type TaskModule, type TaskModuleDeps } from "./task/module";
 export type { TaskCommandDb, TaskDatabase, TaskSpacePort, TaskTransaction } from "./task/ports";
 export { task, taskOccurrence, type TaskOccurrenceRow, type TaskRow } from "./task/schema";
