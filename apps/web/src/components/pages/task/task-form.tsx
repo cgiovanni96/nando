@@ -2,6 +2,7 @@ import {
   Alert,
   Badge,
   Button,
+  Checkbox,
   Flex,
   Group,
   Select,
@@ -24,7 +25,10 @@ import { newCommandId } from "@web/lib/ids";
 import {
   cancelTaskMutationOptions,
   completeTaskMutationOptions,
+  markTodoTaskMutationOptions,
+  reopenTaskMutationOptions,
   skipTaskMutationOptions,
+  startTaskMutationOptions,
   updateTaskMutationOptions,
 } from "@web/lib/mutations/tasks";
 import type { SpaceOption } from "@web/lib/queries/spaces";
@@ -36,10 +40,9 @@ import {
   type ScheduleDraft,
 } from "./schedule-draft";
 import { ScheduleField } from "./schedule-field";
+import { STATUS_ORDER, statusCommand, type TaskStatus } from "./task-status";
 import { TaskActionsMenu } from "./task-actions-menu";
 import classes from "./task-page.module.css";
-
-const STATUS_ORDER = ["open", "completed", "skipped", "cancelled"] as const;
 
 type TaskFormValues = {
   title: string;
@@ -78,11 +81,15 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
     },
   });
 
+  function invalidateTask() {
+    void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    void queryClient.invalidateQueries({ queryKey: ["inbox"] });
+  }
+
   function refresh(successMessage: string) {
     return {
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        void queryClient.invalidateQueries({ queryKey: ["inbox"] });
+        invalidateTask();
         notifications.show({
           message: successMessage,
           color: "gray",
@@ -133,9 +140,49 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
     },
   });
 
+  const reopen = useMutation({
+    ...reopenTaskMutationOptions,
+    ...refresh(t("task.actions.reopened")),
+  });
   const complete = useMutation({
     ...completeTaskMutationOptions,
-    ...refresh(t("task.actions.completed")),
+    // Il toast di successo è proprio: porta «Annulla». L'errore è quello comune.
+    onError: refresh(t("task.actions.completed")).onError,
+    onSuccess: () => {
+      invalidateTask();
+      // «Annulla» è una rettifica (ADR-0004): riapre allo stato di prima.
+      const previous = task.status === "in_progress" ? "in_progress" : "open";
+      const id = notifications.show({
+        message: (
+          <Group gap="sm" justify="space-between" wrap="nowrap">
+            <Text size="sm">{t("task.actions.completed")}</Text>
+            <Button
+              size="compact-xs"
+              variant="subtle"
+              onClick={() => {
+                notifications.hide(id);
+                reopen.mutate({
+                  taskId: task.id,
+                  input: { commandId: newCommandId(), to: previous },
+                });
+              }}
+            >
+              {t("task.actions.undo")}
+            </Button>
+          </Group>
+        ),
+        color: "gray",
+        withCloseButton: false,
+        autoClose: 6000,
+        p: "sm",
+        radius: "sm",
+      });
+    },
+  });
+  const start = useMutation({ ...startTaskMutationOptions, ...refresh(t("task.actions.started")) });
+  const markTodo = useMutation({
+    ...markTodoTaskMutationOptions,
+    ...refresh(t("task.actions.todo")),
   });
   const skip = useMutation({ ...skipTaskMutationOptions, ...refresh(t("task.actions.skipped")) });
   const cancel = useMutation({
@@ -143,26 +190,51 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
     ...refresh(t("task.actions.cancelled")),
   });
 
-  const statusPending = complete.isPending || skip.isPending || cancel.isPending;
-  const statusLocked = readOnly || task.status !== "open" || form.isDirty();
+  const statusPending = [complete, start, markTodo, skip, cancel, reopen].some(
+    (mutation) => mutation.isPending,
+  );
+  const closedForGood = task.status === "skipped" || task.status === "cancelled";
+  const statusLocked = readOnly || closedForGood || form.isDirty();
 
   const statusData = STATUS_ORDER.map((value) => ({
     value,
     label: t(`task.status.${value}`),
-    disabled: value === "open" || task.status !== "open",
+    disabled: value !== task.status && statusCommand(task.status, value) === null,
   }));
 
   function completeTask() {
     complete.mutate({ taskId: task.id, input: { commandId: newCommandId() } });
   }
 
-  function changeStatus(value: string | null) {
-    if (!value || value === task.status) return;
+  function skipTask() {
+    skip.mutate({ taskId: task.id, input: { commandId: newCommandId() } });
+  }
 
+  function changeStatus(value: string | null) {
+    if (!value) return;
+    const command = statusCommand(task.status, value as TaskStatus);
+    if (!command) return;
+
+    const taskId = task.id;
     const input = { commandId: newCommandId() };
-    if (value === "completed") completeTask();
-    if (value === "skipped") skip.mutate({ taskId: task.id, input });
-    if (value === "cancelled") cancel.mutate({ taskId: task.id, input });
+    switch (command.kind) {
+      case "start":
+        return start.mutate({ taskId, input });
+      case "todo":
+        return markTodo.mutate({ taskId, input });
+      case "complete":
+        return completeTask();
+      case "skip":
+        return skip.mutate({ taskId, input });
+      case "cancel":
+        return cancel.mutate({ taskId, input });
+      case "reopen":
+        return reopen.mutate({ taskId, input: { ...input, to: command.to } });
+    }
+  }
+
+  function toggleCompleted(checked: boolean) {
+    changeStatus(checked ? "completed" : "open");
   }
 
   function persist() {
@@ -219,6 +291,14 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
       <Stack gap="lg">
         <Stack gap="sm">
           <Group justify="space-between" align="center" gap="md" wrap="nowrap">
+            <Checkbox
+              size="md"
+              radius="xl"
+              checked={task.status === "completed"}
+              onChange={(event) => toggleCompleted(event.currentTarget.checked)}
+              disabled={statusLocked || statusPending}
+              aria-label={t("task.actions.complete")}
+            />
             <TextInput
               key={form.key("title")}
               {...form.getInputProps("title")}
@@ -241,6 +321,7 @@ export function TaskForm({ task, spaces, readOnly, late }: TaskFormProps) {
               onSave={save}
               onDiscard={() => form.reset()}
               onComplete={completeTask}
+              onSkip={skipTask}
             />
           </Group>
 

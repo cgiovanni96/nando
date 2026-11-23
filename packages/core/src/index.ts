@@ -20,6 +20,7 @@ export { space, spaceKind, type SpaceRow } from "./space/schema";
 export {
   isTerminalStatus,
   normalizeTaskTitle,
+  reopenViolation,
   restorableUntil,
   restoreViolation,
   spaceViolation,
@@ -30,6 +31,7 @@ export {
   titleViolation,
   transitionViolation,
   type Task,
+  type TaskHistoryEntry,
   type TaskSpaceSnapshot,
   type TaskStatus,
   type TaskStatusCommand,
@@ -44,9 +46,17 @@ export {
   type ScheduleInput,
   type TemporalState,
 } from "./task/schedule";
+export type { TaskCompleted, TaskCompletionReverted, TaskEvent } from "./task/events";
 export { createTaskModule, type TaskModule, type TaskModuleDeps } from "./task/module";
 export type { TaskCommandDb, TaskDatabase, TaskSpacePort, TaskTransaction } from "./task/ports";
-export { task, taskOccurrence, type TaskOccurrenceRow, type TaskRow } from "./task/schema";
+export {
+  task,
+  taskCompletion,
+  taskOccurrence,
+  taskRectification,
+  type TaskOccurrenceRow,
+  type TaskRow,
+} from "./task/schema";
 
 // Il core arriva con M1: Space e Task.
 export const CORE_MODULE = "core" as const;

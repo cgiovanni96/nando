@@ -1,9 +1,10 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import type { Clock, DomainError, Result } from "@nando/kernel";
 import { err, ok } from "@nando/kernel";
 
 import {
   normalizeTaskTitle,
+  reopenViolation,
   restoreViolation,
   spaceViolation,
   TASK_STATUS_TARGETS,
@@ -15,7 +16,7 @@ import {
 import { findTask, findTaskIncludingDeleted, scheduleColumns } from "./mapper";
 import type { TaskCommandDb, TaskDatabase, TaskSpacePort } from "./ports";
 import { buildSchedule, type Schedule, type ScheduleInput } from "./schedule";
-import { task, taskOccurrence } from "./schema";
+import { task, taskCompletion, taskOccurrence, taskRectification } from "./schema";
 
 export type TaskCommandDeps = {
   db: TaskDatabase;
@@ -99,14 +100,39 @@ export function createTaskCommands({
   spacePort,
   defaultTimeZone,
 }: TaskCommandDeps) {
+  /**
+   * Cambio di stato dell'unica occorrenza. `effect` aggiunge le scritture del
+   * comando (Completion, rettifica, data di chiusura) dentro la stessa
+   * transazione e restituisce i campi extra dell'occorrenza.
+   */
   async function transition(
     taskId: string,
     target: TaskStatus,
     tx?: TaskCommandDb,
+    options: {
+      violation?: (from: TaskStatus) => DomainError | null;
+      effect?: (
+        conn: TaskCommandDb,
+        occurrence: { id: string; activityId: string | null },
+        now: Date,
+      ) => Promise<Result<Partial<typeof taskOccurrence.$inferInsert>>>;
+    } = {},
   ): Promise<Result<Task>> {
     const now = clock.now();
 
     return runInTransaction(db, tx, async (conn) => {
+      // Lock della riga: due comandi concorrenti (due tab, commandId diversi)
+      // si serializzano e il secondo vede lo stato scritto dal primo, così un
+      // completamento non si registra due volte.
+      const [occurrence] = await conn
+        .select({ id: taskOccurrence.id, activityId: taskOccurrence.activityId })
+        .from(taskOccurrence)
+        .where(eq(taskOccurrence.taskId, taskId))
+        .limit(1)
+        .for("update");
+
+      if (!occurrence) return err(notFound());
+
       const current = await findTask(conn, taskId);
 
       if (!current) return err(notFound());
@@ -117,13 +143,18 @@ export function createTaskCommands({
       const invalidSpace = await spaceError(spacePort, current.spaceId);
       if (invalidSpace) return err(invalidSpace);
 
-      const violation = transitionViolation(current.status, target);
+      const violation = (options.violation ?? ((from) => transitionViolation(from, target)))(
+        current.status,
+      );
       if (violation) return err(violation);
+
+      const extra = options.effect ? await options.effect(conn, occurrence, now) : ok({});
+      if (!extra.ok) return extra;
 
       const [updated] = await conn
         .update(taskOccurrence)
-        .set({ status: target, updatedAt: now })
-        .where(eq(taskOccurrence.taskId, taskId))
+        .set({ ...extra.value, status: target, updatedAt: now })
+        .where(eq(taskOccurrence.id, occurrence.id))
         .returning({ id: taskOccurrence.id });
 
       if (!updated) return err(notFound());
@@ -270,16 +301,90 @@ export function createTaskCommands({
       });
     },
 
+    /** open → in_progress: solo stato di lavoro, nessun Completion (ADR-0028). */
+    async start(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
+      return transition(input.taskId, TASK_STATUS_TARGETS.start, tx);
+    },
+
+    /** in_progress → open, «rimetti da fare»: nessun Completion né rettifica. */
+    async markTodo(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
+      return transition(input.taskId, TASK_STATUS_TARGETS.markTodo, tx);
+    },
+
+    /**
+     * Completa l'occorrenza con un Completion datato adesso (ADR-0004).
+     * L'`activityId` nasce al primo completamento e si riusa dopo una
+     * rettifica, così la stessa azione non conta due volte (ADR-0003).
+     */
     async complete(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
-      return transition(input.taskId, TASK_STATUS_TARGETS.complete, tx);
+      return transition(input.taskId, TASK_STATUS_TARGETS.complete, tx, {
+        effect: async (conn, occurrence, now) => {
+          const activityId = occurrence.activityId ?? ids();
+          await conn.insert(taskCompletion).values({
+            id: ids(),
+            occurrenceId: occurrence.id,
+            activityId,
+            occurredAt: now,
+            provenance: "manual",
+            createdAt: now,
+          });
+          return ok({ activityId, closedAt: null });
+        },
+      });
     },
 
     async skip(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
-      return transition(input.taskId, TASK_STATUS_TARGETS.skip, tx);
+      return transition(input.taskId, TASK_STATUS_TARGETS.skip, tx, {
+        effect: async (_conn, _occurrence, now) => ok({ closedAt: now }),
+      });
     },
 
     async cancel(input: TaskIdInput, tx?: TaskCommandDb): Promise<Result<Task>> {
-      return transition(input.taskId, TASK_STATUS_TARGETS.cancel, tx);
+      return transition(input.taskId, TASK_STATUS_TARGETS.cancel, tx, {
+        effect: async (_conn, _occurrence, now) => ok({ closedAt: now }),
+      });
+    },
+
+    /**
+     * Riapertura di un completamento: una Rectification annulla l'ultimo
+     * Completion e l'occorrenza torna a `open` (o `in_progress`, se richiesto).
+     * Il Completion resta interrogabile. Riaprire verso lo stato già corrente è
+     * un no-op; da `skipped` o `cancelled` non si riapre.
+     */
+    async reopen(
+      input: TaskIdInput & { to?: "open" | "in_progress" },
+      tx?: TaskCommandDb,
+    ): Promise<Result<Task>> {
+      const target = input.to ?? "open";
+
+      return transition(input.taskId, target, tx, {
+        violation: reopenViolation,
+        effect: async (conn, occurrence, now) => {
+          const [active] = await conn
+            .select({ id: taskCompletion.id })
+            .from(taskCompletion)
+            .leftJoin(taskRectification, eq(taskRectification.completionId, taskCompletion.id))
+            .where(
+              and(eq(taskCompletion.occurrenceId, occurrence.id), isNull(taskRectification.id)),
+            )
+            .orderBy(desc(taskCompletion.occurredAt))
+            .limit(1);
+
+          // Dopo il backfill della 0007 ogni occorrenza completata ha un
+          // Completion attivo; se mancasse, si riapre comunque senza rettifica.
+          if (active) {
+            await conn.insert(taskRectification).values({
+              id: ids(),
+              completionId: active.id,
+              action: "revert",
+              reason: null,
+              provenance: "manual",
+              createdAt: now,
+            });
+          }
+          return ok({ closedAt: null });
+        },
+      });
     },
 
     /**

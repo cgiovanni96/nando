@@ -60,3 +60,33 @@ export function taskQueryOptions(taskId: string) {
     staleTime: 30_000,
   });
 }
+
+type TaskHistoryResponse = InferResponseType<
+  (typeof browserApiClient.api.tasks)[":taskId"]["history"]["$get"],
+  200
+>;
+
+export type TaskHistoryEntry = TaskHistoryResponse["data"]["items"][number];
+
+async function fetchTaskHistory(taskId: string): Promise<TaskHistoryEntry[]> {
+  const response = await browserApiClient.api.tasks[":taskId"].history.$get({
+    param: { taskId },
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response, "Non è stato possibile caricare lo storico.");
+  }
+
+  const body = (await response.json()) as TaskHistoryResponse;
+
+  return body.data.items;
+}
+
+/** Storico dell'occorrenza: completamenti, riaperture, skip e cancel. */
+export function taskHistoryQueryOptions(taskId: string) {
+  return queryOptions({
+    queryKey: ["tasks", "history", taskId] as const,
+    queryFn: () => fetchTaskHistory(taskId),
+    staleTime: 30_000,
+  });
+}

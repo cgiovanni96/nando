@@ -2,7 +2,7 @@ import type { DomainError } from "@nando/kernel";
 
 import type { Schedule } from "./schedule";
 
-export const TASK_STATUSES = ["open", "completed", "skipped", "cancelled"] as const;
+export const TASK_STATUSES = ["open", "in_progress", "completed", "skipped", "cancelled"] as const;
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
@@ -13,7 +13,13 @@ export const TASK_DELETION_GRACE_DAYS = 7;
 
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
+/**
+ * Comando → stato di arrivo. `start` e `markTodo` cambiano solo lo stato di
+ * lavoro (ADR-0028); `complete` crea anche un Completion.
+ */
 export const TASK_STATUS_TARGETS = {
+  start: "in_progress",
+  markTodo: "open",
   complete: "completed",
   skip: "skipped",
   cancel: "cancelled",
@@ -38,6 +44,12 @@ export type Task = {
   deletedAt: Date | null;
 };
 
+/** Voce dello storico di un'occorrenza; le riaperture sono rettifiche. */
+export type TaskHistoryEntry = {
+  kind: "completed" | "reopened" | "skipped" | "cancelled";
+  at: Date;
+};
+
 /** Ciò che il modulo Task deve sapere di uno Space, senza importarne lo schema. */
 export type TaskSpaceSnapshot = {
   id: string;
@@ -47,6 +59,7 @@ export type TaskSpaceSnapshot = {
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
   open: "aperto",
+  in_progress: "in corso",
   completed: "completato",
   skipped: "saltato",
   cancelled: "cancellato",
@@ -73,22 +86,34 @@ export function titleViolation(title: string): DomainError | null {
   return null;
 }
 
+/** `open` e `in_progress` sono aperti; gli altri stati chiudono l'occorrenza. */
 export function isTerminalStatus(status: TaskStatus): boolean {
-  return status !== "open";
+  return status !== "open" && status !== "in_progress";
 }
 
 /**
- * Una transizione ammessa parte solo da `open`. Lo stesso stato è un no-op
- * idempotente; gli stati terminali non si riaprono in M1 (serve una
- * Rectification, ADR-0004).
+ * Una transizione parte solo da uno stato aperto (`open` o `in_progress`). Lo
+ * stesso stato è un no-op idempotente. Uno stato terminale non si lascia con
+ * una transizione: riaprire un completamento è una Rectification (ADR-0004).
  */
 export function transitionViolation(from: TaskStatus, to: TaskStatus): DomainError | null {
-  if (from === to || from === "open") return null;
+  if (from === to || !isTerminalStatus(from)) return null;
 
   return {
     code: "domain_rule_violation",
     message: `Un task ${STATUS_LABELS[from]} non può passare a ${STATUS_LABELS[to]}.`,
   };
+}
+
+/**
+ * Si riapre solo un completamento (ADR-0004): la riapertura è una Rectification
+ * del Completion. Riaprire verso lo stato già corrente è un no-op gestito dal
+ * comando prima di questa regola.
+ */
+export function reopenViolation(from: TaskStatus): DomainError | null {
+  if (from === "completed") return null;
+
+  return { code: "domain_rule_violation", message: "Si riapre solo un task completato." };
 }
 
 /**

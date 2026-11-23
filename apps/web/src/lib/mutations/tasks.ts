@@ -148,3 +148,58 @@ export async function restoreTask({ taskId, input }: { taskId: string; input: Ta
 export const restoreTaskMutationOptions = mutationOptions({
   mutationFn: restoreTask,
 });
+
+type ReopenTaskEndpoint = (typeof browserApiClient.api.tasks)[":taskId"]["reopen"]["$post"];
+export type ReopenTaskInput = InferRequestType<ReopenTaskEndpoint>["json"];
+
+export async function startTask({ taskId, input }: { taskId: string; input: TaskCommandInput }) {
+  const response = await browserApiClient.api.tasks[":taskId"].start.$post({
+    param: { taskId },
+    json: input,
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response, "Non è stato possibile iniziare il task.");
+  }
+
+  return response.json();
+}
+
+export const startTaskMutationOptions = mutationOptions({
+  mutationFn: startTask,
+});
+
+export async function markTodoTask({ taskId, input }: { taskId: string; input: TaskCommandInput }) {
+  const response = await browserApiClient.api.tasks[":taskId"].todo.$post({
+    param: { taskId },
+    json: input,
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response, "Non è stato possibile rimettere il task da fare.");
+  }
+
+  return response.json();
+}
+
+export const markTodoTaskMutationOptions = mutationOptions({
+  mutationFn: markTodoTask,
+});
+
+/** Riapertura di un completamento: lato server è una Rectification. */
+export async function reopenTask({ taskId, input }: { taskId: string; input: ReopenTaskInput }) {
+  const response = await browserApiClient.api.tasks[":taskId"].reopen.$post({
+    param: { taskId },
+    json: input,
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response, "Non è stato possibile riaprire il task.");
+  }
+
+  return response.json();
+}
+
+export const reopenTaskMutationOptions = mutationOptions({
+  mutationFn: reopenTask,
+});

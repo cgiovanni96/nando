@@ -6,6 +6,7 @@ import {
   IconDeviceFloppy,
   IconDots,
   IconEditCircleOff,
+  IconPlayerSkipForward,
   IconRestore,
   IconTrash,
 } from "@tabler/icons-react";
@@ -32,6 +33,7 @@ type TaskActionsMenuProps = {
   onSave?: () => void;
   onDiscard?: () => void;
   onComplete?: () => void;
+  onSkip?: () => void;
 };
 
 /**
@@ -49,6 +51,7 @@ export function TaskActionsMenu({
   onSave,
   onDiscard,
   onComplete,
+  onSkip,
 }: TaskActionsMenuProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -102,6 +105,8 @@ export function TaskActionsMenu({
   });
 
   const deleted = task.deletedAt !== null;
+  // Da fare o in corso (ADR-0028): solo da qui si completa o si salta.
+  const isActive = task.status === "open" || task.status === "in_progress";
 
   const saveAction: PageAction | null = onSave
     ? {
@@ -129,8 +134,18 @@ export function TaskActionsMenu({
         id: "complete",
         label: t("task.actions.complete"),
         icon: <IconCircleCheck size={16} stroke={1.6} />,
-        disabled: readOnly || task.status !== "open" || isDirty || isCompleting || statusPending,
+        disabled: readOnly || !isActive || isDirty || isCompleting || statusPending,
         onTrigger: onComplete,
+      }
+    : null;
+
+  const skipAction: PageAction | null = onSkip
+    ? {
+        id: "skip",
+        label: t("task.actions.skip"),
+        icon: <IconPlayerSkipForward size={16} stroke={1.6} />,
+        disabled: readOnly || !isActive || isDirty || statusPending,
+        onTrigger: onSkip,
       }
     : null;
 
@@ -152,6 +167,7 @@ export function TaskActionsMenu({
         ...(saveAction ? [saveAction] : []),
         ...(discardAction ? [discardAction] : []),
         ...(completeAction ? [completeAction] : []),
+        ...(skipAction ? [skipAction] : []),
         {
           id: "delete",
           label: t("task.actions.delete"),

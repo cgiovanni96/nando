@@ -31,9 +31,11 @@ export function createCompleteTaskRoute(deps: ApiDeps, tasks: TaskModule) {
       tags: ["tasks"],
       summary: "Completa un task",
       description:
-        "Comando di intento idempotente: porta l'occorrenza da `open` a `completed`. " +
-        "Completare un task già completato restituisce lo stesso risultato; uno stato " +
-        "`skipped` o `cancelled` è terminale e restituisce 422.",
+        "Comando di intento idempotente: porta l'occorrenza da `open` o `in_progress` a " +
+        "`completed` e registra un Completion datato adesso, con l'`activityId` " +
+        "dell'occorrenza. Completare un task già completato restituisce lo stesso " +
+        "risultato; uno stato `skipped` o `cancelled` è terminale e restituisce 422. " +
+        "Per annullare un completamento si usa `reopen`.",
       requestBody: jsonRequestBody(taskCommandRequestSchema, taskCommandRequestExample),
       responses: {
         200: jsonResponse(

@@ -13,6 +13,10 @@ import { createMoveTaskRoute } from "./operations/move-task/route";
 import { createRestoreTaskRoute } from "./operations/restore-task/route";
 import { createSkipTaskRoute } from "./operations/skip-task/route";
 import { createUpdateTaskRoute } from "./operations/update-task/route";
+import { createMarkTodoTaskRoute } from "./operations/mark-todo-task/route";
+import { createReopenTaskRoute } from "./operations/reopen-task/route";
+import { createStartTaskRoute } from "./operations/start-task/route";
+import { createTaskHistoryRoute } from "./operations/task-history/route";
 
 /**
  * Composizione del route group `tasks`.
@@ -28,10 +32,14 @@ export function createTaskRoutes(deps: ApiDeps, tasks: TaskModule) {
     .use("/api/tasks/*", auth)
     .route("/", createListTasksRoute(tasks))
     .route("/", createGetTaskRoute(tasks))
+    .route("/", createTaskHistoryRoute(tasks))
     .route("/", createCreateTaskRoute(deps, tasks))
     .route("/", createUpdateTaskRoute(deps, tasks))
     .route("/", createMoveTaskRoute(deps, tasks))
+    .route("/", createStartTaskRoute(deps, tasks))
+    .route("/", createMarkTodoTaskRoute(deps, tasks))
     .route("/", createCompleteTaskRoute(deps, tasks))
+    .route("/", createReopenTaskRoute(deps, tasks))
     .route("/", createSkipTaskRoute(deps, tasks))
     .route("/", createCancelTaskRoute(deps, tasks))
     .route("/", createDeleteTaskRoute(deps, tasks))

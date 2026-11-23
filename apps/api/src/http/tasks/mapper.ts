@@ -1,8 +1,9 @@
 // Mapping dominio -> DTO del gruppo Task: nessun `Date` attraversa il wire.
 
-import { restorableUntil, type Schedule, type Task } from "@nando/core";
+import { restorableUntil, type Schedule, type Task, type TaskHistoryEntry } from "@nando/core";
 
 import type { ScheduleDto, TaskDto } from "./contract/shared";
+import type { TaskHistoryEntryDto } from "./operations/task-history/contract";
 
 /** Date locali restano `YYYY-MM-DD`; gli istanti diventano ISO 8601 UTC. */
 function toScheduleDto(schedule: Schedule): ScheduleDto {
@@ -30,4 +31,8 @@ export function toTaskDto(task: Task): TaskDto {
     deletedAt: task.deletedAt?.toISOString() ?? null,
     restorableUntil: task.deletedAt ? restorableUntil(task.deletedAt).toISOString() : null,
   };
+}
+
+export function toTaskHistoryDto(entry: TaskHistoryEntry): TaskHistoryEntryDto {
+  return { kind: entry.kind, at: entry.at.toISOString() };
 }

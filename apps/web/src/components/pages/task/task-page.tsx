@@ -27,6 +27,7 @@ import classes from "./task-page.module.css";
 import { TaskActionsMenu } from "./task-actions-menu";
 import { isLate } from "./schedule-draft";
 import { TaskForm } from "./task-form";
+import { TaskHistory } from "./task-history";
 
 export function TaskPage() {
   const { t } = useTranslation();
@@ -134,13 +135,16 @@ export function TaskPage() {
           <DeletedTaskNotice task={detail} />
         </Stack>
       ) : (
-        <TaskForm
-          key={detail.version}
-          task={detail}
-          spaces={optionsWithCurrent}
-          readOnly={archived}
-          late={late}
-        />
+        <Stack gap="xl">
+          <TaskForm
+            key={detail.version}
+            task={detail}
+            spaces={optionsWithCurrent}
+            readOnly={archived}
+            late={late}
+          />
+          <TaskHistory taskId={detail.id} />
+        </Stack>
       )}
     </Stack>
   );
