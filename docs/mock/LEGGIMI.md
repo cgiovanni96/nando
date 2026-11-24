@@ -8,6 +8,23 @@ Aprire `index.html` nel browser. Non serve installare dipendenze.
 - `habit-model.js`: habit, configurazioni, pause, fonti, evidenze e derivazioni (score, forza, streak).
 - `habit-analytics.js`: dettaglio Habit, storico per periodo, fonti, calendario delle evidenze e dialoghi.
 - `design.html`: pagina di token, componenti, stati e note per schermata.
+- `calendar-m2.js`, `calendar-m2.css`: **prototype NAS-155**, da buttare. Sostituiscono Dashboard e Calendario con il modello di M2 (vedi sotto).
+
+## Prototype M2 — Giornata (NAS-155)
+
+Ora dimostrativa: 28/10/2026 09:30. `calendar-m2.js` aggiunge task demo con id 9001–9013: range all-day e timed, scadenze a un'ora, task in ritardo e task senza data.
+
+- **Dashboard:** Oggi è diviso in In ritardo, In svolgimento (range iniziato e non ancora scaduto; rinominato per non confondersi con lo stato «In corso» della board) e Scade oggi, con al massimo 7 righe e «Mostra tutte (N)». La checkbox completa e mostra un toast con «Annulla» (rettifica); ⤼ salta. «Prossimi» non è più una lista sotto Oggi: ci sono tre varianti, che si scelgono con `?variant=` oppure con la barra viola in basso (o con i tasti ← →):
+  - **A · Striscia + Agenda:** dentro Oggi c'è una striscia dei 7 giorni con il numero di task per giorno; cliccando un giorno il widget mostra quel giorno. L'orizzonte lungo è nella vista Agenda del Calendario, con un selettore 7/15/30 giorni.
+  - **B · Tab + Board Task** (la scelta dopo il primo giro): in dashboard le tab di C; nella sidebar la voce «Task» apre una **board per stato** con le colonne Da fare, In corso e Fatto (solo gli ultimi 7 giorni). Si sposta una card trascinandola o con i link «→ colonna»: verso Fatto registra un Completion con il toast «Annulla», uscendo da Fatto registra una rettifica, verso In corso registra «iniziato». Filtri: Space e scadenza (Tutte, 7, 15 o 30 giorni; con un orizzonte attivo i task senza data sono nascosti). Introduce lo stato `in_progress`: va emendato ADR-0004.
+  - **C · Tab in dashboard:** il widget ha due tab, Oggi e Prossimi 7 giorni.
+- Un range compare anche nel giorno di inizio, con l'etichetta «inizia».
+- **Calendario:** viste Mese, Settimana, Giorno e Agenda. Il click su una voce apre un popover con Completa, Salta, Riapri e Apri.
+- **Drag** (solo desktop, con finestra di almeno 900 px e mouse): si trascinano solo le occorrenze aperte. La durata resta uguale; un all-day resta all-day e un timed mantiene l'ora se cade su un giorno. La maniglia in basso di un blocco timed ne cambia la fine.
+- **Pannello «senza data»** nella vista Settimana, con filtro per Space. Sul giorno o sulla riga all-day il task riceve una scadenza all-day; su uno slot orario, una scadenza a quell'ora.
+- Il riquadro «Prototype NAS-155» in fondo alla pagina mostra l'ultima azione, lo Schedule e lo storico del task modificato, e ripristina i dati demo.
+
+Limiti: date naive nell'ora locale del browser, nessuna verifica di `@mantine/schedule`, storico non mostrato nella pagina task, range timed di più giorni non resi nella griglia oraria.
 
 ## Percorsi
 
