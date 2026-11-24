@@ -60,6 +60,20 @@ export function localDate(instant: Date, timeZone: string): LocalDate {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
+/**
+ * Giorno locale di scadenza: un all-day scade nel suo giorno, un timed nel
+ * giorno dell'istante, nella timezone del Task.
+ */
+export function scheduleDueDate(schedule: Schedule): LocalDate {
+  return schedule.allDay ? schedule.to : localDate(schedule.to, schedule.timeZone);
+}
+
+/** Giorno locale d'inizio, o `null` quando lo Schedule è un punto. */
+export function scheduleStartDate(schedule: Schedule): LocalDate | null {
+  if (schedule.allDay) return schedule.from;
+  return schedule.from === null ? null : localDate(schedule.from, schedule.timeZone);
+}
+
 function invalid(message: string): DomainError {
   return { code: "validation_error", message };
 }

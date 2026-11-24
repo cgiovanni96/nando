@@ -1,26 +1,22 @@
-import { EmptyState, Stack, Title } from "@mantine/core";
-import { IconCalendarEvent } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
+import { Skeleton, Stack, Title } from "@mantine/core";
+import { ClientOnly } from "@tanstack/react-router";
 
-import { QuickCaptureCard } from "@web/components/shared/capture/quick-capture-card";
-import classes from "./dashboard-page.module.css";
+import { formatLocalDate } from "@web/lib/format/datetime";
+import { localToday } from "./agenda-groups";
+import { TodayWidget } from "./today-widget";
+
+/** Altezza di un h1 nel tema (28px × 1.3): il titolo non sposta il layout quando arriva. */
+const TITLE_HEIGHT = 36.4;
 
 export function DashboardPage() {
-  const { t } = useTranslation();
-
   return (
     <Stack gap="xl">
-      <Title order={1}>{t("dashboard.title")}</Title>
+      {/* «Oggi» è il giorno del browser: il server può essere in un altro fuso. */}
+      <ClientOnly fallback={<Skeleton height={TITLE_HEIGHT} width={280} />}>
+        <Title order={1}>{formatLocalDate(localToday(), "long")}</Title>
+      </ClientOnly>
 
-      <QuickCaptureCard />
-
-      <EmptyState
-        className={classes.emptyState}
-        p={{ base: 32, sm: 48 }}
-        bdrs="lg"
-        icon={<IconCalendarEvent size={28} stroke={1.5} />}
-        title={t("dashboard.today.title")}
-      />
+      <TodayWidget />
     </Stack>
   );
 }

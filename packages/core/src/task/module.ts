@@ -15,7 +15,7 @@ export type TaskModuleDeps = {
 export function createTaskModule({ db, clock, ids, spacePort, defaultTimeZone }: TaskModuleDeps) {
   return {
     commands: createTaskCommands({ db, clock, ids, spacePort, defaultTimeZone }),
-    queries: createTaskQueries({ db }),
+    queries: createTaskQueries({ db, clock }),
   };
 }
 

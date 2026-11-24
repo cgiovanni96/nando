@@ -30,6 +30,7 @@ export {
   TASK_TITLE_MAX_LENGTH,
   titleViolation,
   transitionViolation,
+  type AgendaEntry,
   type Task,
   type TaskHistoryEntry,
   type TaskSpaceSnapshot,
@@ -40,6 +41,8 @@ export {
   buildSchedule,
   isValidTimeZone,
   localDate,
+  scheduleDueDate,
+  scheduleStartDate,
   temporalState,
   type LocalDate,
   type Schedule,
@@ -48,6 +51,7 @@ export {
 } from "./task/schedule";
 export type { TaskCompleted, TaskCompletionReverted, TaskEvent } from "./task/events";
 export { createTaskModule, type TaskModule, type TaskModuleDeps } from "./task/module";
+export type { AgendaFilter } from "./task/queries";
 export type { TaskCommandDb, TaskDatabase, TaskSpacePort, TaskTransaction } from "./task/ports";
 export {
   task,

@@ -33,6 +33,10 @@ export const openApiOptions = {
         description: "Vista globale delle entità senza Space proprietario.",
       },
       {
+        name: "agenda",
+        description: "Occorrenze con Schedule per intervallo di giorni: dashboard e calendario.",
+      },
+      {
         name: "tasks",
         description: "Task core: titolo, stato, scadenza e Space.",
       },

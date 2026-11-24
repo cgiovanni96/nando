@@ -1,16 +1,20 @@
-import { and, asc, desc, eq, gt, isNotNull, isNull, lt, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
+import type { Clock } from "@nando/kernel";
 
 import { clampLimit, decodeIdCursor, encodeCursor } from "../db/cursor";
 import type { InboxCursor, InboxItem } from "../space/domain";
 import type { InboxSourceQuery } from "../space/ports";
-import type { Task, TaskHistoryEntry, TaskStatus } from "./domain";
+import type { AgendaEntry, Task, TaskHistoryEntry, TaskStatus } from "./domain";
 import { findTaskIncludingDeleted, taskViewColumns, toTask } from "./mapper";
 import type { TaskDatabase } from "./ports";
+import { scheduleDueDate, scheduleStartDate, temporalState } from "./schedule";
+import type { LocalDate } from "./schedule";
 import { task, taskCompletion, taskOccurrence, taskRectification } from "./schema";
 
 export type TaskQueryDeps = {
   db: TaskDatabase;
+  clock: Clock;
 };
 
 export type TaskListState = "active" | "deleted";
@@ -25,10 +29,20 @@ export type ListTasksFilter = {
   limit?: number;
 };
 
+/** Intervallo di giorni locali dell'agenda, estremi inclusi. */
+export type AgendaFilter = {
+  from: LocalDate;
+  to: LocalDate;
+  /** Restituisce anche le occorrenze già scadute ora, qualunque sia la data. */
+  includeOverdue?: boolean;
+  cursor?: string | null;
+  limit?: number;
+};
+
 /** Tipo che questa sorgente dichiara nell'Inbox: uno solo, i task. */
 const INBOX_ENTITY_TYPE = "task";
 
-export function createTaskQueries({ db }: TaskQueryDeps) {
+export function createTaskQueries({ db, clock }: TaskQueryDeps) {
   return {
     /**
      * Lettura per id: dentro la finestra di grazia il task resta interrogabile,
@@ -129,6 +143,61 @@ export function createTaskQueries({ db }: TaskQueryDeps) {
     },
 
     /**
+     * Agenda: le occorrenze attive con uno Schedule che toccano l'intervallo di
+     * giorni locali, più quelle scadute ora se richiesto. Ogni giorno si valuta
+     * nella timezone del Task; l'ordine è per id, come `list`.
+     */
+    async agenda(
+      filter: AgendaFilter,
+    ): Promise<{ items: AgendaEntry[]; nextCursor: string | null }> {
+      const now = clock.now();
+      const nowIso = now.toISOString();
+      const limit = clampLimit(filter.limit);
+
+      // Giorni locali dell'occorrenza: per un all-day sono già date locali, per
+      // un timed si converte l'istante nella timezone del Task.
+      const localDue = sql`case when ${taskOccurrence.allDay} then ${taskOccurrence.endDate} else (${taskOccurrence.endAt} at time zone ${task.timeZone})::date end`;
+      const localStart = sql`case when ${taskOccurrence.allDay} then coalesce(${taskOccurrence.startDate}, ${taskOccurrence.endDate}) else (coalesce(${taskOccurrence.startAt}, ${taskOccurrence.endAt}) at time zone ${task.timeZone})::date end`;
+      const inRange = sql`${localStart} <= ${filter.to}::date and ${localDue} >= ${filter.from}::date`;
+      const overdue = sql`(${taskOccurrence.allDay} and ${taskOccurrence.endDate} < (${nowIso}::timestamptz at time zone ${task.timeZone})::date) or (not ${taskOccurrence.allDay} and ${taskOccurrence.endAt} < ${nowIso}::timestamptz)`;
+
+      const conditions: (SQL | undefined)[] = [
+        isNull(task.deletedAt),
+        inArray(taskOccurrence.status, ["open", "in_progress"]),
+        sql`(${taskOccurrence.endDate} is not null or ${taskOccurrence.endAt} is not null)`,
+        filter.includeOverdue ? or(inRange, overdue) : inRange,
+      ];
+
+      if (filter.cursor) {
+        const cursorId = decodeIdCursor(filter.cursor);
+
+        if (cursorId) {
+          conditions.push(gt(task.id, cursorId));
+        }
+      }
+
+      const rows = await db
+        .select(taskViewColumns)
+        .from(task)
+        .innerJoin(taskOccurrence, eq(taskOccurrence.taskId, task.id))
+        .where(and(...conditions))
+        .orderBy(asc(task.id))
+        .limit(limit + 1);
+
+      const hasMore = rows.length > limit;
+      const page = hasMore ? rows.slice(0, limit) : rows;
+      const last = page.at(-1);
+      const items = page
+        .map((row) => toAgendaEntry(toTask(row), now))
+        .filter((entry): entry is AgendaEntry => entry !== null);
+
+      return {
+        items,
+        nextCursor: hasMore && last ? encodeCursor({ id: last.id }) : null,
+      };
+    },
+
+    /**
      * Sorgente dell'Inbox: i task senza Space, non cancellati, nello stesso
      * ordine del merge (`updatedAt` discendente, tipo e id ascendenti) così il
      * cursore composto riprende esattamente dopo l'ultimo elemento letto.
@@ -153,6 +222,23 @@ export function createTaskQueries({ db }: TaskQueryDeps) {
         updatedAt: row.updatedAt,
       }));
     },
+  };
+}
+
+/** Voce d'agenda dalla vista piatta; `null` senza Schedule o con occorrenza chiusa. */
+function toAgendaEntry(view: Task, now: Date): AgendaEntry | null {
+  const schedule = view.schedule;
+  if (!schedule) return null;
+
+  const state = temporalState(schedule, view.status, now);
+  if (!state) return null;
+
+  return {
+    ...view,
+    schedule,
+    temporalState: state,
+    dueDate: scheduleDueDate(schedule),
+    startDate: scheduleStartDate(schedule),
   };
 }
 

@@ -6,7 +6,7 @@ import type { ScheduleDto, TaskDto } from "./contract/shared";
 import type { TaskHistoryEntryDto } from "./operations/task-history/contract";
 
 /** Date locali restano `YYYY-MM-DD`; gli istanti diventano ISO 8601 UTC. */
-function toScheduleDto(schedule: Schedule): ScheduleDto {
+export function toScheduleDto(schedule: Schedule): ScheduleDto {
   return schedule.allDay
     ? { allDay: true, from: schedule.from, to: schedule.to, timeZone: schedule.timeZone }
     : {

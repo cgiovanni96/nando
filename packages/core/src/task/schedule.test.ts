@@ -4,6 +4,8 @@ import {
   buildSchedule,
   isValidTimeZone,
   localDate,
+  scheduleDueDate,
+  scheduleStartDate,
   temporalState,
   type Schedule,
 } from "./schedule";
@@ -42,6 +44,42 @@ describe("localDate", () => {
   it("regge il passaggio all'ora legale (29/03/2026, 02:00 → 03:00)", () => {
     expect(localDate(new Date("2026-03-28T23:30:00Z"), ROME)).toBe("2026-03-29"); // 00:30 CET
     expect(localDate(new Date("2026-03-29T21:30:00Z"), ROME)).toBe("2026-03-29"); // 23:30 CEST
+  });
+});
+
+describe("scheduleDueDate", () => {
+  it("per un all-day è il giorno di scadenza, senza conversioni", () => {
+    expect(scheduleDueDate(allDay("2026-10-29", "2026-10-27"))).toBe("2026-10-29");
+  });
+
+  it("per un timed è il giorno locale dell'istante: il confine dipende dalla timezone", () => {
+    // 23:30 UTC del 23/11 è già il 24/11 a Roma (CET, +1).
+    expect(scheduleDueDate(timed("2026-11-23T23:30:00.000Z"))).toBe("2026-11-24");
+    expect(
+      scheduleDueDate({
+        allDay: false,
+        from: null,
+        to: new Date("2026-11-23T23:30:00.000Z"),
+        timeZone: "UTC",
+      }),
+    ).toBe("2026-11-23");
+  });
+});
+
+describe("scheduleStartDate", () => {
+  it("per un all-day è il giorno d'inizio dell'intervallo", () => {
+    expect(scheduleStartDate(allDay("2026-10-29", "2026-10-27"))).toBe("2026-10-27");
+  });
+
+  it("è null per un punto senza from", () => {
+    expect(scheduleStartDate(allDay("2026-10-27"))).toBeNull();
+    expect(scheduleStartDate(timed("2026-10-27T10:00:00.000Z"))).toBeNull();
+  });
+
+  it("per un timed è il giorno locale del from, anche se cade nel giorno prima", () => {
+    const schedule = timed("2026-11-24T09:00:00.000Z", "2026-11-23T22:30:00.000Z");
+    expect(scheduleStartDate(schedule)).toBe("2026-11-23");
+    expect(scheduleDueDate(schedule)).toBe("2026-11-24");
   });
 });
 
