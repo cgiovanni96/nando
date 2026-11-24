@@ -84,9 +84,28 @@ export const it = {
     },
   },
   dashboard: {
-    title: "Oggi",
     today: {
-      title: "Nessun task per Oggi",
+      tab: "Oggi",
+      empty: "Niente per oggi",
+      groups: { overdue: "In ritardo", current: "In svolgimento", dueToday: "Scade oggi" },
+      showAll: "Mostra tutte ({{count}})",
+      showLess: "Mostra meno",
+    },
+    next: { tab: "Prossimi 7 giorni", empty: "Niente nei prossimi giorni" },
+    agenda: {
+      loading: "Caricamento dell'agenda",
+      error: "Non è stato possibile caricare l'agenda.",
+    },
+    row: {
+      complete: "Completa {{title}}",
+      menu: "Azioni per {{title}}",
+      inProgress: "In corso",
+      starts: "inizia",
+      error: "Non è stato possibile aggiornare il task.",
+    },
+    capture: {
+      placeholder: "Nuovo task per oggi",
+      success: "Task aggiunto a Oggi.",
     },
   },
   inbox: {
