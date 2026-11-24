@@ -1,6 +1,6 @@
 import type { DomainError } from "@nando/kernel";
 
-import type { Schedule } from "./schedule";
+import type { LocalDate, Schedule, TemporalState } from "./schedule";
 
 export const TASK_STATUSES = ["open", "in_progress", "completed", "skipped", "cancelled"] as const;
 
@@ -42,6 +42,17 @@ export type Task = {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+};
+
+/**
+ * Voce dell'agenda: il task con lo Schedule (sempre presente) e i giorni locali
+ * derivati, valutati nella timezone del Task.
+ */
+export type AgendaEntry = Omit<Task, "schedule"> & {
+  schedule: Schedule;
+  temporalState: TemporalState;
+  dueDate: LocalDate;
+  startDate: LocalDate | null;
 };
 
 /** Voce dello storico di un'occorrenza; le riaperture sono rettifiche. */
