@@ -1,0 +1,14 @@
+.anchor {
+  pointer-events: none;
+}
+
+.open {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  text-decoration: none;
+}
+
+.open:hover {
+  color: var(--mantine-color-text);
+  text-decoration: underline;
+}

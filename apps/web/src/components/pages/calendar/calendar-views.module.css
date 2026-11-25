@@ -1,0 +1,51 @@
+/* Le posizioni degli eventi sono percentuali di questo strato: 50% per riga. */
+.allDayEvents {
+  bottom: auto;
+  height: 3rem;
+  overflow: visible;
+}
+
+.allDayEvents::before {
+  display: none;
+}
+
+/* La radice dell'evento ha pointer-events: none: senza questo, click e colori restano sulla libreria. */
+.allDayBody {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding-inline: var(--mantine-spacing-xs);
+  white-space: nowrap;
+  font-size: var(--mantine-font-size-xs);
+  flex: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  background-color: var(--event-bg);
+  color: var(--event-color);
+  border-radius: var(--event-radius);
+  font-weight: var(--mantine-font-weight-medium);
+}
+
+@media (hover: hover) {
+  .allDayBody:hover {
+    background-color: var(--event-hover);
+  }
+}
+
+.weekAllDay {
+  position: sticky;
+  top: var(--week-view-week-day-height);
+  z-index: 3;
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.dayAllDay,
+.daySlotLabel[data-all-day] {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background-color: var(--mantine-color-body);
+}

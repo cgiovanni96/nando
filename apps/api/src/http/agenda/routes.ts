@@ -24,13 +24,16 @@ export function createAgendaRoutes(deps: ApiDeps, tasks: TaskModule) {
       tags: ["agenda"],
       summary: "Agenda per intervallo di giorni",
       description:
-        "Query senza effetti: restituisce le occorrenze dei task in stato `open` o " +
+        "Query senza effetti: restituisce di default le occorrenze dei task in stato `open` o " +
         "`in_progress` che hanno uno Schedule con giorni sovrapposti a `from`–`to` " +
-        "(estremi inclusi), valutati nella timezone del Task. " +
-        "Con `includeOverdue=true` tornano anche le occorrenze scadute ora con data fuori " +
-        "dall'intervallo; quelle nell'intervallo tornano sempre. I task senza Schedule non " +
+        "(estremi inclusi), valutati nella timezone del Task. Con `includeClosed=true` tornano " +
+        "anche le occorrenze chiuse (`completed`, `skipped`, `cancelled`) sovrapposte " +
+        "all'intervallo. Con `includeOverdue=true` tornano anche le occorrenze attive scadute " +
+        "ora con data fuori dall'intervallo: l'estensione copre solo le occorrenze attive, " +
+        "quindi una chiusa fuori dall'intervallo non torna mai. I task senza Schedule non " +
         "compaiono mai. Ogni voce porta `temporalState`, `dueDate` e `startDate` calcolati " +
-        "nella timezone del Task. Un `from` dopo `to` o un intervallo oltre 62 giorni, estremi inclusi, è un " +
+        "nella timezone del Task; `temporalState` è `null` per le occorrenze chiuse. Un `from` " +
+        "dopo `to` o un intervallo oltre 62 giorni, estremi inclusi, è un " +
         "400 `validation_error`. La paginazione usa `cursor` e `limit` (default 50, massimo 100).",
       responses: {
         200: jsonResponse(
@@ -48,6 +51,7 @@ export function createAgendaRoutes(deps: ApiDeps, tasks: TaskModule) {
         from: query.from,
         to: query.to,
         includeOverdue: query.includeOverdue === "true",
+        includeClosed: query.includeClosed === "true",
         cursor: query.cursor ?? null,
         limit: query.limit,
       });

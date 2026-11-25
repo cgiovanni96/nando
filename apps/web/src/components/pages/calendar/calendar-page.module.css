@@ -1,0 +1,6 @@
+/* Sul telefono le viste non stanno accanto al titolo: vanno a capo e occupano la riga. */
+@media (max-width: 47.99em) {
+  .views {
+    width: 100%;
+  }
+}

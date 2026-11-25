@@ -12,6 +12,7 @@ import { cssVariablesResolver, theme } from "@web/lib/theme";
 import "dayjs/locale/it";
 import "@mantine/core/styles.layer.css";
 import "@mantine/dates/styles.layer.css";
+import "@mantine/schedule/styles.layer.css";
 import "@mantine/notifications/styles.layer.css";
 import "@mantine/spotlight/styles.layer.css";
 import "@web/styles/global.css";

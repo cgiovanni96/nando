@@ -25,6 +25,7 @@ export const agendaQuerySchema = z
     from: z.iso.date(),
     to: z.iso.date(),
     includeOverdue: z.enum(["true", "false"]).default("false"),
+    includeClosed: z.enum(["true", "false"]).default("false"),
     cursor: z.string().min(1).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(50),
   })
@@ -41,7 +42,7 @@ export const temporalStateSchema = z.enum(["upcoming", "current", "overdue"]);
 
 export const agendaItemDtoSchema = taskDtoSchema.extend({
   schedule: scheduleDtoSchema,
-  temporalState: temporalStateSchema,
+  temporalState: temporalStateSchema.nullable(),
   dueDate: z.iso.date(),
   startDate: z.iso.date().nullable(),
 });
@@ -85,6 +86,20 @@ export const agendaResponseExample = agendaResponseSchema.parse({
         temporalState: "current",
         dueDate: "2026-11-14",
         startDate: "2026-11-10",
+      }),
+      agendaItemDtoFactory({
+        id: "0199a4c2-7a10-7000-8000-000000000303",
+        title: "Ripasso settimanale",
+        status: "completed",
+        schedule: {
+          allDay: true,
+          from: null,
+          to: "2026-11-12",
+          timeZone: EXAMPLE_TIME_ZONE,
+        },
+        temporalState: null,
+        dueDate: "2026-11-12",
+        startDate: null,
       }),
     ],
     nextCursor: null,

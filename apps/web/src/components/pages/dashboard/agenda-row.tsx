@@ -1,20 +1,12 @@
-import { ActionIcon, Badge, Button, Checkbox, Group, Menu, Text } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+import { ActionIcon, Badge, Checkbox, Group, Menu, Text } from "@mantine/core";
 import { IconDots, IconPlayerSkipForward } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { ApiError } from "@web/lib/api-error";
+import { useOccurrenceActions } from "@web/components/shared/occurrence/use-occurrence-actions";
 import { formatLocalDate, formatTime } from "@web/lib/format/datetime";
-import { newCommandId } from "@web/lib/ids";
-import {
-  completeTaskMutationOptions,
-  reopenTaskMutationOptions,
-  skipTaskMutationOptions,
-} from "@web/lib/mutations/tasks";
+import { localToday } from "@web/lib/local-date";
 import type { AgendaItem } from "@web/lib/queries/agenda";
-import { localToday } from "./agenda-groups";
 import classes from "./agenda-row.module.css";
 
 type AgendaRowProps = {
@@ -22,100 +14,10 @@ type AgendaRowProps = {
   starts?: boolean;
 };
 
-type CompleteToastProps = {
-  onUndo: () => void;
-};
-
-function CompleteToast({ onUndo }: CompleteToastProps) {
-  const { t } = useTranslation();
-
-  return (
-    <Group gap="sm" justify="space-between" wrap="nowrap">
-      <Text size="sm">{t("task.actions.completed")}</Text>
-      <Button size="compact-xs" variant="subtle" onClick={onUndo}>
-        {t("task.actions.undo")}
-      </Button>
-    </Group>
-  );
-}
-
-function showCompleteToast(onUndo: () => void) {
-  return notifications.show({
-    message: <CompleteToast onUndo={onUndo} />,
-    color: "gray",
-    withCloseButton: false,
-    autoClose: 6000,
-    p: "sm",
-    radius: "sm",
-  });
-}
-
 export function AgendaRow({ item, starts = false }: AgendaRowProps) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
+  const { complete, skip, pending } = useOccurrenceActions(item);
 
-  function invalidate() {
-    void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-  }
-
-  function notifyError(error: Error) {
-    notifications.show({
-      message: error instanceof ApiError ? error.message : t("dashboard.row.error"),
-      color: "red",
-      withCloseButton: false,
-      p: "sm",
-      radius: "sm",
-    });
-  }
-
-  const reopen = useMutation({
-    ...reopenTaskMutationOptions,
-    onSuccess: () => {
-      invalidate();
-      notifications.show({
-        message: t("task.actions.reopened"),
-        color: "gray",
-        withCloseButton: false,
-        p: "sm",
-        radius: "sm",
-      });
-    },
-    onError: notifyError,
-  });
-
-  const complete = useMutation({
-    ...completeTaskMutationOptions,
-    // «Annulla» è una rettifica (ADR-0004): riapre allo stato di prima.
-    onSuccess: () => {
-      invalidate();
-      const previous = item.status === "in_progress" ? "in_progress" : "open";
-      const id = showCompleteToast(() => {
-        notifications.hide(id);
-        reopen.mutate({
-          taskId: item.id,
-          input: { commandId: newCommandId(), to: previous },
-        });
-      });
-    },
-    onError: notifyError,
-  });
-
-  const skip = useMutation({
-    ...skipTaskMutationOptions,
-    onSuccess: () => {
-      invalidate();
-      notifications.show({
-        message: t("task.actions.skipped"),
-        color: "gray",
-        withCloseButton: false,
-        p: "sm",
-        radius: "sm",
-      });
-    },
-    onError: notifyError,
-  });
-
-  const pending = complete.isPending || reopen.isPending || skip.isPending;
   const today = localToday();
   const dueLabel =
     item.temporalState === "overdue" && item.dueDate !== today
@@ -127,7 +29,7 @@ export function AgendaRow({ item, starts = false }: AgendaRowProps) {
   return (
     <Group gap="sm" wrap="nowrap" py="xs" className={classes.row}>
       <Checkbox
-        onChange={() => complete.mutate({ taskId: item.id, input: { commandId: newCommandId() } })}
+        onChange={complete}
         disabled={pending}
         aria-label={t("dashboard.row.complete", { title: item.title })}
       />
@@ -170,7 +72,7 @@ export function AgendaRow({ item, starts = false }: AgendaRowProps) {
           <Menu.Item
             leftSection={<IconPlayerSkipForward size={16} stroke={1.6} />}
             disabled={pending}
-            onClick={() => skip.mutate({ taskId: item.id, input: { commandId: newCommandId() } })}
+            onClick={skip}
           >
             {t("task.actions.skip")}
           </Menu.Item>

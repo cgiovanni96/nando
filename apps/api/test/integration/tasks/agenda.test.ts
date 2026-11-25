@@ -155,6 +155,136 @@ describe("agenda query", () => {
     });
   });
 
+  it("returns closed occurrences only with includeClosed", async () => {
+    const completed = await createTask({
+      title: "Completata oggi",
+      schedule: { allDay: true, from: null, to: today },
+    });
+    const skipped = await createTask({
+      title: "Saltata oggi",
+      schedule: { allDay: true, from: null, to: today },
+    });
+    const cancelled = await createTask({
+      title: "Cancellata oggi",
+      schedule: { allDay: true, from: null, to: today },
+    });
+
+    const commands = await Promise.all([
+      post(
+        `/api/tasks/${completed.id}/complete`,
+        taskCommandRequestFactory({ commandId: newId() }),
+      ),
+      post(`/api/tasks/${skipped.id}/skip`, taskCommandRequestFactory({ commandId: newId() })),
+      post(`/api/tasks/${cancelled.id}/cancel`, taskCommandRequestFactory({ commandId: newId() })),
+    ]);
+
+    for (const response of commands) expect(response.status).toBe(200);
+
+    const withoutClosed = await readAgenda(`from=${today}&to=${today}`);
+    const withClosed = await readAgenda(`from=${today}&to=${today}&includeClosed=true`);
+
+    for (const task of [completed, skipped, cancelled]) {
+      expect(findById(withoutClosed, task.id)).toBeUndefined();
+    }
+
+    expect(findById(withClosed, completed.id)).toMatchObject({
+      id: completed.id,
+      status: "completed",
+      temporalState: null,
+    });
+    expect(findById(withClosed, skipped.id)).toMatchObject({
+      id: skipped.id,
+      status: "skipped",
+      temporalState: null,
+    });
+    expect(findById(withClosed, cancelled.id)).toMatchObject({
+      id: cancelled.id,
+      status: "cancelled",
+      temporalState: null,
+    });
+  });
+
+  it("never extends a closed occurrence outside the range", async () => {
+    const completed = await createTask({
+      title: "Completata ieri",
+      schedule: { allDay: true, from: null, to: addDays(today, -1) },
+    });
+
+    const completedResponse = await post(
+      `/api/tasks/${completed.id}/complete`,
+      taskCommandRequestFactory({ commandId: newId() }),
+    );
+
+    expect(completedResponse.status).toBe(200);
+
+    const todayBoth = await readAgenda(
+      `from=${today}&to=${today}&includeClosed=true&includeOverdue=true`,
+    );
+    const yesterday = addDays(today, -1);
+    const coveringYesterday = await readAgenda(
+      `from=${yesterday}&to=${yesterday}&includeClosed=true`,
+    );
+
+    expect(findById(todayBoth, completed.id)).toBeUndefined();
+    expect(findById(coveringYesterday, completed.id)).toMatchObject({
+      id: completed.id,
+      status: "completed",
+      temporalState: null,
+    });
+  });
+
+  it("never extends a closed timed point outside the range", async () => {
+    const twoDaysAgo = addDays(today, -2);
+    const completed = await createTask({
+      title: "Punto completato due giorni fa",
+      schedule: { allDay: false, from: null, to: `${twoDaysAgo}T10:00:00.000Z` },
+    });
+
+    const completedResponse = await post(
+      `/api/tasks/${completed.id}/complete`,
+      taskCommandRequestFactory({ commandId: newId() }),
+    );
+
+    expect(completedResponse.status).toBe(200);
+
+    const todayBoth = await readAgenda(
+      `from=${today}&to=${today}&includeClosed=true&includeOverdue=true`,
+    );
+    const coveringTheDay = await readAgenda(
+      `from=${twoDaysAgo}&to=${twoDaysAgo}&includeClosed=true`,
+    );
+
+    expect(findById(todayBoth, completed.id)).toBeUndefined();
+    expect(findById(coveringTheDay, completed.id)).toMatchObject({
+      id: completed.id,
+      status: "completed",
+      temporalState: null,
+    });
+  });
+
+  it("never returns a closed task in the deletion grace window", async () => {
+    const skipped = await createTask({
+      title: "Saltata e cancellata",
+      schedule: { allDay: true, from: null, to: today },
+    });
+
+    const skipResponse = await post(
+      `/api/tasks/${skipped.id}/skip`,
+      taskCommandRequestFactory({ commandId: newId() }),
+    );
+    const deleteResponse = await post(
+      `/api/tasks/${skipped.id}/delete`,
+      taskCommandRequestFactory({ commandId: newId() }),
+    );
+
+    expect(skipResponse.status).toBe(200);
+    expect(deleteResponse.status).toBe(200);
+
+    const withClosed = await readAgenda(`from=${today}&to=${today}&includeClosed=true`);
+
+    expect(findById(withClosed, skipped.id)).toBeUndefined();
+  });
+
   it("rejects an inverted or too wide range", async () => {
     const inverted = await get(`/api/agenda?from=${addDays(today, 1)}&to=${today}`);
     const invertedParsed = errorEnvelopeSchema.safeParse(await inverted.json());

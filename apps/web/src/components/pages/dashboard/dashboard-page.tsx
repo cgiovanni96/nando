@@ -2,7 +2,7 @@ import { Skeleton, Stack, Title } from "@mantine/core";
 import { ClientOnly } from "@tanstack/react-router";
 
 import { formatLocalDate } from "@web/lib/format/datetime";
-import { localToday } from "./agenda-groups";
+import { localToday } from "@web/lib/local-date";
 import { TodayWidget } from "./today-widget";
 
 /** Altezza di un h1 nel tema (28px × 1.3): il titolo non sposta il layout quando arriva. */

@@ -35,12 +35,20 @@ export type AgendaFilter = {
   to: LocalDate;
   /** Restituisce anche le occorrenze già scadute ora, qualunque sia la data. */
   includeOverdue?: boolean;
+  /** Restituisce anche le occorrenze chiuse (`completed`, `skipped`, `cancelled`). */
+  includeClosed?: boolean;
   cursor?: string | null;
   limit?: number;
 };
 
 /** Tipo che questa sorgente dichiara nell'Inbox: uno solo, i task. */
 const INBOX_ENTITY_TYPE = "task";
+
+/** Occorrenze attive, `open` e `in_progress`: le uniche che l'agenda mostra di default. */
+const ACTIVE_STATUSES = ["open", "in_progress"] as const;
+
+/** Occorrenze chiuse: tornano solo con `includeClosed`. */
+const CLOSED_STATUSES = ["completed", "skipped", "cancelled"] as const;
 
 export function createTaskQueries({ db, clock }: TaskQueryDeps) {
   return {
@@ -143,9 +151,11 @@ export function createTaskQueries({ db, clock }: TaskQueryDeps) {
     },
 
     /**
-     * Agenda: le occorrenze attive con uno Schedule che toccano l'intervallo di
-     * giorni locali, più quelle scadute ora se richiesto. Ogni giorno si valuta
-     * nella timezone del Task; l'ordine è per id, come `list`.
+     * Agenda: le occorrenze con uno Schedule che toccano l'intervallo di giorni
+     * locali, più quelle scadute ora se richiesto. Di default solo le occorrenze
+     * attive; con `includeClosed` anche le chiuse. L'estensione per scadenza
+     * vale solo per le occorrenze attive. Ogni giorno si valuta nella timezone
+     * del Task; l'ordine è per id, come `list`.
      */
     async agenda(
       filter: AgendaFilter,
@@ -159,13 +169,21 @@ export function createTaskQueries({ db, clock }: TaskQueryDeps) {
       const localDue = sql`case when ${taskOccurrence.allDay} then ${taskOccurrence.endDate} else (${taskOccurrence.endAt} at time zone ${task.timeZone})::date end`;
       const localStart = sql`case when ${taskOccurrence.allDay} then coalesce(${taskOccurrence.startDate}, ${taskOccurrence.endDate}) else (coalesce(${taskOccurrence.startAt}, ${taskOccurrence.endAt}) at time zone ${task.timeZone})::date end`;
       const inRange = sql`${localStart} <= ${filter.to}::date and ${localDue} >= ${filter.from}::date`;
-      const overdue = sql`(${taskOccurrence.allDay} and ${taskOccurrence.endDate} < (${nowIso}::timestamptz at time zone ${task.timeZone})::date) or (not ${taskOccurrence.allDay} and ${taskOccurrence.endAt} < ${nowIso}::timestamptz)`;
+      const overdue = sql`((${taskOccurrence.allDay} and ${taskOccurrence.endDate} < (${nowIso}::timestamptz at time zone ${task.timeZone})::date) or (not ${taskOccurrence.allDay} and ${taskOccurrence.endAt} < ${nowIso}::timestamptz))`;
+      const statuses = filter.includeClosed
+        ? [...ACTIVE_STATUSES, ...CLOSED_STATUSES]
+        : [...ACTIVE_STATUSES];
+      // L'estensione per scadenza copre le sole occorrenze attive: una chiusa
+      // fuori dall'intervallo non torna mai, nemmeno con entrambi i flag.
+      const range = filter.includeOverdue
+        ? or(inRange, and(inArray(taskOccurrence.status, [...ACTIVE_STATUSES]), overdue))
+        : inRange;
 
       const conditions: (SQL | undefined)[] = [
         isNull(task.deletedAt),
-        inArray(taskOccurrence.status, ["open", "in_progress"]),
+        inArray(taskOccurrence.status, statuses),
         sql`(${taskOccurrence.endDate} is not null or ${taskOccurrence.endAt} is not null)`,
-        filter.includeOverdue ? or(inRange, overdue) : inRange,
+        range,
       ];
 
       if (filter.cursor) {
@@ -225,18 +243,15 @@ export function createTaskQueries({ db, clock }: TaskQueryDeps) {
   };
 }
 
-/** Voce d'agenda dalla vista piatta; `null` senza Schedule o con occorrenza chiusa. */
+/** Voce d'agenda dalla vista piatta; `null` senza Schedule. */
 function toAgendaEntry(view: Task, now: Date): AgendaEntry | null {
   const schedule = view.schedule;
   if (!schedule) return null;
 
-  const state = temporalState(schedule, view.status, now);
-  if (!state) return null;
-
   return {
     ...view,
     schedule,
-    temporalState: state,
+    temporalState: temporalState(schedule, view.status, now),
     dueDate: scheduleDueDate(schedule),
     startDate: scheduleStartDate(schedule),
   };
