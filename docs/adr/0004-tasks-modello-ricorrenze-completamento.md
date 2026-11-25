@@ -32,7 +32,7 @@ Tasks è core, non una capability (ADR-0005): è uno dei building block che Know
 - Per le date, `to` è inclusiva nella UI e il giorno successivo è il limite esclusivo nei calcoli. Per i timed, `to` è l'istante di fine.
 - `to` è la scadenza: è ciò che l'utente chiama `dueDate`. `from` è opzionale e dice che il task occupa un intervallo.
 - La conversione a UTC avviene al bordo; il dominio conserva la `timeZone`.
-- Calendar rende nel timezone del viewer; ricorrenza e all-day si valutano nella timezone del Task; il dettaglio mostra la timezone originale.
+- Calendar rende nella timezone del Task (emendamento 2026-11-25 in fondo); ricorrenza e all-day si valutano nella timezone del Task; il dettaglio mostra la timezone originale.
 
 ### Stati
 
@@ -133,3 +133,16 @@ Completion
 - **Riaprire = nuovo task**: scomodo per un errore di click.
 - **Auto-skip delle occorrenze perse**: nasconde le occasioni mancate.
 - **Subtask come Task figli**: gerarchia non necessaria in v1.
+
+## Emendamento 2026-11-25 — Calendar nella timezone del Task
+
+**Stato:** accettato. Ticket: NAS-157. Supera la regola di *Schedule* «Calendar rende nel timezone del viewer».
+
+Calendar colloca ogni occorrenza nel giorno e all'ora locale della timezone del Task, non in quella del viewer. La route `agenda`, che alimenta anche Oggi e Prossimi 7 giorni, assegna già i giorni così: con la timezone del viewer, la stessa occorrenza potrebbe comparire in due giorni diversi nelle due schermate.
+
+Conseguenze:
+
+- Il calendario e i widget mostrano le stesse occorrenze per gli stessi giorni, anche quando la timezone del Task è diversa da quella del dispositivo.
+- «Oggi», cioè il giorno evidenziato e quello a cui porta il pulsante, resta il giorno locale del dispositivo.
+- Due occorrenze di Task con timezone diverse si confrontano per ora locale: possono apparire sovrapposte senza esserlo nel tempo reale.
+- Non cambiano le altre regole: la conversione a UTC avviene al bordo, ricorrenza e all-day si valutano nella timezone del Task, il dettaglio mostra la timezone originale.
