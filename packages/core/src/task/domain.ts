@@ -50,7 +50,8 @@ export type Task = {
  */
 export type AgendaEntry = Omit<Task, "schedule"> & {
   schedule: Schedule;
-  temporalState: TemporalState;
+  /** `null` per le occorrenze chiuse. */
+  temporalState: TemporalState | null;
   dueDate: LocalDate;
   startDate: LocalDate | null;
 };

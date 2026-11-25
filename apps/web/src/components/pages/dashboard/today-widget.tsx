@@ -2,8 +2,9 @@ import { Badge, Card, Center, Loader, Tabs, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+import { addDays, localToday } from "@web/lib/local-date";
 import { agendaQueryOptions } from "@web/lib/queries/agenda";
-import { NEXT_DAYS, addDays, groupNextDays, groupToday, localToday } from "./agenda-groups";
+import { NEXT_DAYS, groupNextDays, groupToday } from "./agenda-groups";
 import { NextDaysPanel } from "./next-days-panel";
 import { TodayPanel } from "./today-panel";
 

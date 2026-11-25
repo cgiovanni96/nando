@@ -41,7 +41,7 @@ export function isNavigable(entry: NavEntry): entry is NavigableNavEntry {
 
 export const primaryNav: NavEntry[] = [
   { labelKey: "nav.items.dashboard", icon: IconLayoutDashboard, to: "/" },
-  { labelKey: "nav.items.calendar", icon: IconCalendarEvent, milestone: "M2" },
+  { labelKey: "nav.items.calendar", icon: IconCalendarEvent, to: "/calendar" },
   { labelKey: "nav.items.knowledge", icon: IconBook2, milestone: "M4" },
   { labelKey: "nav.items.habits", icon: IconRepeat, milestone: "M5" },
 ];

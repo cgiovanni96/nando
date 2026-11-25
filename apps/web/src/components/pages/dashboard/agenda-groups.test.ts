@@ -4,11 +4,9 @@ import type { AgendaItem } from "@web/lib/queries/agenda";
 import {
   NEXT_DAYS,
   type TodayGroup,
-  addDays,
   groupNextDays,
   groupToday,
   limitGroups,
-  localToday,
 } from "./agenda-groups";
 
 const TODAY = "2026-11-12";
@@ -209,19 +207,5 @@ describe("groupNextDays", () => {
     const result = groupNextDays([item({ id: "today", dueDate: TODAY })], TODAY);
 
     expect(result.total).toBe(0);
-  });
-});
-
-describe("addDays", () => {
-  it("crosses month and year boundaries", () => {
-    expect(addDays("2026-11-28", 4)).toBe("2026-12-02");
-    expect(addDays("2026-12-30", 3)).toBe("2027-01-02");
-    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
-  });
-});
-
-describe("localToday", () => {
-  it("formats the browser's local calendar day with zero padding", () => {
-    expect(localToday(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
   });
 });
