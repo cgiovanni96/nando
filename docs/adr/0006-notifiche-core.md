@@ -4,6 +4,7 @@
 - **Data:** 2026-10-27
 - **Ticket:** NAS-83 — Notifiche core: trigger, preferenze, dedup
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
+- **Emendato da:** ADR-0029 (overdue per serie, offset di default e «Nessun promemoria», dispatcher pg-boss, polling in-app fino a M6)
 
 ## Contesto
 
