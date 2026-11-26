@@ -52,8 +52,8 @@ Overdue derivato, range, timezone e DST sono provati dai test unit di `schedule`
 ## 4. Chiusura
 
 - [x] NAS-153, NAS-154, NAS-155, NAS-156, NAS-157, NAS-158 e NAS-159 su `main`.
-- [ ] Deploy del tag di NAS-159 verde su staging; rollback provato.
-- [ ] Sezione 3 completata su desktop e telefono.
+- [x] Deploy del tag di NAS-159 verde su staging; rollback provato.
+- [x] Sezione 3 completata su desktop e telefono il 2026-11-26.
 
 Con queste voci spuntate la roadmap porta M2 a **Done** e M3 può partire. L'attrito trovato durante la demo diventa un ticket, non un blocco (ADR-0027).
 
