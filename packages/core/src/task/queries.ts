@@ -23,6 +23,8 @@ export type ListTasksFilter = {
   /** `null` filtra l'Inbox; `undefined` non filtra. */
   spaceId?: string | null;
   status?: TaskStatus;
+  /** `true` tiene solo i task con uno Schedule, `false` solo quelli senza; `undefined` non filtra. */
+  scheduled?: boolean;
   /** `active` esclude i cancellati, `deleted` mostra solo quelli in grazia. */
   state?: TaskListState;
   cursor?: string | null;
@@ -122,6 +124,16 @@ export function createTaskQueries({ db, clock }: TaskQueryDeps) {
 
       if (filter.status) {
         conditions.push(eq(taskOccurrence.status, filter.status));
+      }
+
+      if (filter.scheduled === true) {
+        conditions.push(
+          sql`(${taskOccurrence.endDate} is not null or ${taskOccurrence.endAt} is not null)`,
+        );
+      } else if (filter.scheduled === false) {
+        conditions.push(
+          sql`(${taskOccurrence.endDate} is null and ${taskOccurrence.endAt} is null)`,
+        );
       }
 
       if (filter.cursor) {

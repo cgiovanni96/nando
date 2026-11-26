@@ -19,6 +19,8 @@ export function createListTasksRoute(tasks: TaskModule) {
       description:
         "Query senza effetti: restituisce i task ordinati dal più recente. " +
         "`spaceId` filtra per Space proprietario, `status` per stato dell'occorrenza. " +
+        "`scheduled` tiene solo i task con uno Schedule (`true`) o senza (`false`) e si combina " +
+        "con `status` e `spaceId`. " +
         "`state` vale `active` (default) o `deleted`: quest'ultimo elenca solo i task " +
         "cancellati ancora dentro la finestra di grazia di 7 giorni. " +
         "La paginazione usa `cursor` e `limit` (default 50, massimo 100).",
@@ -40,6 +42,7 @@ export function createListTasksRoute(tasks: TaskModule) {
         state: query.state,
         ...(query.spaceId ? { spaceId: query.spaceId } : {}),
         ...(query.status ? { status: query.status } : {}),
+        ...(query.scheduled ? { scheduled: query.scheduled === "true" } : {}),
       });
 
       return c.json(

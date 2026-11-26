@@ -1,11 +1,13 @@
 import { newId } from "@nando/kernel";
 import { afterAll, describe, expect, it } from "vitest";
 
+import { agendaResponseSchema } from "@api/http/agenda/contract";
 import { errorEnvelopeSchema } from "@api/http/envelope";
 import {
   taskCommandRequestFactory,
   taskListResponseSchema,
   taskResponseSchema,
+  updateTaskRequestFactory,
 } from "@api/http/tasks/contract";
 import { createSpace, createTask, get, handle, post, readTask } from "./helpers";
 
@@ -94,6 +96,149 @@ describe("task queries", () => {
       const firstIds = firstParsed.data.data.items.map((item) => item.id);
       const secondIds = secondParsed.data.data.items.map((item) => item.id);
       expect(secondIds.some((id) => firstIds.includes(id))).toBe(false);
+    }
+  });
+
+  it("filters tasks by the presence of a Schedule", async () => {
+    const space = await createSpace("Vita");
+    const inbox = await createTask({ title: "Inbox senza data" });
+    const inSpace = await createTask({ title: "Space senza data", spaceId: space.id });
+    const allDay = await createTask({
+      title: "Conferenza",
+      schedule: { allDay: true, from: "2026-12-01", to: "2026-12-02" },
+    });
+    const timed = await createTask({
+      title: "Visita",
+      schedule: { allDay: false, from: null, to: "2026-12-01T10:00:00.000Z" },
+    });
+
+    const unscheduled = await get("/api/tasks?scheduled=false");
+    const unscheduledParsed = taskListResponseSchema.safeParse(await unscheduled.json());
+
+    expect(unscheduled.status).toBe(200);
+    expect(unscheduledParsed.success).toBe(true);
+    if (unscheduledParsed.success) {
+      const ids = unscheduledParsed.data.data.items.map((item) => item.id);
+      expect(ids.sort()).toEqual([inbox.id, inSpace.id].sort());
+      expect(unscheduledParsed.data.data.items.every((item) => item.schedule === null)).toBe(true);
+    }
+
+    const scheduled = await get("/api/tasks?scheduled=true");
+    const scheduledParsed = taskListResponseSchema.safeParse(await scheduled.json());
+
+    expect(scheduled.status).toBe(200);
+    expect(scheduledParsed.success).toBe(true);
+    if (scheduledParsed.success) {
+      const ids = scheduledParsed.data.data.items.map((item) => item.id);
+      expect(ids.sort()).toEqual([allDay.id, timed.id].sort());
+    }
+  });
+
+  it("combines scheduled with status", async () => {
+    const open = await createTask({ title: "Aperta" });
+    const started = await createTask({ title: "Iniziata" });
+    const startedResponse = await post(
+      `/api/tasks/${started.id}/start`,
+      taskCommandRequestFactory({ commandId: newId() }),
+    );
+
+    expect(startedResponse.status).toBe(200);
+
+    const openList = await get("/api/tasks?scheduled=false&status=open");
+    const openParsed = taskListResponseSchema.safeParse(await openList.json());
+
+    expect(openParsed.success).toBe(true);
+    if (openParsed.success) {
+      expect(openParsed.data.data.items.map((item) => item.id)).toEqual([open.id]);
+    }
+
+    const startedList = await get("/api/tasks?scheduled=false&status=in_progress");
+    const startedParsed = taskListResponseSchema.safeParse(await startedList.json());
+
+    expect(startedParsed.success).toBe(true);
+    if (startedParsed.success) {
+      expect(startedParsed.data.data.items.map((item) => item.id)).toEqual([started.id]);
+    }
+  });
+
+  it("paginates unscheduled tasks around a scheduled one", async () => {
+    const first = await createTask({ title: "Uno" });
+    await createTask({
+      title: "Pianificata",
+      schedule: { allDay: true, from: "2026-12-01", to: "2026-12-01" },
+    });
+    const second = await createTask({ title: "Due" });
+    const third = await createTask({ title: "Tre" });
+
+    const page = await get("/api/tasks?scheduled=false&limit=2");
+    const pageParsed = taskListResponseSchema.safeParse(await page.json());
+
+    expect(pageParsed.success).toBe(true);
+    if (!pageParsed.success) return;
+
+    expect(pageParsed.data.data.items.map((item) => item.id)).toEqual([third.id, second.id]);
+    expect(pageParsed.data.data.nextCursor).toEqual(expect.any(String));
+
+    const cursor = pageParsed.data.data.nextCursor;
+    if (!cursor) return;
+
+    const next = await get(
+      `/api/tasks?scheduled=false&limit=2&cursor=${encodeURIComponent(cursor)}`,
+    );
+    const nextParsed = taskListResponseSchema.safeParse(await next.json());
+
+    expect(nextParsed.success).toBe(true);
+    if (nextParsed.success) {
+      expect(nextParsed.data.data.items.map((item) => item.id)).toEqual([first.id]);
+      expect(nextParsed.data.data.nextCursor).toBeNull();
+    }
+  });
+
+  it("rejects an invalid scheduled filter", async () => {
+    const response = await get("/api/tasks?scheduled=maybe");
+    const parsed = errorEnvelopeSchema.safeParse(await response.json());
+
+    expect(response.status).toBe(400);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.error.code).toBe("validation_error");
+    }
+  });
+
+  it("moves a planned task out of scheduled=false and into the agenda", async () => {
+    const task = await createTask({ title: "Da pianificare" });
+
+    const update = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version,
+        title: task.title,
+        spaceId: null,
+        schedule: { allDay: true, from: null, to: "2026-12-05" },
+      }),
+    );
+    const updateParsed = taskResponseSchema.safeParse(await update.json());
+
+    expect(update.status).toBe(200);
+    expect(updateParsed.success).toBe(true);
+
+    const unscheduled = await get("/api/tasks?scheduled=false");
+    const unscheduledParsed = taskListResponseSchema.safeParse(await unscheduled.json());
+
+    expect(unscheduledParsed.success).toBe(true);
+    if (unscheduledParsed.success) {
+      expect(unscheduledParsed.data.data.items.map((item) => item.id)).not.toContain(task.id);
+    }
+
+    const agenda = await get("/api/agenda?from=2026-12-05&to=2026-12-05");
+    const agendaParsed = agendaResponseSchema.safeParse(await agenda.json());
+
+    expect(agenda.status).toBe(200);
+    expect(agendaParsed.success).toBe(true);
+    if (agendaParsed.success) {
+      const item = agendaParsed.data.data.items.find((entry) => entry.id === task.id);
+      expect(item).toMatchObject({ id: task.id, dueDate: "2026-12-05" });
     }
   });
 
