@@ -5,6 +5,7 @@
 - **Ticket:** NAS-155 — Prototype del calendario (M2)
 - **Emenda:** ADR-0004 (stati dell'occorrenza), ADR-0023 (catalogo widget della dashboard)
 - **Prototype:** branch `proto/nas-155-calendario`, `docs/mock/calendar-m2.js`, variante B
+- **Emendato da:** ADR-0029 (la board mostra per ogni serie i ritardi, le occorrenze in corso e la prossima)
 
 ## Contesto
 

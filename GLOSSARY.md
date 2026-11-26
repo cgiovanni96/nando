@@ -66,6 +66,18 @@ _Avoid_: dueDate (come stringa), evento
 Regola RRULE (subset RFC 5545) che genera le Occurrences di un Task; si valuta nella timezone del Task.
 _Avoid_: schedulazione, ripetizione
 
+**Series**:
+Insieme delle Occurrences generate da una Recurrence rule, identificato da un `seriesId` stabile anche dopo uno Split; nella UI «serie».
+_Avoid_: ricorrenza (come sinonimo), task ricorrente (come entità)
+
+**Exception**:
+Occurrence di una Series modificata da sola (Schedule o note), che la Recurrence rule non sovrascrive più; nella UI «modificata».
+_Avoid_: override, detached, occorrenza staccata
+
+**Split**:
+Modifica «questa e le future» di una Series: la regola del Task attuale termina prima dell'Occurrence scelta e un Task nuovo della stessa Series prosegue con la regola modificata.
+_Avoid_: fork, copia della serie
+
 **Skip**:
 Chiusura di una singola Occurrence senza completamento e senza Evidence; la serie continua.
 _Avoid_: cancel, delete

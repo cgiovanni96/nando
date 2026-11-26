@@ -4,7 +4,7 @@
 - **Data:** 2026-10-27
 - **Ticket:** NAS-57 — Tasks: modello, ricorrenze, completamento; revisione in NAS-55 — Calendar interno: vista sui task, range e timezone
 - **Mappa:** NAS-41 — Nando v1, Fondazione decision-complete
-- **Emendato da:** ADR-0028 (stato `in_progress` dell'occorrenza; `current` si chiama «In svolgimento» nella UI)
+- **Emendato da:** ADR-0028 (stato `in_progress` dell'occorrenza; `current` si chiama «In svolgimento» nella UI); ADR-0029 (serie, `seriesId`, eccezioni, split, fine mese, `reminderMode`)
 
 ## Contesto
 
