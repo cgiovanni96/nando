@@ -44,6 +44,34 @@ export type Task = {
   deletedAt: Date | null;
 };
 
+/** Colonne della board: le tre che una card può occupare. */
+export const BOARD_STATUSES = ["open", "in_progress", "completed"] as const;
+
+/** Stato di una colonna della board. */
+export type BoardStatus = (typeof BOARD_STATUSES)[number];
+
+/** Orizzonti di scadenza selezionabili dai filtri della board. */
+export const BOARD_HORIZONS = [7, 15, 30] as const;
+
+/** Orizzonte di scadenza della board, in giorni. */
+export type BoardHorizon = (typeof BOARD_HORIZONS)[number];
+
+/** Giorni di Fatto: completamenti con occurredAt ≥ now − 7 giorni. */
+export const BOARD_DONE_DAYS = 7;
+
+/**
+ * Voce della board: il task con il giorno locale di scadenza, lo stato
+ * temporale e l'ultimo completamento, valutati ora.
+ */
+export type BoardEntry = Task & {
+  /** `scheduleDueDate`, `null` senza Schedule. */
+  dueDate: LocalDate | null;
+  /** `temporalState(schedule, status, now)`; `null` se chiuso o senza Schedule. */
+  temporalState: TemporalState | null;
+  /** Ultimo Completion; `null` se status ≠ completed. */
+  completedAt: Date | null;
+};
+
 /**
  * Voce dell'agenda: il task con lo Schedule (sempre presente) e i giorni locali
  * derivati, valutati nella timezone del Task.

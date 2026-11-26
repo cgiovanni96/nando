@@ -5,6 +5,7 @@ import {
   IconFolders,
   IconInbox,
   IconLayoutDashboard,
+  IconLayoutKanban,
   IconRepeat,
   IconTrash,
 } from "@tabler/icons-react";
@@ -41,6 +42,7 @@ export function isNavigable(entry: NavEntry): entry is NavigableNavEntry {
 
 export const primaryNav: NavEntry[] = [
   { labelKey: "nav.items.dashboard", icon: IconLayoutDashboard, to: "/" },
+  { labelKey: "nav.items.tasks", icon: IconLayoutKanban, to: "/tasks" },
   { labelKey: "nav.items.calendar", icon: IconCalendarEvent, to: "/calendar" },
   { labelKey: "nav.items.knowledge", icon: IconBook2, milestone: "M4" },
   { labelKey: "nav.items.habits", icon: IconRepeat, milestone: "M5" },

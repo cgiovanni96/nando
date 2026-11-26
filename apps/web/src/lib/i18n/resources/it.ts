@@ -18,6 +18,7 @@ export const it = {
     },
     items: {
       dashboard: "Dashboard",
+      tasks: "Task",
       calendar: "Calendario",
       knowledge: "Knowledge",
       habits: "Habits",
@@ -177,6 +178,35 @@ export const it = {
     error: "Non è stato possibile caricare il cestino.",
     restored: "Task ripristinato.",
     restoreError: "Non è stato possibile ripristinare il task.",
+  },
+  tasks: {
+    filters: {
+      space: "Space",
+      allSpaces: "Tutti",
+      horizon: "Scadenza",
+      all: "Tutte",
+      days7: "7 giorni",
+      days15: "15 giorni",
+      days30: "30 giorni",
+      horizonHint:
+        "Con un orizzonte attivo i task senza data e quelli che scadono dopo sono nascosti.",
+    },
+    columns: {
+      open: "Da fare",
+      in_progress: "In corso",
+      completed: "Fatto",
+    },
+    doneWindow: "Ultimi 7 giorni",
+    empty: "Nessun task",
+    loading: "Caricamento dei task",
+    error: "Non è stato possibile caricare i task.",
+    card: {
+      noDate: "Senza data",
+      overdue: "In ritardo",
+      current: "In svolgimento",
+      menu: "Sposta {{title}}",
+      moveTo: "Sposta in {{column}}",
+    },
   },
   task: {
     inboxLabel: "Inbox",

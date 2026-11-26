@@ -18,6 +18,9 @@ export { createSpaceModule, type SpaceModule, type SpaceModuleDeps } from "./spa
 export type { InboxSource, InboxSourceQuery, SpaceDatabase } from "./space/ports";
 export { space, spaceKind, type SpaceRow } from "./space/schema";
 export {
+  BOARD_DONE_DAYS,
+  BOARD_HORIZONS,
+  BOARD_STATUSES,
   isTerminalStatus,
   normalizeTaskTitle,
   reopenViolation,
@@ -31,6 +34,9 @@ export {
   titleViolation,
   transitionViolation,
   type AgendaEntry,
+  type BoardEntry,
+  type BoardHorizon,
+  type BoardStatus,
   type Task,
   type TaskHistoryEntry,
   type TaskSpaceSnapshot,
@@ -51,7 +57,7 @@ export {
 } from "./task/schedule";
 export type { TaskCompleted, TaskCompletionReverted, TaskEvent } from "./task/events";
 export { createTaskModule, type TaskModule, type TaskModuleDeps } from "./task/module";
-export type { AgendaFilter } from "./task/queries";
+export type { AgendaFilter, BoardFilter } from "./task/queries";
 export type { TaskCommandDb, TaskDatabase, TaskSpacePort, TaskTransaction } from "./task/ports";
 export {
   task,

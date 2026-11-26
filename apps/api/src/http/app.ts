@@ -8,6 +8,7 @@ import { openAPIRouteHandler } from "hono-openapi";
 import { errorEnvelope } from "./envelope";
 import { HttpError, toHttpError } from "./errors";
 import { createAgendaRoutes } from "./agenda/routes";
+import { createBoardRoutes } from "./board/routes";
 import { createHealthRoutes } from "./health";
 import { createInboxRoutes } from "./inbox/routes";
 import { requestId } from "./middleware/request-id";
@@ -67,7 +68,8 @@ export function createContractApp(deps: ApiDeps) {
     .route("/", createSpaceRoutes(deps, spaces))
     .route("/", createInboxRoutes(deps, spaces))
     .route("/", createTaskRoutes(deps, tasks))
-    .route("/", createAgendaRoutes(deps, tasks));
+    .route("/", createAgendaRoutes(deps, tasks))
+    .route("/", createBoardRoutes(deps, tasks));
 }
 
 /** App completa del processo api: richieste, errori, health, contratto e docs. */

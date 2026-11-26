@@ -15,6 +15,7 @@ export const contractRoutes = [
   { method: "POST", path: "/api/spaces/{spaceId}/unarchive" },
   { method: "GET", path: "/api/inbox" },
   { method: "GET", path: "/api/agenda" },
+  { method: "GET", path: "/api/board" },
   { method: "GET", path: "/api/tasks" },
   { method: "POST", path: "/api/tasks" },
   { method: "GET", path: "/api/tasks/{taskId}" },

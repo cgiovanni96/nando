@@ -5,7 +5,17 @@ import type { Clock } from "@nando/kernel";
 import { clampLimit, decodeIdCursor, encodeCursor } from "../db/cursor";
 import type { InboxCursor, InboxItem } from "../space/domain";
 import type { InboxSourceQuery } from "../space/ports";
-import type { AgendaEntry, Task, TaskHistoryEntry, TaskStatus } from "./domain";
+import { decodeBoardCursor, encodeBoardCursor } from "./board-cursor";
+import { BOARD_DONE_DAYS } from "./domain";
+import type {
+  AgendaEntry,
+  BoardEntry,
+  BoardHorizon,
+  BoardStatus,
+  Task,
+  TaskHistoryEntry,
+  TaskStatus,
+} from "./domain";
 import { findTaskIncludingDeleted, taskViewColumns, toTask } from "./mapper";
 import type { TaskDatabase } from "./ports";
 import { scheduleDueDate, scheduleStartDate, temporalState } from "./schedule";
@@ -39,6 +49,18 @@ export type AgendaFilter = {
   includeOverdue?: boolean;
   /** Restituisce anche le occorrenze chiuse (`completed`, `skipped`, `cancelled`). */
   includeClosed?: boolean;
+  cursor?: string | null;
+  limit?: number;
+};
+
+/**
+ * Una colonna della board per volta, filtrata per Space e orizzonte di
+ * scadenza. `spaceId` assente non filtra; `horizon` assente non filtra.
+ */
+export type BoardFilter = {
+  status: BoardStatus;
+  spaceId?: string;
+  horizon?: BoardHorizon;
   cursor?: string | null;
   limit?: number;
 };
@@ -225,6 +247,116 @@ export function createTaskQueries({ db, clock }: TaskQueryDeps) {
         items,
         nextCursor: hasMore && last ? encodeCursor({ id: last.id }) : null,
       };
+    },
+
+    /**
+     * Una colonna della board per volta: i task di uno stato (`open`,
+     * `in_progress` o `completed`), filtrati per Space e orizzonte di scadenza.
+     * Gli aperti sono ordinati per giorno locale di scadenza (`dueKey`), i
+     * completati per completamento più recente e limitati agli ultimi
+     * `BOARD_DONE_DAYS` giorni. Un orizzonte attivo nasconde i task senza data e
+     * quelli che scadono dopo il giorno locale oggi + (orizzonte − 1); le
+     * occorrenze scadute restano. Cursore keyset opaco, ignorato se invalido.
+     */
+    async board(filter: BoardFilter): Promise<{ items: BoardEntry[]; nextCursor: string | null }> {
+      const now = clock.now();
+      const nowIso = now.toISOString();
+      const limit = clampLimit(filter.limit);
+
+      // Giorno locale di scadenza: per un all-day è già una data locale, per un
+      // timed si converte l'istante nella timezone del Task.
+      const localDue = sql`case when ${taskOccurrence.allDay} then ${taskOccurrence.endDate} else (${taskOccurrence.endAt} at time zone ${task.timeZone})::date end`;
+      const localToday = sql`(${nowIso}::timestamptz at time zone ${task.timeZone})::date`;
+      // Chiave di ordinamento degli aperti: fine del giorno locale per un
+      // all-day, l'istante di scadenza per un timed, null senza Schedule.
+      const dueKey = sql<
+        Date | string | null
+      >`case when ${taskOccurrence.allDay} then ((${taskOccurrence.endDate} + 1)::timestamp at time zone ${task.timeZone}) when ${taskOccurrence.endAt} is not null then ${taskOccurrence.endAt} else null end`;
+      // Ultimo completamento dell'occorrenza; null se non è mai stata completata.
+      const completedAt = sql<
+        Date | string | null
+      >`(select max(${taskCompletion.occurredAt}) from ${taskCompletion} where ${taskCompletion.occurrenceId} = ${taskOccurrence.id})`;
+
+      const conditions: SQL[] = [isNull(task.deletedAt), eq(taskOccurrence.status, filter.status)];
+
+      if (filter.spaceId) {
+        conditions.push(eq(task.spaceId, filter.spaceId));
+      }
+
+      if (filter.horizon) {
+        conditions.push(
+          sql`${localDue} is not null and ${localDue} <= ${localToday} + ${filter.horizon - 1}::int`,
+        );
+      }
+
+      if (filter.status === "completed") {
+        conditions.push(
+          sql`${completedAt} >= (${nowIso}::timestamptz - (${BOARD_DONE_DAYS}::int * interval '1 day'))`,
+        );
+      }
+
+      if (filter.cursor) {
+        const cursor = decodeBoardCursor(filter.cursor);
+
+        if (cursor) {
+          if (filter.status === "completed") {
+            conditions.push(
+              sql`(${completedAt} < ${cursor.key}::timestamptz or (${completedAt} = ${cursor.key}::timestamptz and ${task.id} > ${cursor.id}))`,
+            );
+          } else if (cursor.key === null) {
+            conditions.push(sql`${dueKey} is null and ${task.id} > ${cursor.id}`);
+          } else {
+            conditions.push(
+              sql`(${dueKey} > ${cursor.key}::timestamptz or (${dueKey} = ${cursor.key}::timestamptz and ${task.id} > ${cursor.id}) or ${dueKey} is null)`,
+            );
+          }
+        }
+      }
+
+      const order =
+        filter.status === "completed"
+          ? [desc(completedAt), asc(task.id)]
+          : [sql`${dueKey} asc nulls last`, asc(task.id)];
+
+      const rows = await db
+        .select({
+          ...taskViewColumns,
+          dueKey: dueKey.as<Date | string | null>("due_key"),
+          completedAt: completedAt.as<Date | string | null>("completed_at"),
+        })
+        .from(task)
+        .innerJoin(taskOccurrence, eq(taskOccurrence.taskId, task.id))
+        .where(and(...conditions))
+        .orderBy(...order)
+        .limit(limit + 1);
+
+      const hasMore = rows.length > limit;
+      const page = hasMore ? rows.slice(0, limit) : rows;
+      const last = page.at(-1);
+      const items = page.map((row) => {
+        const view = toTask(row);
+        const schedule = view.schedule;
+        const completed = row.completedAt;
+
+        return {
+          ...view,
+          dueDate: schedule ? scheduleDueDate(schedule) : null,
+          temporalState: schedule ? temporalState(schedule, view.status, now) : null,
+          completedAt:
+            view.status === "completed" && completed !== null ? new Date(completed) : null,
+        };
+      });
+
+      let nextCursor: string | null = null;
+      if (hasMore && last) {
+        const key = filter.status === "completed" ? last.completedAt : last.dueKey;
+        nextCursor = encodeBoardCursor({
+          key: key === null ? null : new Date(key).toISOString(),
+          id: last.id,
+        });
+      }
+
+      return { items, nextCursor };
     },
 
     /**

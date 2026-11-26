@@ -1,0 +1,9 @@
+.column {
+  min-height: 10rem;
+}
+
+.column[data-over="true"] {
+  background: var(--mantine-primary-color-light);
+  outline: 2px dashed var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
