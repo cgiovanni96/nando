@@ -1,6 +1,25 @@
 /* Sul telefono le viste non stanno accanto al titolo: vanno a capo e occupano la riga. */
 @media (max-width: 47.99em) {
+  .viewControls {
+    /* Senza larghezza propria il gruppo si stringe sul contenuto e la vista resta stretta. */
+    width: 100%;
+  }
+
   .views {
     width: 100%;
   }
+}
+
+/* Le viste prendono lo spazio che resta e si stringono: la griglia ha una larghezza minima propria. */
+.viewsColumn {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Il pannello resta in cima mentre la pagina scorre. */
+.panel {
+  flex: 0 0 260px;
+  width: 260px;
+  position: sticky;
+  top: 0;
 }

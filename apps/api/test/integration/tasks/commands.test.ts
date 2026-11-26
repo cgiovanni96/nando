@@ -214,6 +214,90 @@ describe("task commands", () => {
     if (clearedParsed.success) expect(clearedParsed.data.data.schedule).toBeNull();
   });
 
+  it("moves an all-day range by two days and keeps title and Space", async () => {
+    const space = await createSpace("Lavoro");
+    const task = await createTask({
+      title: "Conferenza",
+      spaceId: space.id,
+      schedule: { allDay: true, from: "2026-11-10", to: "2026-11-12" },
+    });
+
+    const response = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version,
+        title: task.title,
+        spaceId: space.id,
+        schedule: { allDay: true, from: "2026-11-12", to: "2026-11-14" },
+      }),
+    );
+    const parsed = taskResponseSchema.safeParse(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.data).toMatchObject({
+        title: "Conferenza",
+        spaceId: space.id,
+        version: task.version + 1,
+        schedule: {
+          allDay: true,
+          from: "2026-11-12",
+          to: "2026-11-14",
+          timeZone: "Europe/Rome",
+        },
+      });
+    }
+  });
+
+  it("rejects the second move that reuses expectedVersion", async () => {
+    const task = await createTask({
+      title: "Spostabile",
+      schedule: { allDay: true, from: "2026-11-10", to: "2026-11-12" },
+    });
+
+    const first = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version,
+        title: task.title,
+        spaceId: null,
+        schedule: { allDay: true, from: "2026-11-12", to: "2026-11-14" },
+      }),
+    );
+
+    expect(first.status).toBe(200);
+
+    const second = await post(
+      `/api/tasks/${task.id}/update`,
+      updateTaskRequestFactory({
+        commandId: newId(),
+        expectedVersion: task.version,
+        title: task.title,
+        spaceId: null,
+        schedule: { allDay: true, from: "2026-11-14", to: "2026-11-16" },
+      }),
+    );
+    const secondParsed = errorEnvelopeSchema.safeParse(await second.json());
+
+    expect(second.status).toBe(409);
+    expect(secondParsed.success).toBe(true);
+    if (secondParsed.success) {
+      expect(secondParsed.data.error.code).toBe("version_conflict");
+      expect(secondParsed.data.error.details).toEqual({ currentVersion: task.version + 1 });
+    }
+
+    const reread = await readTask(task.id);
+    expect(reread.schedule).toEqual({
+      allDay: true,
+      from: "2026-11-12",
+      to: "2026-11-14",
+      timeZone: "Europe/Rome",
+    });
+  });
+
   it("changes Space through update and reflects it in Inbox", async () => {
     const space = await createSpace("Lavoro");
     const task = await createTask({ title: "Da collocare", spaceId: space.id });

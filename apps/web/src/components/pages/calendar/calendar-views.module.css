@@ -34,10 +34,21 @@
   }
 }
 
+.allDayBody[data-draggable] {
+  cursor: grab;
+}
+
+/* Durante il drag i corpi coprono le celle: senza questo il drop non le raggiunge. */
+[data-dragging] [data-event-id],
+[data-dragging] [data-event-id] * {
+  pointer-events: none;
+}
+
+/* Gli eventi della griglia hanno z-index 3 e vengono dopo nel DOM: la riga sticky deve stare sopra. */
 .weekAllDay {
   position: sticky;
   top: var(--week-view-week-day-height);
-  z-index: 3;
+  z-index: 4;
   background-color: var(--mantine-color-body);
   border-bottom: 1px solid var(--mantine-color-default-border);
 }
@@ -46,6 +57,6 @@
 .daySlotLabel[data-all-day] {
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 4;
   background-color: var(--mantine-color-body);
 }
