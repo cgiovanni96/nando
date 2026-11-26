@@ -119,6 +119,21 @@ export const it = {
     more: "Altri",
     moreCount: "+{{count}} altri",
     popover: { start: "Inizia", open: "Apri" },
+    move: {
+      conflict: "Il task è cambiato nel frattempo. È tornato al suo posto.",
+      error: "Non è stato possibile spostare il task.",
+    },
+    unscheduled: {
+      title: "Senza data",
+      show: "Mostra senza data",
+      hide: "Nascondi senza data",
+      space: "Space",
+      allSpaces: "Tutti",
+      inbox: "Inbox",
+      empty: "Tutto pianificato",
+      loading: "Caricamento dei task senza data",
+      error: "Non è stato possibile caricare i task senza data.",
+    },
   },
   inbox: {
     title: "Da collocare",

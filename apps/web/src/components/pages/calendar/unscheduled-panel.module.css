@@ -1,0 +1,37 @@
+.panel {
+  min-width: 0;
+}
+
+.item {
+  min-width: 0;
+}
+
+.item[data-draggable="true"] {
+  cursor: grab;
+}
+
+.item[data-draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.item[data-draggable="false"] {
+  opacity: 0.6;
+}
+
+.itemTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.itemTitle:hover {
+  text-decoration: underline;
+}

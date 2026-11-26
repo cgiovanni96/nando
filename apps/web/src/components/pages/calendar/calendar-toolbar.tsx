@@ -14,9 +14,16 @@ type CalendarToolbarProps = {
   date: string;
   onViewChange: (view: CalendarView) => void;
   onDateChange: (date: string) => void;
+  panel?: { opened: boolean; onToggle: () => void };
 };
 
-export function CalendarToolbar({ view, date, onViewChange, onDateChange }: CalendarToolbarProps) {
+export function CalendarToolbar({
+  view,
+  date,
+  onViewChange,
+  onDateChange,
+  panel,
+}: CalendarToolbarProps) {
   const { t } = useTranslation();
 
   // Il tipo del valore viene dalle opzioni: niente stringhe arbitrarie da convertire.
@@ -65,14 +72,22 @@ export function CalendarToolbar({ view, date, onViewChange, onDateChange }: Cale
         </Title>
       </Group>
 
-      <SegmentedControl
-        size="xs"
-        value={view}
-        onChange={onViewChange}
-        data={viewOptions}
-        aria-label={t("calendar.views.label")}
-        className={classes.views}
-      />
+      <Group gap="xs" wrap="wrap" className={classes.viewControls}>
+        {panel === undefined ? null : (
+          <Button size="xs" variant="default" aria-expanded={panel.opened} onClick={panel.onToggle}>
+            {panel.opened ? t("calendar.unscheduled.hide") : t("calendar.unscheduled.show")}
+          </Button>
+        )}
+
+        <SegmentedControl
+          size="xs"
+          value={view}
+          onChange={onViewChange}
+          data={viewOptions}
+          aria-label={t("calendar.views.label")}
+          className={classes.views}
+        />
+      </Group>
     </Group>
   );
 }
