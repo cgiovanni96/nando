@@ -2,6 +2,7 @@
 
 - **Stato:** accettato
 - **Data:** 2026-11-26
+- **Aggiornato:** 2026-11-27, con gli esiti del mock (NAS-160)
 - **Ticket:** M3 — Ricorrenze e notifiche (grilling della milestone)
 - **Emenda:** ADR-0004 (ricorrenza, scope di modifica, viste delle serie), ADR-0006 (trigger delle serie, offset, consegna), ADR-0023 (centro notifiche nella topbar)
 
@@ -34,13 +35,17 @@ M3 porta il flusso 3: un task ricorrente genera occorrenze e notifiche senza int
 ### Scope di modifica
 
 - **Solo questa:** cambia Schedule o note di una occorrenza, che diventa un'eccezione.
-- **Tutta la serie:** titolo, Space e promemoria stanno sul Task e valgono per tutte le occorrenze. Una modifica di regola o orario rigenera solo le occorrenze future non toccate.
+- **Tutta la serie:** titolo, Space e promemoria stanno sul Task e valgono per tutte le occorrenze, quindi cambiarli da un'occorrenza non chiede lo scope. Una modifica di regola o orario rigenera solo le occorrenze future non toccate.
+  - Su una serie settimanale con più giorni, spostare un'occorrenza sostituisce solo il suo giorno in `byweekday`: il mercoledì di lun/mer/ven portato a giovedì dà lun/gio/ven. Per le altre frequenze si sposta l'ancora.
 - **Questa e le future** (split) all'occorrenza X:
   - la regola del Task vecchio riceve `until` subito prima di X;
   - nasce un Task nuovo con la regola modificata, lo stesso `seriesId`, titolo, Space, timezone e promemoria, e le sue occorrenze partono da X;
   - le occorrenze non toccate del Task vecchio da X in poi si rimuovono, quelle toccate restano al Task vecchio.
 
   Sulla prima occorrenza della serie lo split equivale a «Tutta la serie», e la UI offre solo quello.
+
+- Il dialog dello scope preseleziona «Solo questa» per una modifica di data o orario e «Questa e le future» per una modifica di regola.
+- La regola si modifica in un dialog che parte dalla riga «Ripete» del task. Sulla bozza la regola resta in attesa e si applica alla creazione.
 
 ### Aggiungere e togliere la regola
 
@@ -49,14 +54,15 @@ M3 porta il flusso 3: un task ricorrente genera occorrenze e notifiche senza int
 
 ### Serie nelle viste
 
-- **Board Task** (ADR-0028): per ogni serie mostra le occorrenze in ritardo, quelle `in_progress` e la prima aperta non ancora scaduta. Le altre restano nel calendario e in Prossimi 7 giorni. La card ha l'icona della ricorrenza e il filtro scadenza continua a valere.
-- **Oggi:** i ritardi della stessa serie stanno in una riga con il conteggio.
+- **Board Task** (ADR-0028): per ogni serie mostra l'ultima occorrenza in ritardo, quelle `in_progress` e la prima aperta non ancora scaduta. I ritardi precedenti stanno nella card dell'ultimo, con il conteggio e «Salta le precedenti», come in Oggi. Le altre occorrenze restano nel calendario e in Prossimi 7 giorni. La card ha l'icona della ricorrenza e il filtro scadenza continua a valere.
+- **Oggi:** i ritardi della stessa serie stanno in una riga, la più recente, con il conteggio.
 - **Salta le precedenti:** su un'occorrenza in ritardo, un solo comando fa skip di tutte le occorrenze `open` della stessa serie con scadenza precedente. Ogni skip resta nella storia; le `in_progress` non si toccano. Non esiste un auto-skip: ADR-0004 resta valido.
 
 ### Trigger e offset
 
 - `task.dueSoon` e `task.starts` restano per occorrenza, con `threadKey = task:{occurrenceId}`.
 - `task.overdue` usa `threadKey = series:{seriesId}:overdue`: un ritardo nuovo della stessa serie fa supersede di quello non letto, e il centro mostra un solo ritardo per serie. Il testo non porta un conteggio, perché il producer lo calcola alla registrazione e allo scatto non sarebbe più vero; il conteggio sta in Oggi.
+- Il thread dell'overdue non è quello dell'occorrenza, quindi il supersede non tocca `dueSoon` e `starts`. Quando scatta, l'overdue risolve anche le notifiche attive del thread `task:{occurrenceId}`: per un'occorrenza resta un solo segnale.
 - Il promemoria del Task diventa **`reminderMode ∈ {default, custom, none}`** con `reminderOffsetMinutes`, che vale solo per `custom` (0 = al momento). `none` spegne `dueSoon` e `starts`; l'overdue resta sempre.
 - **NotificationSettings** porta gli offset di default per tipo: all-day 1440 minuti, cioè il giorno prima, rispetto alle 08:00 locali del giorno rilevante; timed 30 minuti prima. Si modificano nella pagina Impostazioni. Cambiarli riregistra le richieste pendenti dei task in `default`, con upsert per `dedupKey`.
 - In M3 le preferenze sono solo queste. `digestEnabled`, `digestTime` e quiet hours restano nel modello di ADR-0006 e arrivano con l'email in v1.1.
@@ -75,6 +81,7 @@ M3 porta il flusso 3: un task ricorrente genera occorrenze e notifiche senza int
 - Il client aggiorna badge e centro con **polling ogni 60 secondi e al focus**. Il relay SSE `/events` di ADR-0010 nasce in M6, con lo streaming AI.
 - Una notifica nuova aggiorna solo il badge, senza toast: i toast restano per l'esito delle azioni.
 - In M3 non c'è una pagina Notifiche.
+- La voce Impostazioni sta in fondo alla sidebar. Su telefono non entra nella bottom nav: ci si arriva dal piede del popover della campanella.
 
 ## Conseguenze
 
@@ -87,7 +94,7 @@ M3 porta il flusso 3: un task ricorrente genera occorrenze e notifiche senza int
   - i default degli offset sono in NotificationSettings e c'è «Nessun promemoria»;
   - il dispatcher è pg-boss, e la consegna in-app usa il polling fino a M6.
 - **ADR-0023:** la topbar ha la campanella.
-- **ADR-0028:** la board applica la regola delle serie.
+- **ADR-0028:** la board applica la regola delle serie e raggruppa i ritardi come Oggi.
 - **Roadmap M3:** le preferenze sono gli offset; la demo è «cambio l'offset e la notifica si sposta», non «disattivo una preferenza».
 - **M5:** il binding Habit può puntare al `seriesId`, senza migrazione.
 
@@ -100,6 +107,9 @@ M3 porta il flusso 3: un task ricorrente genera occorrenze e notifiche senza int
 - **La serie sovrascrive le eccezioni:** perde una modifica fatta a mano.
 - **Auto-skip delle occorrenze perse:** nasconde le occasioni mancate (ADR-0004).
 - **Un overdue per occorrenza:** una serie giornaliera ignorata accumula un segnale al giorno.
+- **Promemoria e overdue della stessa occorrenza attivi insieme:** due segnali per lo stesso fatto.
+- **Una card per ogni ritardo nella board:** sette card per una serie giornaliera ignorata da una settimana.
+- **Spostare tutti i giorni di una serie settimanale dello stesso scarto:** lun/mer/ven diventerebbe mar/gio/sab per aver spostato un solo giorno.
 - **Interruttori in-app per tipo di trigger:** viola l'invariante 1 di ADR-0006.
 - **Job di riconciliazione al posto dell'outbox:** Notifications leggerebbe Task, e M5 avrebbe comunque bisogno dell'outbox.
 - **Scrivere la richiesta nella transazione del Task:** due aggregate in una transazione.
