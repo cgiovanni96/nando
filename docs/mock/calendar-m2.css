@@ -85,3 +85,78 @@
 .m2-card.st-completed{opacity:.7}
 .m2-pill-progress{border-color:var(--accent);font-weight:600}
 @media (max-width:900px){.m2-board{grid-template-columns:1fr}}
+
+/* ── NAS-160 — M3 Ricorrenze e notifiche ─────────────────────────────── */
+
+/* serie nelle viste */
+.m3-rec{display:inline-flex;align-items:center;flex:none;color:var(--muted)}
+.m3-rec .od-icon{width:14px;height:14px}
+.m2-chip .m3-rec .od-icon,.m2-event .m3-rec .od-icon{width:11px;height:11px}
+.m2-event .m2-time .m3-rec{margin-left:4px;vertical-align:-1px}
+.m3-tag{display:inline-flex;align-items:center;flex:none;border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:12px;line-height:20px;white-space:nowrap;color:var(--muted);background:var(--soft)}
+.m3-tag.is-late{color:var(--danger);border-color:currentColor;background:transparent}
+.m3-skip-earlier{white-space:nowrap;color:var(--accent)}
+.m3-row-series{flex-wrap:wrap;row-gap:2px}
+.m3-row-extra{flex-basis:100%;display:flex;gap:12px;align-items:center;padding-left:28px}
+.m2-chip.st-cancelled,.m2-event.st-cancelled{opacity:.4;text-decoration:line-through}
+.m3-pop-series{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.m3-pop-series .od-icon{width:12px;height:12px}
+
+/* campanella e centro notifiche */
+.m3-bell{position:relative;margin-left:auto}
+.m3-bell + [data-action="theme"]{margin-left:0}
+.m3-badge{position:absolute;top:-5px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+.m3-notif-pop{position:fixed;top:60px;right:24px;z-index:70;width:min(380px,calc(100vw - 32px));max-height:min(520px,calc(100vh - 140px));display:flex;flex-direction:column;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px rgb(0 0 0 / .18)}
+.m3-notif-head,.m3-notif-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px}
+.m3-notif-head{border-bottom:1px solid var(--line)}
+.m3-notif-foot{border-top:1px solid var(--line)}
+.m3-notif-list{overflow:auto}
+.m3-notif{display:flex;align-items:flex-start;gap:4px;padding-right:8px;border-bottom:1px solid var(--line);border-left:3px solid transparent}
+.m3-notif:last-child{border-bottom:0}
+.m3-notif.prio-high{border-left-color:var(--danger)}
+.m3-notif-main{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;padding:10px 6px 10px 11px;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer}
+.m3-notif-main .od-field{display:grid;gap:2px;min-width:0}
+.m3-dot{flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%}
+.m3-notif.is-unread .m3-dot{background:var(--accent)}
+.m3-notif.is-unread .m3-notif-title{font-weight:600}
+.m3-dismiss{margin-top:8px}
+.m3-notif-empty{margin:0;padding:28px 14px;color:var(--muted);text-align:center}
+
+/* dialog: regola e scope */
+.m3-dialog{box-sizing:border-box;padding:20px;width:min(460px,calc(100vw - 32px));max-width:calc(100vw - 32px)}
+.m3-dialog *{min-width:0}
+.m3-dialog input[type=date]{max-width:100%}
+.m3-dialog h2{margin:0 0 4px;font-size:18px}
+.m3-form{display:grid;gap:14px;margin:16px 0}
+.m3-field{display:grid;gap:6px;font-size:13px;border:0;padding:0;margin:0;min-width:0}
+.m3-field>span,.m3-field legend{color:var(--muted);font-size:13px;padding:0;margin-bottom:6px}
+.m3-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0;max-width:100%}
+.m3-inline .property-select{min-width:0;max-width:100%;text-overflow:ellipsis}
+.m3-num{width:64px}
+.m3-radio{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:36px}
+.m3-days{display:flex;gap:6px;flex-wrap:wrap}
+.m3-day{min-width:44px;min-height:36px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);font:inherit;font-size:13px;cursor:pointer}
+.m3-day[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.m3-note{margin:0}
+.m3-preview{margin:0;font-size:13px;color:var(--muted)}
+.m3-scope{display:grid;gap:8px;margin:16px 0;border:0;padding:0}
+.m3-scope label{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.m3-scope label:has(input:checked){border-color:var(--accent);background:var(--tint)}
+.m3-scope small{grid-column:2;color:var(--muted)}
+.m3-rule-btn{display:inline-flex;align-items:center;min-height:32px;padding:4px 8px;border-radius:4px;color:var(--fg);font:inherit;font-size:14px;cursor:pointer}
+.m3-rule-btn:hover{background:var(--soft)}
+
+/* Impostazioni */
+.m3-settings{max-width:560px}
+.m3-settings .m3-field{margin:16px 0}
+.m3-debug-row{gap:12px;flex-wrap:wrap}
+.m2-debug h4{margin:10px 0 4px;font-size:12px}
+.m2-debug ul{margin:0;padding-left:18px}
+
+@media (max-width:767px){
+  .m3-notif-pop{top:60px;left:16px;right:16px;width:auto}
+}
+@media (max-width:767px){
+  .m2-row{flex-wrap:wrap;row-gap:2px}
+  .m2-row .task-name{flex:1 1 9rem;min-width:9rem}
+}
