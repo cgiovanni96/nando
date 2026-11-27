@@ -158,7 +158,7 @@
       ${note ? `<span class="pill">${note}</span>` : ''}${TEMPORAL_PILL[tmp] || ''}${st === 'in_progress' ? '<span class="pill m2-pill-progress">In corso</span>' : ''}${st === 'skipped' ? '<span class="pill">Saltato</span>' : ''}
       <span class="task-date">${esc(s.allDay ? (s.from ? label(s) : 'Tutto il giorno') : s.from ? `${timeOf(s.from)}–${timeOf(s.to)}` : `entro le ${timeOf(s.to)}`)}</span>
       <button class="icon-btn m2-menu" data-m2-skip="${t.id}" ${!isActive(t) ? 'disabled' : ''} title="Salta" aria-label="Salta ${esc(t.title)}">⤼</button>
-      ${older ? `<div class="m3-row-extra"><span class="m3-tag is-late">+${older} precedenti</span><button class="text-btn m3-skip-earlier" data-m3-skip-earlier="${t.id}">Salta le precedenti</button></div>` : ''}
+      ${older ? `<div class="m3-row-extra"><span class="m3-tag is-late">+${older} ${older === 1 ? 'precedente' : 'precedenti'}</span><button class="text-btn m3-skip-earlier" data-m3-skip-earlier="${t.id}">${older === 1 ? 'Salta la precedente' : 'Salta le precedenti'}</button></div>` : ''}
     </div>`;
   }
 
@@ -730,14 +730,16 @@
     return `<span class="m3-rec" title="${esc(text)}">${icon('repeat')}<span class="sr-only">Serie: ${esc(text)}</span></span>${t.exception && !compact ? '<span class="m3-tag">Modificata</span>' : ''}`;
   }
   /** Board (ADR-0029): per ogni serie i ritardi, le occorrenze in corso e la prima aperta non scaduta. */
+  /** Board per serie (ADR-0029): l'ultimo ritardo con il conteggio, le occorrenze in corso e la prossima. */
   function onBoard(t) {
-    if (!t.seriesId || !isActive(t) || status(t) === 'in_progress' || temporal(t) === 'overdue') return true;
+    if (!t.seriesId || !isActive(t) || status(t) === 'in_progress') return true;
+    if (temporal(t) === 'overdue') return !state.tasks.some((o) => o.seriesId === t.seriesId && o !== t && status(o) === 'open' && temporal(o) === 'overdue' && sched(o).to > sched(t).to);
     const next = state.tasks.filter((o) => o.seriesId === t.seriesId && status(o) === 'open' && sched(o) && temporal(o) !== 'overdue').sort(byTime)[0];
     return next === t;
   }
   function afterNext(t) {
     if (!isSeries(t) || !isActive(t)) return '';
-    if (temporal(t) === 'overdue') return skipEarlierButton(t);
+    if (temporal(t) === 'overdue') { const n = olderOpen(t).length; return `${n ? `<span class="m3-tag is-late">+${n} ${n === 1 ? 'precedente' : 'precedenti'}</span>` : ''}${skipEarlierButton(t)}`; }
     const next = state.tasks.filter((o) => o.seriesId === t.seriesId && o !== t && isActive(o) && sched(o) && sched(o).to > sched(t).to).sort(byTime)[0];
     return next ? `<small class="muted">poi ${esc(dayName(startDay(sched(next))))}</small>` : '';
   }

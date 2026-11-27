@@ -53,7 +53,7 @@ Cosa si prova:
 - **Serie nelle viste:**
   - L'icona ↻ compare in righe, card, chip e popover, con la regola nel tooltip. «Modificata» marca le eccezioni.
   - Oggi raggruppa i ritardi della stessa serie in una riga con «+N precedenti» e «Salta le precedenti».
-  - La board mostra per ogni serie i ritardi, le occorrenze in corso e la prossima, con «poi …» per la data successiva. «Salta le N precedenti» sta solo sull'ultimo ritardo della serie, anche nel popover del calendario.
+  - La board mostra per ogni serie l'ultimo ritardo con «+N precedenti» e «Salta le N precedenti», le occorrenze in corso e la prossima, con «poi …» per la data successiva. Nel popover del calendario «Salta le N precedenti» sta solo sull'ultimo ritardo della serie.
 - **Campanella** nella topbar, anche su telefono, con badge delle non lette. Il popover:
   - elenca le attive per priorità, poi le più recenti;
   - un clic apre il task e segna come letta; × rimuove la notifica; c'è «Segna tutte come lette»;
@@ -66,18 +66,15 @@ Cosa si prova:
   - elenca le prossime notifiche in programma: cambiando un offset si vede il `triggerAt` spostarsi;
   - mostra serie, `genKey`, eccezione e promemoria dell'ultimo task modificato.
 
-Scelte proposte, da confermare:
+Decise dopo la prova del mock e registrate in ADR-0029:
 
 - La ripetizione si modifica in un dialog che parte dalla riga «Ripete» della pagina task, non in linea fra le proprietà.
 - Nello scope è preselezionato «Solo questa» per una data e «Questa e le future» per una regola.
 - Impostazioni sta in fondo alla sidebar sopra Ricerca e, su telefono, nel piede del popover della campanella: niente voce nella bottom nav.
-- Una notifica nuova aggiorna solo il badge, senza toast (ADR-0029).
-
-Emerso dal mock, da decidere:
-
-- **Overdue e dueSoon della stessa occorrenza.** Con il thread dell'overdue per serie, l'overdue non fa più supersede del dueSoon della sua occorrenza, e resterebbero due segnali. Il mock risolve dueSoon e starts quando scatta l'overdue della stessa occorrenza: va aggiunto ad ADR-0029 e a NAS-166.
-- **Spostare un giorno di una serie su più giorni** con «Tutta la serie» (es. il mercoledì di lun/mer/ven portato a giovedì) cambia solo quel giorno della settimana: lun/gio/ven. Per le altre frequenze si sposta l'ancora. È un dettaglio di NAS-165.
-- **Board e serie giornaliere ignorate:** la board mostra tutti i ritardi della serie (sette card per Meditare), mentre Oggi li raggruppa. Se il rumore pesa, anche la board può raggruppare.
+- Una notifica nuova aggiorna solo il badge, senza toast.
+- **Overdue e promemoria della stessa occorrenza.** Il thread dell'overdue è per serie, quindi il supersede non tocca dueSoon e starts della sua occorrenza. Quando scatta, l'overdue li risolve (NAS-166).
+- **Spostare un giorno di una serie su più giorni** con «Tutta la serie» (es. il mercoledì di lun/mer/ven portato a giovedì) cambia solo quel giorno della settimana: lun/gio/ven. Per le altre frequenze si sposta l'ancora (NAS-165).
+- **Board e serie ignorate:** la board raggruppa i ritardi di una serie nella card dell'ultimo, come Oggi (NAS-167).
 - **Titolo e Space** valgono per tutto il Task: cambiarli da un'occorrenza non chiede lo scope.
 
 Limiti: date naive senza DST, testo delle notifiche calcolato a ogni render invece che alla registrazione, nessun polling, il campo Scadenza della pagina task mostra solo la data.
